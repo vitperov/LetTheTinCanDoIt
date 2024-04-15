@@ -1,7 +1,10 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PyQt5.QtCore import pyqtSignal
 
 class ChatGPTView(QWidget):
+    send_request = pyqtSignal(str, str)
+
     def __init__(self):
         super().__init__()
         self.init_ui()
