@@ -3,7 +3,7 @@ from chatgpt_model import ChatGPTModel
 from chatgpt_view import ChatGPTView
 
 class ChatGPTController(QObject):
-    send_request = pyqtSignal(str, str)
+    send_request = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -17,4 +17,3 @@ class ChatGPTController(QObject):
     def handle_send_request(self, request, api_key):
         self.model.api_key = api_key
         self.send_request.emit(request)
-

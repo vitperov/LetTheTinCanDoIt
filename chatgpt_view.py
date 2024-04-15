@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit
 from PyQt5.QtCore import pyqtSignal
 
 class ChatGPTView(QWidget):
@@ -17,7 +17,7 @@ class ChatGPTView(QWidget):
         self.request_input = QLineEdit()
 
         self.response_label = QLabel('Response:')
-        self.response_display = QLineEdit()
+        self.response_display = QTextEdit()
         self.response_display.setReadOnly(True)
 
         self.send_button = QPushButton('Send')
