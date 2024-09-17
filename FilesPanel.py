@@ -1,7 +1,7 @@
 import os
 import json
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog
-from PyQt5.QtCore import QDir
+from PyQt5.QtCore import QDir, Qt
 
 # Path to the settings JSON file
 SETTINGS_FILE = 'settings/settings.json'
@@ -24,18 +24,15 @@ class FilesPanel(QWidget):
 
         # Set up the custom file system model to display the directory tree with checkboxes
         self.file_system_model = CustomFileSystemModel()
-        
-        # Load the last project directory from settings, if it exists
+        self.tree_view.setModel(self.file_system_model)  # Set the model first
+
+        # Load the last project directory or default to the user's home directory
         last_project_dir = self.load_last_project_directory()
 
-        # Set the root directory to the last chosen project directory, or home if not available
-        if last_project_dir and os.path.exists(last_project_dir):
-            self.file_system_model.setRootPath(last_project_dir)
-            self.tree_view.setRootIndex(self.file_system_model.index(last_project_dir))
-        else:
-            home_directory = os.path.expanduser('~')
-            self.file_system_model.setRootPath(home_directory)
-            self.tree_view.setRootIndex(self.file_system_model.index(home_directory))
+        # Set the root path in the file system model
+        self.file_system_model.setRootPath(last_project_dir)
+        # Set the root index in the tree view using the file system model
+        self.tree_view.setRootIndex(self.file_system_model.index(last_project_dir))
 
         # Hide unwanted columns: Size (1), Type (2), and Last Modified (3)
         self.tree_view.hideColumn(1)  # Hide the Size column
@@ -50,22 +47,33 @@ class FilesPanel(QWidget):
         self.setLayout(main_layout)
 
     def choose_directory(self):
-        # Open a QFileDialog to select a directory
+        """Opens a dialog to choose a project directory and saves it to the settings file."""
         selected_dir = QFileDialog.getExistingDirectory(self, "Choose Project Directory", os.path.expanduser('~'))
 
         # If the user selected a directory, update the root path of the tree view and save it to settings
         if selected_dir:
-            self.tree_view.setRootIndex(self.file_system_model.index(selected_dir))
+            # Set the root path in the file system model first
             self.file_system_model.setRootPath(selected_dir)
+            # Then update the root index in the tree view
+            self.tree_view.setRootIndex(self.file_system_model.index(selected_dir))
+            # Save the selected directory
             self.save_last_project_directory(selected_dir)
 
     def load_last_project_directory(self):
-        """Loads the last project directory from the settings file."""
+        """Loads the last project directory from the settings file or defaults to home directory."""
+        home_directory = os.path.expanduser('~')  # Fallback to the user's home directory
+
         if os.path.exists(SETTINGS_FILE):
-            with open(SETTINGS_FILE, 'r') as f:
-                settings = json.load(f)
-                return settings.get('last_project_dir')
-        return None
+            try:
+                with open(SETTINGS_FILE, 'r') as f:
+                    settings = json.load(f)
+                    # Return last_project_dir if it exists, otherwise return home directory
+                    return settings.get('last_project_dir', home_directory)
+            except (json.JSONDecodeError, IOError):
+                # If the file is corrupted or cannot be read, fallback to home directory
+                pass
+        
+        return home_directory
 
     def save_last_project_directory(self, directory):
         """Saves the selected directory to the settings file."""
