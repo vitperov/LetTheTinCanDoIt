@@ -23,10 +23,12 @@ class ChatGPTModel(QObject):
             print(f"Error loading API key: {e}")
             return None
 
-    def generate_response(self, prompt):
+    def generate_response(self, prompt, chosenFiles):
         #if not self.api_key:
         #    self.response_generated.emit("Error: API key not found or invalid.")
         #    return
+        
+        print("Attaching files:" + str(chosenFiles))
 
         try:
             response = self.client.chat.completions.create(

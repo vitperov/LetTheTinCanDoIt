@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSignal
 from FilesPanel import *
 
 class ChatGPTView(QWidget):
-    send_request = pyqtSignal(str)
+    send_request = pyqtSignal(str, list)  # Signal with request and chosen files
 
     def __init__(self):
         super().__init__()
@@ -14,6 +14,7 @@ class ChatGPTView(QWidget):
         # Create the main layout as a horizontal layout
         main_layout = QHBoxLayout()
 
+        # Initialize the left panel with FilesPanel widget
         self.left_panel = FilesPanel()
         main_layout.addWidget(self.left_panel)
 
@@ -49,9 +50,17 @@ class ChatGPTView(QWidget):
     def handle_send(self):
         request = self.request_input.text()
         if request:
+            # Clear the input field
             self.request_input.clear()
+
+            # Retrieve the selected files from the FilesPanel
+            selected_files = self.left_panel.get_checked_files()
+
+            # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
-            self.send_request.emit(request)
+
+            # Emit the signal with the request and selected files
+            self.send_request.emit(request, selected_files)
 
     def update_response(self, response):
         self.response_display.setText(response)
