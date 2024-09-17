@@ -3,16 +3,13 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButto
 from PyQt5.QtCore import pyqtSignal
 
 class ChatGPTView(QWidget):
-    send_request = pyqtSignal(str, str)
+    send_request = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         self.init_ui()
 
     def init_ui(self):
-        self.token_label = QLabel('Access Token Key:')
-        self.token_input = QLineEdit()
-
         self.request_label = QLabel('Request:')
         self.request_input = QLineEdit()
 
@@ -24,8 +21,6 @@ class ChatGPTView(QWidget):
         self.send_button.clicked.connect(self.handle_send)
 
         layout = QVBoxLayout()
-        layout.addWidget(self.token_label)
-        layout.addWidget(self.token_input)
         layout.addWidget(self.request_label)
         layout.addWidget(self.request_input)
         layout.addWidget(self.response_label)
@@ -41,7 +36,7 @@ class ChatGPTView(QWidget):
         if request:
             self.request_input.clear()
             self.response_display.setText('Sending request...')
-            self.send_request.emit(request, self.token_input.text())
+            self.send_request.emit(request)
 
     def update_response(self, response):
         self.response_display.setText(response)
