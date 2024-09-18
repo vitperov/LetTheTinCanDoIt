@@ -21,20 +21,42 @@ class ProjectGPTModel(QObject):
             return data.get('api_key', '')
         return ''
 
+    def make_file_content_text(self, chosen_files):
+        """
+        Creates a text block from the chosen files to be appended to the request.
+        """
+        if not chosen_files:
+            return ""
+
+        file_contents = []
+        header = "Here is my file" if len(chosen_files) == 1 else "Here are my files"
+        file_contents.append(header)
+
+        for file_path in chosen_files:
+            if os.path.exists(file_path):
+                with open(file_path, 'r') as file:
+                    content = file.read()
+                file_contents.append(f"{file_path}\n```\n{content}\n```\n")
+
+        return "\n".join(file_contents) + "\n"
+
     def generate_response(self, model, role_string, chosen_files, full_request):
         """
         Generates a response using the selected model, role_string, chosen_files, and full_request.
         """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
+            file_content_text = self.make_file_content_text(chosen_files)
+            full_request_with_files = file_content_text + full_request
+
             messages = [
                 {"role": "system", "content": role_string},
-                {"role": "user", "content": full_request}
+                {"role": "user", "content": full_request_with_files}
             ]
             
             print("Model: " + model)
             print("Role: " + role_string)
-            print("Request: " + full_request)
+            print("Request: " + full_request_with_files)
             print("--------------")
 
             # Generate response using the selected model
