@@ -1,14 +1,15 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit, QHBoxLayout, QComboBox
 from PyQt5.QtCore import pyqtSignal
 from modules.view.FilesPanel import *
 from modules.view.RoleSelector import *
 
 class ProjectGPTView(QWidget):
-    send_request = pyqtSignal(str, list, str)  # Signal with role_string, selected files, and full request
+    send_request = pyqtSignal(str, str, list, str)  # Signal with selected model, role_string, selected files, and full request
 
-    def __init__(self):
+    def __init__(self, available_models):
         super().__init__()
+        self.available_models = available_models  # Store available models
         self.init_ui()
 
     def init_ui(self):
@@ -21,6 +22,11 @@ class ProjectGPTView(QWidget):
 
         # Right panel layout that includes the RoleSelector and other input fields
         right_panel_layout = QVBoxLayout()
+
+        # Create the dropdown for available models
+        self.model_dropdown = QComboBox()
+        self.model_dropdown.addItems(self.available_models)
+        right_panel_layout.addWidget(self.model_dropdown)  # Add the dropdown to the layout
 
         # Add RoleSelector widget to the right panel layout
         self.role_selector = RoleSelector()
@@ -66,14 +72,17 @@ class ProjectGPTView(QWidget):
             # Get the selected role string from RoleSelector
             role_description = self.role_selector.get_role_string()
 
+            # Get the selected model from the dropdown
+            selected_model = self.model_dropdown.currentText()
+
             # Combine the role description with the request
             full_request = f"{role_description} {request}"
 
             # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
 
-            # Emit the signal with the role_description, selected_files, and full_request
-            self.send_request.emit(role_description, selected_files, full_request)
+            # Emit the signal with the selected model, role_description, selected_files, and full_request
+            self.send_request.emit(selected_model, role_description, selected_files, full_request)
 
     def update_response(self, response):
         self.response_display.setText(response)
