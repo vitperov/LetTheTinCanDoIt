@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit, QHBoxLayout, QComboBox
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox
 from PyQt5.QtCore import pyqtSignal
 from modules.view.FilesPanel import *
 from modules.view.RoleSelector import *
@@ -33,7 +33,7 @@ class ProjectGPTView(QWidget):
         right_panel_layout.addWidget(self.role_selector)
 
         self.request_label = QLabel('Request:')
-        self.request_input = QLineEdit()
+        self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
 
         self.response_label = QLabel('Response:')
         self.response_display = QTextEdit()
@@ -44,7 +44,7 @@ class ProjectGPTView(QWidget):
 
         # Add widgets to the right panel layout
         right_panel_layout.addWidget(self.request_label)
-        right_panel_layout.addWidget(self.request_input)
+        right_panel_layout.addWidget(self.request_input)  # Add the QTextEdit instead of QLineEdit
         right_panel_layout.addWidget(self.response_label)
         right_panel_layout.addWidget(self.response_display)
         right_panel_layout.addWidget(self.send_button)
@@ -61,7 +61,7 @@ class ProjectGPTView(QWidget):
         self.show()
 
     def handle_send(self):
-        request = self.request_input.text()
+        request = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
         if request:
             # Clear the input field
             self.request_input.clear()
@@ -69,19 +69,19 @@ class ProjectGPTView(QWidget):
             # Retrieve the selected files from the FilesPanel
             selected_files = self.left_panel.get_checked_files()
 
-            # Get the selected role string from RoleSelector
+            # Get the selected role string from RoleSelector (although it won't be used in the request)
             role_description = self.role_selector.get_role_string()
 
             # Get the selected model from the dropdown
             selected_model = self.model_dropdown.currentText()
 
-            # Combine the role description with the request
-            full_request = f"{role_description} {request}"
+            # Combine the request without adding the role description
+            full_request = request
 
             # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
 
-            # Emit the signal with the selected model, role_description, selected_files, and full_request
+            # Emit the signal with the selected model, role_description (still emitting for completeness), selected_files, and full_request
             self.send_request.emit(selected_model, role_description, selected_files, full_request)
 
     def update_response(self, response):
