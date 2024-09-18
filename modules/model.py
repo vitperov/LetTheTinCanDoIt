@@ -2,7 +2,7 @@ import json
 from openai import OpenAI
 from PyQt5.QtCore import QObject, pyqtSignal
 
-class ChatGPTModel(QObject):
+class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)
 
     def __init__(self):

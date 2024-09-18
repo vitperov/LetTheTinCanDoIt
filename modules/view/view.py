@@ -1,9 +1,10 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
-from FilesPanel import *
+from modules.view.FilesPanel import *
+from modules.view.RoleSelector import *
 
-class ChatGPTView(QWidget):
+class ProjectGPTView(QWidget):
     send_request = pyqtSignal(str, list)  # Signal with request and chosen files
 
     def __init__(self):
@@ -18,6 +19,13 @@ class ChatGPTView(QWidget):
         self.left_panel = FilesPanel()
         main_layout.addWidget(self.left_panel)
 
+        # Right panel layout that includes the RoleSelector and other input fields
+        right_panel_layout = QVBoxLayout()
+
+        # Add RoleSelector widget to the right panel layout
+        self.role_selector = RoleSelector()
+        right_panel_layout.addWidget(self.role_selector)
+
         self.request_label = QLabel('Request:')
         self.request_input = QLineEdit()
 
@@ -29,7 +37,6 @@ class ChatGPTView(QWidget):
         self.send_button.clicked.connect(self.handle_send)
 
         # Add widgets to the right panel layout
-        right_panel_layout = QVBoxLayout()
         right_panel_layout.addWidget(self.request_label)
         right_panel_layout.addWidget(self.request_input)
         right_panel_layout.addWidget(self.response_label)
@@ -56,11 +63,17 @@ class ChatGPTView(QWidget):
             # Retrieve the selected files from the FilesPanel
             selected_files = self.left_panel.get_checked_files()
 
+            # Get the selected role string from RoleSelector
+            role_description = self.role_selector.get_role_string()
+
+            # Combine the role description with the request
+            full_request = f"{role_description} {request}"
+
             # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
 
-            # Emit the signal with the request and selected files
-            self.send_request.emit(request, selected_files)
+            # Emit the signal with the full request and selected files
+            self.send_request.emit(full_request, selected_files)
 
     def update_response(self, response):
         self.response_display.setText(response)

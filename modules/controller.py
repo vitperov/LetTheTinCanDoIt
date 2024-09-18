@@ -1,14 +1,14 @@
 from PyQt5.QtCore import QObject, pyqtSignal
-from chatgpt_model import ChatGPTModel
-from chatgpt_view import ChatGPTView
+from modules.model import *
+from modules.view.view import *
 
-class ChatGPTController(QObject):
+class ProjectGPTController(QObject):
     send_request = pyqtSignal(str, list)
 
     def __init__(self):
         super().__init__()
-        self.model = ChatGPTModel()
-        self.view = ChatGPTView()
+        self.model = ProjectGPTModel()
+        self.view = ProjectGPTView()
 
         self.view.send_request.connect(self.handle_send_request)
         self.send_request.connect(self.model.generate_response)
