@@ -23,9 +23,6 @@ class ProjectGPTModel(QObject):
         return ''
 
     def make_file_content_text(self, chosen_files):
-        """
-        Creates a text block from the chosen files to be appended to the request.
-        """
         if not chosen_files:
             return ""
 
@@ -38,8 +35,12 @@ class ProjectGPTModel(QObject):
                 with open(file_path, 'r') as file:
                     content = file.read()
                 file_contents.append(f"**{file_path}**\n```\n{content}\n```\n")
-                
-        keepFilenamesRequest = "Please return the content of each file with its corresponding filename, and modify the content as requested. Do not modify or omit the filenames themselves.\n"
+
+        keepFilenamesRequest = ("Please return the content of each file with its corresponding filename, "
+                                "and modify the content as requested. "
+                                "Do not add any programming language markers (e.g., 'python', 'c++', etc.) "
+                                "to the output files. "
+                                "Do not modify or omit the filenames themselves.\n")
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
