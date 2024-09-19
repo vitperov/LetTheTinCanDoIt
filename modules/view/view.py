@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox, QSplitter
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox, QSplitter, QGroupBox, QFormLayout
 from PyQt5.QtCore import pyqtSignal, Qt
 from modules.view.FilesPanel import FilesPanel
 from modules.view.RoleSelector import RoleSelector
@@ -28,17 +28,29 @@ class ProjectGPTView(QWidget):
         # Add the left panel to the splitter
         splitter.addWidget(self.left_panel)
 
-        # Right panel layout that includes the RoleSelector and other input fields
+        # Right panel layout that includes both the "Parameters" and "Request" sections
         right_panel_layout = QVBoxLayout()
+
+        # ---------- Parameters GroupBox ----------
+        parameters_groupbox = QGroupBox("Parameters")
+        parameters_layout = QVBoxLayout()
 
         # Create the dropdown for available models
         self.model_dropdown = QComboBox()
         self.model_dropdown.addItems(self.available_models)
-        right_panel_layout.addWidget(self.model_dropdown)  # Add the dropdown to the layout
+        parameters_layout.addWidget(self.model_dropdown)
 
-        # Add RoleSelector widget to the right panel layout
+        # Set layout to the groupbox
+        parameters_groupbox.setLayout(parameters_layout)
+        right_panel_layout.addWidget(parameters_groupbox)
+
+        # ---------- Request GroupBox ----------
+        request_groupbox = QGroupBox("Request")
+        request_layout = QVBoxLayout()
+
+        # Add RoleSelector widget to the request layout
         self.role_selector = RoleSelector()
-        right_panel_layout.addWidget(self.role_selector)
+        request_layout.addWidget(self.role_selector)
 
         self.request_label = QLabel('Request:')
         self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
@@ -50,12 +62,16 @@ class ProjectGPTView(QWidget):
         self.send_button = QPushButton('Send')
         self.send_button.clicked.connect(self.handle_send)
 
-        # Add widgets to the right panel layout
-        right_panel_layout.addWidget(self.request_label)
-        right_panel_layout.addWidget(self.request_input)  # Add the QTextEdit instead of QLineEdit
-        right_panel_layout.addWidget(self.response_label)
-        right_panel_layout.addWidget(self.response_display)
-        right_panel_layout.addWidget(self.send_button)
+        # Add widgets to the request layout
+        request_layout.addWidget(self.request_label)
+        request_layout.addWidget(self.request_input)
+        request_layout.addWidget(self.response_label)
+        request_layout.addWidget(self.response_display)
+        request_layout.addWidget(self.send_button)
+
+        # Set layout to the groupbox
+        request_groupbox.setLayout(request_layout)
+        right_panel_layout.addWidget(request_groupbox)
 
         # Create a right panel widget to hold the right panel layout
         right_panel = QWidget()
