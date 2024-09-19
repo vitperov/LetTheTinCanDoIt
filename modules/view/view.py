@@ -1,8 +1,8 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox
-from PyQt5.QtCore import pyqtSignal
-from modules.view.FilesPanel import *
-from modules.view.RoleSelector import *
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox, QSplitter
+from PyQt5.QtCore import pyqtSignal, Qt
+from modules.view.FilesPanel import FilesPanel
+from modules.view.RoleSelector import RoleSelector
 
 class ProjectGPTView(QWidget):
     send_request = pyqtSignal(str, str, list, str)  # Signal with selected model, role_string, selected files, and full request
@@ -16,9 +16,17 @@ class ProjectGPTView(QWidget):
         # Create the main layout as a horizontal layout
         main_layout = QHBoxLayout()
 
+        # Create a splitter to allow resizing between the left and right panels
+        splitter = QSplitter(Qt.Horizontal)
+
         # Initialize the left panel with FilesPanel widget
         self.left_panel = FilesPanel()
-        main_layout.addWidget(self.left_panel)
+
+        # Set a minimum width for the left panel so it can't be collapsed completely
+        self.left_panel.setMinimumWidth(200)  # Minimum width of 200px for the left panel
+
+        # Add the left panel to the splitter
+        splitter.addWidget(self.left_panel)
 
         # Right panel layout that includes the RoleSelector and other input fields
         right_panel_layout = QVBoxLayout()
@@ -53,8 +61,24 @@ class ProjectGPTView(QWidget):
         right_panel = QWidget()
         right_panel.setLayout(right_panel_layout)
 
-        # Add the right panel to the main layout
-        main_layout.addWidget(right_panel)
+        # Set a minimum width for the right panel
+        right_panel.setMinimumWidth(300)  # Minimum width of 300px for the right panel
+
+        # Add the right panel to the splitter
+        splitter.addWidget(right_panel)
+
+        # Set initial sizes for the panels (left panel 400px, right panel takes remaining space)
+        splitter.setSizes([250, 800])
+
+        # Prevent panels from collapsing completely by setting the minimum size for the splitter
+        splitter.setHandleWidth(1)
+        splitter.setChildrenCollapsible(False)  # Disable collapsing
+
+        # Add the splitter to the main layout
+        main_layout.addWidget(splitter)
+
+        # Set the initial window size to 1000px wide
+        self.resize(1000, 800)  # Set the initial window size to 1000x800px
 
         self.setLayout(main_layout)
         self.setWindowTitle('ChatGPT Application')
@@ -69,7 +93,7 @@ class ProjectGPTView(QWidget):
             # Retrieve the selected files from the FilesPanel
             selected_files = self.left_panel.get_checked_files()
 
-            # Get the selected role string from RoleSelector (although it won't be used in the request)
+            # Get the selected role string from RoleSelector
             role_description = self.role_selector.get_role_string()
 
             # Get the selected model from the dropdown
@@ -81,7 +105,7 @@ class ProjectGPTView(QWidget):
             # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
 
-            # Emit the signal with the selected model, role_description (still emitting for completeness), selected_files, and full_request
+            # Emit the signal with the selected model, role_description, selected_files, and full_request
             self.send_request.emit(selected_model, role_description, selected_files, full_request)
 
     def update_response(self, response):
