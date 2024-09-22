@@ -34,13 +34,12 @@ class ProjectGPTModel(QObject):
             if os.path.exists(file_path):
                 with open(file_path, 'r') as file:
                     content = file.read()
+
+                    content = content.replace("`", "[BACKTICK]")
+
                 file_contents.append(f"**{file_path}**\n```\n{content}\n```\n")
 
-        keepFilenamesRequest = ("Please return the content of each file with its corresponding filename, "
-                                "and modify the content as requested. "
-                                "Do not add any programming language markers (e.g., 'python', 'c++', etc.) "
-                                "to the output files. "
-                                "Do not modify or omit the filenames themselves.\n")
+        keepFilenamesRequest = "Please return the content of each file with its corresponding file path. Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. The code block should use triple backticks (```) without specifying a language. The content inside the code block should be the file content only, with no additional comments, explanations, or markers. Do not modify or omit the file paths.\n"
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
@@ -68,7 +67,7 @@ class ProjectGPTModel(QObject):
                 model=model,  # Use the selected model here
                 messages=messages,
                 temperature=0,
-                max_tokens=2048,
+                #max_tokens=16384,
                 n=1,
                 stop=None
             )

@@ -25,6 +25,9 @@ class ResponseFilesParser:
             file_content = self.extract_content_for_file(response, file_path)
 
             if file_content:
+                # Replace the [BACKTICK] marker with actual backticks
+                file_content = file_content.replace("[BACKTICK]", "`")
+                
                 # Update the file on disk with the new content
                 self.update_file_on_disk(file_path, file_content)
 
