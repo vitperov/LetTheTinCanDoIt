@@ -3,7 +3,7 @@ from modules.model import ProjectGPTModel
 from modules.view.view import ProjectGPTView
 
 class ProjectGPTController(QObject):
-    send_request = pyqtSignal(str, str, list, str)  # Signal with model, role_string, chosen files, and full request
+    send_request = pyqtSignal(str, str, str, list, str)  # Signal with model, role_string, project_dir, chosen files, and full request
 
     def __init__(self):
         super().__init__()
@@ -15,6 +15,6 @@ class ProjectGPTController(QObject):
         self.send_request.connect(self.model.generate_response)
         self.model.response_generated.connect(self.view.update_response)
 
-    def handle_send_request(self, model, role_string, chosen_files, full_request):
+    def handle_send_request(self, model, role_string, project_dir, chosen_files, full_request):
         # Pass all received arguments to the model via the signal
-        self.send_request.emit(model, role_string, chosen_files, full_request)
+        self.send_request.emit(model, role_string, project_dir, chosen_files, full_request)

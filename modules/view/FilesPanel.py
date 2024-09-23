@@ -27,12 +27,12 @@ class FilesPanel(QWidget):
         self.tree_view.setModel(self.file_system_model)  # Set the model first
 
         # Load the last project directory or default to the user's home directory
-        last_project_dir = self.load_last_project_directory()
+        self.project_dir = self.load_last_project_directory()
 
         # Set the root path in the file system model
-        self.file_system_model.setRootPath(last_project_dir)
+        self.file_system_model.setRootPath(self.project_dir)
         # Set the root index in the tree view using the file system model
-        self.tree_view.setRootIndex(self.file_system_model.index(last_project_dir))
+        self.tree_view.setRootIndex(self.file_system_model.index(self.project_dir))
 
         # Hide unwanted columns: Size (1), Type (2), and Last Modified (3)
         self.tree_view.hideColumn(1)  # Hide the Size column
@@ -58,6 +58,8 @@ class FilesPanel(QWidget):
             self.tree_view.setRootIndex(self.file_system_model.index(selected_dir))
             # Save the selected directory
             self.save_last_project_directory(selected_dir)
+            # Update the project directory
+            self.project_dir = selected_dir
 
     def load_last_project_directory(self):
         """Loads the last project directory from the settings file or defaults to home directory."""
@@ -84,7 +86,8 @@ class FilesPanel(QWidget):
 
     # Example function to retrieve the selected files (checked files)
     def get_checked_files(self):
-        return [file_path for file_path, checked in self.file_system_model.checked_files.items() if checked]
+        relative_files = [os.path.relpath(file_path, self.project_dir) for file_path, checked in self.file_system_model.checked_files.items() if checked]
+        return self.project_dir, relative_files
 
 
 class CustomFileSystemModel(QFileSystemModel):

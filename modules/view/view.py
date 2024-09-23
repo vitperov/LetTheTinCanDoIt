@@ -5,7 +5,7 @@ from modules.view.FilesPanel import FilesPanel
 from modules.view.RoleSelector import RoleSelector
 
 class ProjectGPTView(QWidget):
-    send_request = pyqtSignal(str, str, list, str)  # Signal with selected model, role_string, selected files, and full request
+    send_request = pyqtSignal(str, str, str, list, str)  # Signal with selected model, role_string, project_dir, selected files, and full request
 
     def __init__(self, available_models):
         super().__init__()
@@ -106,8 +106,8 @@ class ProjectGPTView(QWidget):
             # Clear the input field
             self.request_input.clear()
 
-            # Retrieve the selected files from the FilesPanel
-            selected_files = self.left_panel.get_checked_files()
+            # Retrieve the selected files and project directory from the FilesPanel
+            project_dir, selected_files = self.left_panel.get_checked_files()
 
             # Get the selected role string from RoleSelector
             role_description = self.role_selector.get_role_string()
@@ -121,8 +121,8 @@ class ProjectGPTView(QWidget):
             # Show a "Sending request..." message in the response display
             self.response_display.setText('Sending request...')
 
-            # Emit the signal with the selected model, role_description, selected_files, and full_request
-            self.send_request.emit(selected_model, role_description, selected_files, full_request)
+            # Emit the signal with the selected model, role_description, project_dir, selected_files, and full_request
+            self.send_request.emit(selected_model, role_description, project_dir, selected_files, full_request)
 
     def update_response(self, response):
         self.response_display.setText(response)

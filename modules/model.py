@@ -22,7 +22,7 @@ class ProjectGPTModel(QObject):
             return data.get('api_key', '')
         return ''
 
-    def make_file_content_text(self, chosen_files):
+    def make_file_content_text(self, project_dir, chosen_files):
         if not chosen_files:
             return ""
 
@@ -30,26 +30,27 @@ class ProjectGPTModel(QObject):
         header = "Here is my file" if len(chosen_files) == 1 else "Here are my files"
         file_contents.append(header)
 
-        for file_path in chosen_files:
+        for relative_path in chosen_files:
+            file_path = os.path.join(project_dir, relative_path)
             if os.path.exists(file_path):
                 with open(file_path, 'r') as file:
                     content = file.read()
 
-                    content = content.replace("`", "[BACKTICK]")
+                    content = content.replace("`", "`")
 
-                file_contents.append(f"**{file_path}**\n```\n{content}\n```\n")
+                file_contents.append(f"**{relative_path}**\n```\n{content}\n```\n")
 
         keepFilenamesRequest = "Please return the content of each file with its corresponding file path. Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. The code block should use triple backticks (```) without specifying a language. The content inside the code block should be the file content only, with no additional comments, explanations, or markers. Do not modify or omit the file paths.\n"
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
-    def generate_response(self, model, role_string, chosen_files, full_request):
+    def generate_response(self, model, role_string, project_dir, chosen_files, full_request):
         """
-        Generates a response using the selected model, role_string, chosen_files, and full_request.
+        Generates a response using the selected model, role_string, project_dir, chosen_files, and full_request.
         """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
-            file_content_text = self.make_file_content_text(chosen_files)
+            file_content_text = self.make_file_content_text(project_dir, chosen_files)
             full_request_with_files = file_content_text + full_request
 
             messages = [
@@ -76,7 +77,7 @@ class ProjectGPTModel(QObject):
             generated_response = response.choices[0].message.content
 
             # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(chosen_files)
+            parser = ResponseFilesParser(project_dir, chosen_files)
             parser.parse_response_and_update_files_on_disk(generated_response)
 
             self.response_generated.emit(generated_response)
