@@ -2,6 +2,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from openai import OpenAI
 import os
 import json
+import tempfile
 from modules.ResponseFilesParser import ResponseFilesParser
 
 class ProjectGPTModel(QObject):
@@ -67,10 +68,10 @@ class ProjectGPTModel(QObject):
             response = self.client.chat.completions.create(
                 model=model,  # Use the selected model here
                 messages=messages,
-                temperature=0,
+                #temperature=0,
                 #max_tokens=16384,
-                n=1,
-                stop=None
+                #n=1,
+                #stop=None
             )
 
             # Extract the generated response from the API result
@@ -87,4 +88,76 @@ class ProjectGPTModel(QObject):
 
         except Exception as e:
             error_message = f"Error generating response: {str(e)}"
+            self.response_generated.emit(error_message)
+            
+    def generate_batch_response(self, model, role_string, project_dir, chosen_files, full_request):
+        """
+        Generates a response using the batch interface for a single request and stores the temporary file in CWD/tmp/.
+        """
+        try:
+            # Construct the messages for the GPT model, with the role_string as the system role
+            file_content_text = self.make_file_content_text(project_dir, chosen_files)
+            full_request_with_files = file_content_text + full_request
+
+            # Define the request body as per the API format
+            messages = [
+                {"role": "system", "content": role_string},
+                {"role": "user", "content": full_request_with_files}
+            ]
+
+            # Prepare the batch request in the required format
+            batch_request = {
+                "custom_id": "request-1",  # Custom ID for tracking the request
+                "method": "POST",  # HTTP method
+                "url": "/v1/chat/completions",  # API endpoint URL
+                "body": {
+                    "model": model,  # The selected model
+                    "messages": messages,  # The constructed messages
+                    #"max_tokens": 1000  # Optional: adjust based on your needs
+                }
+            }
+           
+
+            # Ensure the "CWD/tmp/" directory exists
+            tmp_dir = os.path.join(os.getcwd(), 'tmp')
+            os.makedirs(tmp_dir, exist_ok=True)  # Create the directory if it doesn't exist
+
+            # Save the JSON to a temporary file in CWD/tmp/
+            with tempfile.NamedTemporaryFile(mode="w+", suffix=".jsonl", dir=tmp_dir, delete=False) as temp_file:
+                temp_file.write(json.dumps(batch_request) + '\n')
+                temp_file_path = temp_file.name
+
+            print(f"Batch request JSON saved at: {temp_file_path}")
+            
+            # Ugly batch interface, you need file descriptor and need to create temporary file instead of just passing content directly
+
+            # Upload the file to the API
+            with open(temp_file_path, "rb") as file_to_upload:
+                batch_input_file = self.client.files.create(
+                    file=file_to_upload,
+                    purpose="batch"
+                )
+
+            # Get the file ID from the uploaded file
+            batch_input_file_id = batch_input_file.id
+            print("Batch input file ID: " + str(batch_input_file_id))
+
+            # Create a batch job using the uploaded file
+            batch_obj = self.client.batches.create(
+                input_file_id=batch_input_file_id,
+                endpoint="/v1/chat/completions",
+                completion_window="24h",
+                metadata={
+                    "description": "nightly eval job _"
+                }
+            )
+
+            print("Batch object:")
+            print(batch_obj)
+
+            # Emit the batch job as the generated response (for testing)
+            self.response_generated.emit(str(batch_obj))
+
+        except Exception as e:
+            error_message = f"Error generating batch response: {str(e)}"
             self.response_generated.emit(error_message)
