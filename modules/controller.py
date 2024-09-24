@@ -26,4 +26,4 @@ class ProjectGPTController(QObject):
 
     def handle_get_completed_batch_jobs(self):
         # Handle the retrieval of completed batch jobs
-        pass
+        self.model.get_completed_batch_jobs()

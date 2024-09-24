@@ -171,3 +171,9 @@ class ProjectGPTModel(QObject):
         except Exception as e:
             error_message = f"Error generating batch response: {str(e)}"
             self.response_generated.emit(error_message)
+
+    def get_completed_batch_jobs(self):
+        # Stub method to handle the retrieval of completed batch jobs
+        print("Retrieving completed batch jobs...")
+        jobs = self.client.batches.list()
+        self.response_generated.emit(str(jobs))
