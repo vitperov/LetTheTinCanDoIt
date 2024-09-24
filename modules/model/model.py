@@ -43,7 +43,7 @@ class ProjectGPTModel(QObject):
                 with open(file_path, 'r') as file:
                     content = file.read()
 
-                    content = content.replace("`", "`")
+                    content = content.replace("`", "[BACKTICK]")
 
                 file_contents.append(f"**{relative_path}**\n```\n{content}\n```\n")
 
