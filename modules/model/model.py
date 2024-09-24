@@ -83,8 +83,12 @@ class ProjectGPTModel(QObject):
             # Extract the generated response from the API result
             generated_response = response.choices[0].message.content
             
+            print("Response choices:" + str(len(response.choices)))
+            
             print("------------ USAGE ------")
             print(response.usage)
+            
+            print("------------ UPDATE FILES ------")
 
             # Create an instance of ResponseFilesParser and call the parsing function
             parser = ResponseFilesParser(self.project_dir, self.chosen_files)
