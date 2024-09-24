@@ -1,99 +1,53 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QTextEdit, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox
-from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtCore import Qt
 from modules.view.FilesPanel import FilesPanel
-from modules.view.BatchesPanel import BatchesPanel  # Import the BatchesPanel
-from modules.view.RequestPanel import RequestPanel  # Import the new RequestPanel
+from modules.view.BatchesPanel import BatchesPanel
+from modules.view.RequestPanel import RequestPanel
 
 class ProjectGPTView(QWidget):
-    # Signals for single and batch requests
-    send_request = pyqtSignal(str, str, str)  # Single: model, role_string, and full request
-    send_batch_request = pyqtSignal(str, str, str)  # Batch: model, role_string, and full request
-    get_completed_batch_jobs = pyqtSignal()  # Signal for getting completed batch jobs
-
     def __init__(self, available_models):
         super().__init__()
-        self.available_models = available_models  # Store available models
+        self.available_models = available_models
         self.init_ui()
 
     def init_ui(self):
-        # Create the main layout as a horizontal layout
         main_layout = QHBoxLayout()
-
-        # Create a splitter to allow resizing between the left and right panels
         splitter = QSplitter(Qt.Horizontal)
 
-        # Left-side layout which includes FilesPanel and BatchesPanel
         left_side_layout = QVBoxLayout()
-
-        # Initialize the FilesPanel widget
         self.left_panel = FilesPanel()
-
-        # Set a minimum width for the FilesPanel so it can't be collapsed completely
         self.left_panel.setMinimumWidth(200)
-
-        # Initialize the BatchesPanel widget
         self.batches_panel = BatchesPanel()
-
-        # Connect the BatchesPanel's get_completed_batch_jobs signal to the view's get_completed_batch_jobs signal
-        self.batches_panel.get_completed_batch_jobs.connect(self.get_completed_batch_jobs.emit)
-
-        # Add the FilesPanel and BatchesPanel to the left-side layout
         left_side_layout.addWidget(self.left_panel)
         left_side_layout.addWidget(self.batches_panel)
 
-        # Create a widget to hold the left-side layout and add it to the splitter
         left_side_widget = QWidget()
         left_side_widget.setLayout(left_side_layout)
         splitter.addWidget(left_side_widget)
 
-        # Create the RequestPanel and add it to the right panel
-        self.request_panel = RequestPanel(self.available_models)
-        self.request_panel.send_request_signal.connect(self.send_request.emit)  # Connect the send_request_signal
-        self.request_panel.send_batch_request_signal.connect(self.send_batch_request.emit)  # Connect the send_batch_request_signal
-
-        # Right panel layout that includes both the RequestPanel and Response section
         right_panel_layout = QVBoxLayout()
-
-        # Add RequestPanel to right layout
+        self.request_panel = RequestPanel(self.available_models)
         right_panel_layout.addWidget(self.request_panel)
 
-        # ---------- Response GroupBox ----------
         response_groupbox = QGroupBox("Response")
         response_layout = QVBoxLayout()
-
         self.response_display = QTextEdit()
         self.response_display.setReadOnly(True)
-
-        # Add response display to the response layout
         response_layout.addWidget(self.response_display)
-
-        # Set layout to the groupbox
         response_groupbox.setLayout(response_layout)
         right_panel_layout.addWidget(response_groupbox)
 
-        # Create a right panel widget to hold the right panel layout
         right_panel = QWidget()
         right_panel.setLayout(right_panel_layout)
-
-        # Set a minimum width for the right panel
-        right_panel.setMinimumWidth(300)  # Minimum width of 300px for the right panel
-
-        # Add the right panel to the splitter
+        right_panel.setMinimumWidth(300)
         splitter.addWidget(right_panel)
 
-        # Set initial sizes for the panels (left panel 400px, right panel takes remaining space)
         splitter.setSizes([250, 800])
-
-        # Prevent panels from collapsing completely by setting the minimum size for the splitter
         splitter.setHandleWidth(1)
-        splitter.setChildrenCollapsible(False)  # Disable collapsing
-
-        # Add the splitter to the main layout
+        splitter.setChildrenCollapsible(False)
         main_layout.addWidget(splitter)
 
-        # Set the initial window size to 1000px wide
-        self.resize(1000, 800)  # Set the initial window size to 1000x800px
-
+        self.resize(1000, 800)
         self.setLayout(main_layout)
         self.setWindowTitle('ChatGPT Application')
         self.show()
