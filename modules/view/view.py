@@ -1,13 +1,14 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QHBoxLayout, QComboBox, QSplitter, QGroupBox, QFormLayout
 from PyQt5.QtCore import pyqtSignal, Qt
 from modules.view.FilesPanel import FilesPanel
 from modules.view.RoleSelector import RoleSelector
+from modules.view.BatchesPanel import BatchesPanel  # Import the BatchesPanel
 
 class ProjectGPTView(QWidget):
     # Signals for single and batch requests
     send_request = pyqtSignal(str, str, str, list, str)  # Single: model, role_string, project_dir, selected files, and full request
     send_batch_request = pyqtSignal(str, str, str, list, str)  # Batch: model, role_string, project_dir, file groups, and full request template
+    get_completed_batch_jobs = pyqtSignal()  # Signal for getting completed batch jobs
 
     def __init__(self, available_models):
         super().__init__()
@@ -21,14 +22,29 @@ class ProjectGPTView(QWidget):
         # Create a splitter to allow resizing between the left and right panels
         splitter = QSplitter(Qt.Horizontal)
 
-        # Initialize the left panel with FilesPanel widget
+        # Left-side layout which includes FilesPanel and BatchesPanel
+        left_side_layout = QVBoxLayout()
+
+        # Initialize the FilesPanel widget
         self.left_panel = FilesPanel()
 
-        # Set a minimum width for the left panel so it can't be collapsed completely
-        self.left_panel.setMinimumWidth(200)  # Minimum width of 200px for the left panel
+        # Set a minimum width for the FilesPanel so it can't be collapsed completely
+        self.left_panel.setMinimumWidth(200)
 
-        # Add the left panel to the splitter
-        splitter.addWidget(self.left_panel)
+        # Initialize the BatchesPanel widget
+        self.batches_panel = BatchesPanel()
+
+        # Connect the BatchesPanel's get_completed_batch_jobs signal to the view's get_completed_batch_jobs signal
+        self.batches_panel.get_completed_batch_jobs.connect(self.get_completed_batch_jobs.emit)
+
+        # Add the FilesPanel and BatchesPanel to the left-side layout
+        left_side_layout.addWidget(self.left_panel)
+        left_side_layout.addWidget(self.batches_panel)
+
+        # Create a widget to hold the left-side layout and add it to the splitter
+        left_side_widget = QWidget()
+        left_side_widget.setLayout(left_side_layout)
+        splitter.addWidget(left_side_widget)
 
         # Right panel layout that includes both the "Parameters" and "Request" sections
         right_panel_layout = QVBoxLayout()
