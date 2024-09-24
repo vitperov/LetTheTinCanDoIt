@@ -73,10 +73,6 @@ class ProjectGPTView(QWidget):
         self.request_label = QLabel('Request:')
         self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
 
-        self.response_label = QLabel('Response:')
-        self.response_display = QTextEdit()
-        self.response_display.setReadOnly(True)
-
         # Create "Send" button for single request
         self.send_button = QPushButton('Send')
         self.send_button.clicked.connect(self.handle_send)
@@ -93,13 +89,25 @@ class ProjectGPTView(QWidget):
         # Add widgets to the request layout
         request_layout.addWidget(self.request_label)
         request_layout.addWidget(self.request_input)
-        request_layout.addWidget(self.response_label)
-        request_layout.addWidget(self.response_display)
-        request_layout.addLayout(button_layout)
+        request_layout.addLayout(button_layout)  # Move buttons before the response
 
         # Set layout to the groupbox
         request_groupbox.setLayout(request_layout)
         right_panel_layout.addWidget(request_groupbox)
+
+        # ---------- Response GroupBox ----------
+        response_groupbox = QGroupBox("Response")
+        response_layout = QVBoxLayout()
+
+        self.response_display = QTextEdit()
+        self.response_display.setReadOnly(True)
+
+        # Add response display to the response layout
+        response_layout.addWidget(self.response_display)
+
+        # Set layout to the groupbox
+        response_groupbox.setLayout(response_layout)
+        right_panel_layout.addWidget(response_groupbox)
 
         # Create a right panel widget to hold the right panel layout
         right_panel = QWidget()
