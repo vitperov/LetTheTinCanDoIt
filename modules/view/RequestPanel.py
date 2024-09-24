@@ -65,26 +65,14 @@ class RequestPanel(QWidget):
         self.setLayout(layout)
 
     def handle_send(self):
-        request = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
-        if request:
-            # Clear the input field
-            self.request_input.clear()
-
-            # Get the selected role string from RoleSelector
-            role_description = self.role_selector.get_role_string()
-
-            # Get the selected model from the dropdown
-            selected_model = self.model_dropdown.currentText()
-
-            # Combine the request without adding the role description
-            full_request = request
-
-            # Emit the signal for a single request
-            self.send_request_signal.emit(selected_model, role_description, full_request)
+        self.handle_request(self.send_request_signal)
 
     def handle_send_batch(self):
-        request_template = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
-        if request_template:
+        self.handle_request(self.send_batch_request_signal)
+
+    def handle_request(self, signal):
+        request_text = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
+        if request_text:
             # Clear the input field
             self.request_input.clear()
 
@@ -94,5 +82,5 @@ class RequestPanel(QWidget):
             # Get the selected model from the dropdown
             selected_model = self.model_dropdown.currentText()
 
-            # Emit the signal for a batch request
-            self.send_batch_request_signal.emit(selected_model, role_description, request_template)
+            # Emit the appropriate signal
+            signal.emit(selected_model, role_description, request_text)
