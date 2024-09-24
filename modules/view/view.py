@@ -48,10 +48,8 @@ class ProjectGPTView(QWidget):
 
         # Create the RequestPanel and add it to the right panel
         self.request_panel = RequestPanel(self.available_models)
-
-        # Connect signals from RequestPanel to ProjectGPTView
-        self.request_panel.send_button.clicked.connect(self.handle_send)
-        self.request_panel.send_batch_button.clicked.connect(self.handle_send_batch)
+        self.request_panel.send_request_signal.connect(self.send_request.emit)  # Connect the send_request_signal
+        self.request_panel.send_batch_request_signal.connect(self.send_batch_request.emit)  # Connect the send_batch_request_signal
 
         # Right panel layout that includes both the RequestPanel and Response section
         right_panel_layout = QVBoxLayout()
@@ -99,45 +97,6 @@ class ProjectGPTView(QWidget):
         self.setLayout(main_layout)
         self.setWindowTitle('ChatGPT Application')
         self.show()
-
-    def handle_send(self):
-        request = self.request_panel.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
-        if request:
-            # Clear the input field
-            self.request_panel.request_input.clear()
-
-            # Get the selected role string from RoleSelector
-            role_description = self.request_panel.role_selector.get_role_string()
-
-            # Get the selected model from the dropdown
-            selected_model = self.request_panel.model_dropdown.currentText()
-
-            # Combine the request without adding the role description
-            full_request = request
-
-            # Show a "Sending request..." message in the response display
-            self.response_display.setText('Sending request...')
-
-            # Emit the signal for a single request
-            self.send_request.emit(selected_model, role_description, full_request)
-
-    def handle_send_batch(self):
-        request_template = self.request_panel.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
-        if request_template:
-            # Clear the input field
-            self.request_panel.request_input.clear()
-
-            # Get the selected role string from RoleSelector
-            role_description = self.request_panel.role_selector.get_role_string()
-
-            # Get the selected model from the dropdown
-            selected_model = self.request_panel.model_dropdown.currentText()
-
-            # Show a "Sending batch request..." message in the response display
-            self.response_display.setText('Sending batch request...')
-
-            # Emit the signal for a batch request
-            self.send_batch_request.emit(selected_model, role_description, request_template)
 
     def update_response(self, response):
         self.response_display.setText(response)
