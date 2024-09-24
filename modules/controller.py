@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QObject, pyqtSignal
-from modules.model import ProjectGPTModel
+from modules.model.model import ProjectGPTModel
 from modules.view.view import ProjectGPTView
 
 class ProjectGPTController(QObject):

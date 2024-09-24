@@ -3,7 +3,7 @@ from openai import OpenAI
 import os
 import json
 import tempfile
-from modules.ResponseFilesParser import ResponseFilesParser
+from modules.model.ResponseFilesParser import ResponseFilesParser
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
