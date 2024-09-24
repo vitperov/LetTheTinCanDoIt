@@ -6,8 +6,8 @@ from modules.view.RequestPanel import RequestPanel  # Import the new RequestPane
 
 class ProjectGPTView(QWidget):
     # Signals for single and batch requests
-    send_request = pyqtSignal(str, str, str, list, str)  # Single: model, role_string, project_dir, selected files, and full request
-    send_batch_request = pyqtSignal(str, str, str, list, str)  # Batch: model, role_string, project_dir, file groups, and full request template
+    send_request = pyqtSignal(str, str, str)  # Single: model, role_string, and full request
+    send_batch_request = pyqtSignal(str, str, str)  # Batch: model, role_string, and full request
     get_completed_batch_jobs = pyqtSignal()  # Signal for getting completed batch jobs
 
     def __init__(self, available_models):
@@ -106,9 +106,6 @@ class ProjectGPTView(QWidget):
             # Clear the input field
             self.request_panel.request_input.clear()
 
-            # Retrieve the selected files and project directory from the FilesPanel
-            project_dir, selected_files = self.left_panel.get_checked_files()
-
             # Get the selected role string from RoleSelector
             role_description = self.request_panel.role_selector.get_role_string()
 
@@ -122,16 +119,13 @@ class ProjectGPTView(QWidget):
             self.response_display.setText('Sending request...')
 
             # Emit the signal for a single request
-            self.send_request.emit(selected_model, role_description, project_dir, selected_files, full_request)
+            self.send_request.emit(selected_model, role_description, full_request)
 
     def handle_send_batch(self):
         request_template = self.request_panel.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
         if request_template:
             # Clear the input field
             self.request_panel.request_input.clear()
-
-            # Retrieve the selected files and project directory from the FilesPanel
-            project_dir, selected_files = self.left_panel.get_checked_files()
 
             # Get the selected role string from RoleSelector
             role_description = self.request_panel.role_selector.get_role_string()
@@ -143,7 +137,7 @@ class ProjectGPTView(QWidget):
             self.response_display.setText('Sending batch request...')
 
             # Emit the signal for a batch request
-            self.send_batch_request.emit(selected_model, role_description, project_dir, selected_files, request_template)
+            self.send_batch_request.emit(selected_model, role_description, request_template)
 
     def update_response(self, response):
         self.response_display.setText(response)

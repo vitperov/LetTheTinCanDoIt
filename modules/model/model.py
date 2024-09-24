@@ -13,6 +13,12 @@ class ProjectGPTModel(QObject):
         self.available_models = ["gpt-4o-mini", "gpt-4o", "o1-preview", "o1-mini"]  # Available model list
         self.api_key = self.load_api_key()  # Load the API key from the settings file
         self.client = OpenAI(api_key=self.api_key)
+        self.project_dir = None
+        self.chosen_files = []
+
+    def set_project_files(self, project_dir, chosen_files):
+        self.project_dir = project_dir
+        self.chosen_files = chosen_files
 
     def load_api_key(self):
         # Load the API key from a JSON file
@@ -45,13 +51,13 @@ class ProjectGPTModel(QObject):
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
-    def generate_response(self, model, role_string, project_dir, chosen_files, full_request):
+    def generate_response(self, model, role_string, full_request):
         """
         Generates a response using the selected model, role_string, project_dir, chosen_files, and full_request.
         """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
-            file_content_text = self.make_file_content_text(project_dir, chosen_files)
+            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
             full_request_with_files = file_content_text + full_request
 
             messages = [
@@ -81,7 +87,7 @@ class ProjectGPTModel(QObject):
             print(response.usage)
 
             # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(project_dir, chosen_files)
+            parser = ResponseFilesParser(self.project_dir, self.chosen_files)
             parser.parse_response_and_update_files_on_disk(generated_response)
 
             self.response_generated.emit(generated_response)
@@ -90,13 +96,13 @@ class ProjectGPTModel(QObject):
             error_message = f"Error generating response: {str(e)}"
             self.response_generated.emit(error_message)
             
-    def generate_batch_response(self, model, role_string, project_dir, chosen_files, full_request):
+    def generate_batch_response(self, model, role_string, full_request):
         """
         Generates a response using the batch interface for a single request and stores the temporary file in CWD/tmp/.
         """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
-            file_content_text = self.make_file_content_text(project_dir, chosen_files)
+            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
             full_request_with_files = file_content_text + full_request
 
             # Define the request body as per the API format
