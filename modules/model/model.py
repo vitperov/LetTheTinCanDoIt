@@ -8,7 +8,7 @@ from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the 
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
-    completed_job_list_updated = pyqtSignal(list)  # New signal to emit completed batches list
+    completed_job_list_updated = pyqtSignal(list)  # Signal to emit completed batches list
 
     def __init__(self):
         super().__init__()
@@ -18,6 +18,7 @@ class ProjectGPTModel(QObject):
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
+        self.jobs = None  # Variable to store jobs list
         self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
 
     def set_project_files(self, project_dir, chosen_files):
@@ -63,9 +64,6 @@ class ProjectGPTModel(QObject):
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
     def generate_response(self, model, role_string, full_request):
-        """
-        Generates a response using the selected model, role_string, project_dir, chosen_files, and full_request.
-        """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
             file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
@@ -85,10 +83,6 @@ class ProjectGPTModel(QObject):
             response = self.client.chat.completions.create(
                 model=model,  # Use the selected model here
                 messages=messages,
-                #temperature=0,
-                #max_tokens=16384,
-                #n=1,
-                #stop=None
             )
 
             # Extract the generated response from the API result
@@ -112,9 +106,6 @@ class ProjectGPTModel(QObject):
             self.response_generated.emit(error_message)
             
     def generate_batch_response(self, model, role_string, full_request):
-        """
-        Generates a response using the batch interface for a single request and stores the temporary file in CWD/tmp/.
-        """
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
             file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
@@ -128,13 +119,12 @@ class ProjectGPTModel(QObject):
 
             # Prepare the batch request in the required format
             batch_request = {
-                "custom_id": "request-1",  # Custom ID for tracking the request
+                "custom_id": self.project_dir,  # Store project dir to be able to parse it later
                 "method": "POST",  # HTTP method
                 "url": "/v1/chat/completions",  # API endpoint URL
                 "body": {
                     "model": model,  # The selected model
                     "messages": messages,  # The constructed messages
-                    #"max_tokens": 1000  # Optional: adjust based on your needs
                 }
             }
            
@@ -183,19 +173,19 @@ class ProjectGPTModel(QObject):
     def get_completed_batch_jobs(self):
         try:
             # Retrieve the jobs from the batch API
-            jobs = self.client.batches.list()
+            self.jobs = self.client.batches.list()  # Store the jobs in self.jobs
 
             # Create an empty dictionary to store the results
             batch_dict = {}
 
             # Iterate over each batch object in the retrieved list
-            for batch in jobs.data:
+            for batch in self.jobs.data:
                 batch_id = batch.id
                 status = batch.status
                 description = batch.metadata.get('description', 'No description')
 
                 # If the job is completed and not yet in the completed_batches list, add it
-                if status == 'completed' and batch_id not in self.completed_batches:
+                if (status == 'completed' or True) and batch_id not in self.completed_batches:
                     self.completed_batches.append(batch_id)
 
                 # Populate the dictionary with id as key, and status/description as values
@@ -213,4 +203,55 @@ class ProjectGPTModel(QObject):
 
         except Exception as e:
             error_message = f"Error retrieving completed batch jobs: {str(e)}"
+            self.response_generated.emit(error_message)
+    
+    def get_batch_results(self, batch_id):
+        """
+        Retrieves the results for a specific batch job.
+        
+        Args:
+            batch_id (str): The batch job ID for which to fetch the results.
+        """
+        try:
+            # Find the batch in the stored jobs list
+            if self.jobs is None:
+                raise ValueError("No jobs available. Please call get_completed_batch_jobs first.")
+
+            batch = next((job for job in self.jobs.data if job.id == batch_id), None)
+
+            if not batch:
+                raise ValueError(f"Batch job with ID {batch_id} not found.")
+
+            # Extract the description and output_file_id
+            description = batch.metadata.get('description', 'No description')
+            print("Description: " + description)
+            output_file_id = batch.output_file_id
+            
+            file_response = self.client.files.content(output_file_id).text
+            data = json.loads(file_response)
+
+            proj_dir = data['custom_id'] # We store project dir as custom_id
+            print("Proj dir: " + proj_dir)
+
+            # Extract choices[0] as response
+            response = str(data['response']['body']['choices'][0]['message']['content'])
+
+            # Emit the results
+            self.response_generated.emit(response)
+
+
+            if not os.path.exists(proj_dir):
+                print("Project directory from batch custom_id field '" + str(proj_dir) + "' was not found. Using patch from GUI: " + str(self.project_dir))
+                proj_dir = self.project_dir
+            
+            if (proj_dir is None) or (not os.path.exists(proj_dir)):
+                print("Project directory: " + str(proj_dir) +" was not found. Can't modify files")
+                return
+
+            # Create an instance of ResponseFilesParser and call the parsing function
+            parser = ResponseFilesParser(self.project_dir, self.chosen_files)
+            parser.parse_response_and_update_files_on_disk(generated_response)
+
+        except Exception as e:
+            error_message = f"Error retrieving batch results: {str(e)}"
             self.response_generated.emit(error_message)

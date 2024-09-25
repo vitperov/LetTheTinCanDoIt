@@ -5,6 +5,9 @@ class BatchesPanel(QWidget):
     # Signal to trigger the action of getting completed batch jobs
     get_completed_batch_jobs = pyqtSignal()
 
+    # Signal to trigger the action of fetching results for a selected batch job
+    get_results = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
         self.init_ui()
@@ -30,6 +33,9 @@ class BatchesPanel(QWidget):
 
         # Connect the button click signal to the "get_completed_batch_jobs" signal
         self.get_jobs_button.clicked.connect(self.get_completed_batch_jobs.emit)
+
+        # Connect the "Get Results" button to the method that emits the get_results signal
+        self.get_results_button.clicked.connect(self.emit_selected_batch_id)
 
         # Set the layout to the groupbox
         batch_groupbox.setLayout(groupbox_layout)
@@ -58,3 +64,14 @@ class BatchesPanel(QWidget):
         else:
             # If the list is empty, add a placeholder to indicate no jobs
             self.batch_dropdown.addItem("No completed jobs available")
+
+    def emit_selected_batch_id(self):
+        """
+        Emits the 'get_results' signal with the currently selected batch job ID.
+        """
+        # Get the currently selected batch job ID from the dropdown
+        selected_batch_id = self.batch_dropdown.currentText()
+
+        # Emit the 'get_results' signal with the selected batch job ID
+        if selected_batch_id != "No completed jobs available":
+            self.get_results.emit(selected_batch_id)

@@ -11,6 +11,7 @@ class ProjectGPTController(QObject):
         self.view.request_panel.send_request_signal.connect(self.handle_send_request)
         self.view.request_panel.send_batch_request_signal.connect(self.handle_send_batch_request)
         self.view.batches_panel.get_completed_batch_jobs.connect(self.handle_get_completed_batch_jobs)
+        self.view.batches_panel.get_results.connect(self.handle_get_batch_results)
 
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
@@ -28,3 +29,7 @@ class ProjectGPTController(QObject):
     def handle_get_completed_batch_jobs(self):
         # Handle the retrieval of completed batch jobs
         self.model.get_completed_batch_jobs()
+
+    def handle_get_batch_results(self, batch_id):
+        # Handle the retrieval of results for a specific batch job
+        self.model.get_batch_results(batch_id)
