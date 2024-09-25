@@ -13,6 +13,7 @@ class ProjectGPTController(QObject):
         self.view.batches_panel.get_completed_batch_jobs.connect(self.handle_get_completed_batch_jobs)
 
         self.model.response_generated.connect(self.view.update_response)
+        self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
 
     def handle_send_request(self, model, role_string, full_request):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()

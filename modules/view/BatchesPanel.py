@@ -1,6 +1,4 @@
-# BatchesPanel.py
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QGroupBox
-
 from PyQt5.QtCore import pyqtSignal
 
 class BatchesPanel(QWidget):
@@ -30,7 +28,7 @@ class BatchesPanel(QWidget):
         self.get_results_button = QPushButton("Get Results")
         groupbox_layout.addWidget(self.get_results_button)
 
-        # Connect the button click signal to the `get_completed_batch_jobs` signal
+        # Connect the button click signal to the "get_completed_batch_jobs" signal
         self.get_jobs_button.clicked.connect(self.get_completed_batch_jobs.emit)
 
         # Set the layout to the groupbox
@@ -41,3 +39,22 @@ class BatchesPanel(QWidget):
 
         # Set the layout to the panel
         self.setLayout(layout)
+
+    def completed_job_list_updated(self, completed_batches):
+        """
+        Updates the batch dropdown with the list of completed batch jobs.
+
+        Args:
+            completed_batches (list of str): A list of completed batch job IDs.
+        """
+        print("Completed job list updated:", completed_batches)
+
+        # Clear the current items in the dropdown
+        self.batch_dropdown.clear()
+
+        # Add new items to the dropdown if the completed_batches list is not empty
+        if completed_batches:
+            self.batch_dropdown.addItems(completed_batches)
+        else:
+            # If the list is empty, add a placeholder to indicate no jobs
+            self.batch_dropdown.addItem("No completed jobs available")

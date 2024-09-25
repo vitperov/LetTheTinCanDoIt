@@ -8,6 +8,7 @@ from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the 
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
+    completed_job_list_updated = pyqtSignal(list)  # New signal to emit completed batches list
 
     def __init__(self):
         super().__init__()
@@ -54,7 +55,7 @@ class ProjectGPTModel(QObject):
         keepFilenamesRequest = (
             "Please return the content of each file with its corresponding file path. "
             "Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. "
-            "The code block should use triple backticks (```) without specifying a language. "
+            "The code block should not contain a language as first string. "
             "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
             "Do not modify or omit the file paths.\n"
         )
@@ -206,13 +207,10 @@ class ProjectGPTModel(QObject):
 
             # Emit the result string
             self.response_generated.emit(result_str)
+            
+            # Emit the completed_batches list
+            self.completed_job_list_updated.emit(self.completed_batches)
 
         except Exception as e:
             error_message = f"Error retrieving completed batch jobs: {str(e)}"
             self.response_generated.emit(error_message)
-
-    def get_completed_jobs(self):
-        """
-        Returns the list of completed batch job IDs.
-        """
-        return self.completed_batches
