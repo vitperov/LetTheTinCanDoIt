@@ -1,10 +1,12 @@
 import os
 import re
+from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the FileSyntaxCorrector
 
 class ResponseFilesParser:
     def __init__(self, project_dir, chosen_files):
         self.project_dir = project_dir
         self.chosen_files = chosen_files
+        self.syntax_corrector = FileSyntaxCorrector()  # Instantiate the FileSyntaxCorrector
 
     def parse_response_and_update_files_on_disk(self, response):
         """
@@ -26,8 +28,8 @@ class ResponseFilesParser:
             file_content = self.extract_content_for_file(response, relative_path)
 
             if file_content:
-                # Replace the [BACKTICK] marker with actual backticks
-                file_content = file_content.replace("[BACKTICK]", "`")
+                # Fix the file content after decoding using the FileSyntaxCorrector
+                file_content = self.syntax_corrector.fix_after_decoding(file_content)
                 
                 # Update the file on disk with the new content
                 self.update_file_on_disk(relative_path, file_content)

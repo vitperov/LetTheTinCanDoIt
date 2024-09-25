@@ -4,6 +4,7 @@ import os
 import json
 import tempfile
 from modules.model.ResponseFilesParser import ResponseFilesParser
+from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the new class
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
@@ -15,6 +16,8 @@ class ProjectGPTModel(QObject):
         self.client = OpenAI(api_key=self.api_key)
         self.project_dir = None
         self.chosen_files = []
+        self.completed_batches = []  # List to store completed job IDs
+        self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
@@ -43,11 +46,18 @@ class ProjectGPTModel(QObject):
                 with open(file_path, 'r') as file:
                     content = file.read()
 
-                    content = content.replace("`", "[BACKTICK]")
+                    # Correct the file content syntax using FileSyntaxCorrector
+                    content = self.syntax_corrector.prepare_for_encoding(content)
 
                 file_contents.append(f"**{relative_path}**\n```\n{content}\n```\n")
 
-        keepFilenamesRequest = "Please return the content of each file with its corresponding file path. Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. The code block should use triple backticks (```) without specifying a language. The content inside the code block should be the file content only, with no additional comments, explanations, or markers. Do not modify or omit the file paths.\n"
+        keepFilenamesRequest = (
+            "Please return the content of each file with its corresponding file path. "
+            "Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. "
+            "The code block should use triple backticks (```) without specifying a language. "
+            "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
+            "Do not modify or omit the file paths.\n"
+        )
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
 
@@ -127,7 +137,6 @@ class ProjectGPTModel(QObject):
                 }
             }
            
-
             # Ensure the "CWD/tmp/" directory exists
             tmp_dir = os.path.join(os.getcwd(), 'tmp')
             os.makedirs(tmp_dir, exist_ok=True)  # Create the directory if it doesn't exist
@@ -139,8 +148,6 @@ class ProjectGPTModel(QObject):
 
             print(f"Batch request JSON saved at: {temp_file_path}")
             
-            # Ugly batch interface, you need file descriptor and need to create temporary file instead of just passing content directly
-
             # Upload the file to the API
             with open(temp_file_path, "rb") as file_to_upload:
                 batch_input_file = self.client.files.create(
@@ -173,7 +180,39 @@ class ProjectGPTModel(QObject):
             self.response_generated.emit(error_message)
 
     def get_completed_batch_jobs(self):
-        # Stub method to handle the retrieval of completed batch jobs
-        print("Retrieving completed batch jobs...")
-        jobs = self.client.batches.list()
-        self.response_generated.emit(str(jobs))
+        try:
+            # Retrieve the jobs from the batch API
+            jobs = self.client.batches.list()
+
+            # Create an empty dictionary to store the results
+            batch_dict = {}
+
+            # Iterate over each batch object in the retrieved list
+            for batch in jobs.data:
+                batch_id = batch.id
+                status = batch.status
+                description = batch.metadata.get('description', 'No description')
+
+                # If the job is completed and not yet in the completed_batches list, add it
+                if status == 'completed' and batch_id not in self.completed_batches:
+                    self.completed_batches.append(batch_id)
+
+                # Populate the dictionary with id as key, and status/description as values
+                batch_dict[batch_id] = {'status': status, 'description': description}
+
+            # Convert the dictionary into the desired string format
+            result_str = "\n".join([f"* {batch_id} -> {info['status']} // {info['description']};"
+                                    for batch_id, info in batch_dict.items()])
+
+            # Emit the result string
+            self.response_generated.emit(result_str)
+
+        except Exception as e:
+            error_message = f"Error retrieving completed batch jobs: {str(e)}"
+            self.response_generated.emit(error_message)
+
+    def get_completed_jobs(self):
+        """
+        Returns the list of completed batch job IDs.
+        """
+        return self.completed_batches
