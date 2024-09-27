@@ -98,7 +98,7 @@ class ProjectGPTModel(QObject):
             print("------------ UPDATE FILES ------")
 
             # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(self.project_dir, self.chosen_files)
+            parser = ResponseFilesParser(self.project_dir)
             parser.parse_response_and_update_files_on_disk(generated_response)
 
             self.response_generated.emit(generated_response)
@@ -245,14 +245,11 @@ class ProjectGPTModel(QObject):
             if not os.path.exists(proj_dir):
                 print("Project directory from batch custom_id field '" + str(proj_dir) + "' was not found. Using patch from GUI: " + str(self.project_dir))
                 proj_dir = self.project_dir
-            
-            if (proj_dir is None) or (not os.path.exists(proj_dir)):
-                print("Project directory: " + str(proj_dir) +" was not found. Can't modify files")
                 return
 
             # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(self.project_dir, self.chosen_files)
-            parser.parse_response_and_update_files_on_disk(generated_response)
+            parser = ResponseFilesParser(proj_dir)
+            parser.parse_response_and_update_files_on_disk(response)
 
         except Exception as e:
             error_message = f"Error retrieving batch results: {str(e)}"

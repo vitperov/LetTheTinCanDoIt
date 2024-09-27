@@ -84,9 +84,9 @@ class RequestPanel(QWidget):
         description_text = self.description_input.text()
 
         # Pass the description text as the last parameter of the send_batch_request_signal
-        self.handle_request(self.send_batch_request_signal, description_text)
+        self.handle_request(self.send_batch_request_signal, description_text, True)
 
-    def handle_request(self, signal, description_text=''):
+    def handle_request(self, signal, description_text='', is_batch=False):
         request_text = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
         if request_text:
             # Clear the input field
@@ -99,7 +99,7 @@ class RequestPanel(QWidget):
             selected_model = self.model_dropdown.currentText()
 
             # Emit the signal with description if it's for the batch request, else emit without description
-            if signal == self.send_batch_request_signal:
+            if is_batch:
                 signal.emit(selected_model, role_description, request_text, description_text)
             else:
                 signal.emit(selected_model, role_description, request_text)
