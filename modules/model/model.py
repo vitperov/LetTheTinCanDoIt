@@ -254,3 +254,41 @@ class ProjectGPTModel(QObject):
         except Exception as e:
             error_message = f"Error retrieving batch results: {str(e)}"
             self.response_generated.emit(error_message)
+            
+            
+    def delete_batch_job(self, batch_id):
+        # Delete batch job (stub implementation)
+        print(f"Deleting batch job with ID: {batch_id}")
+        
+        try:
+            # Find the batch in the stored jobs list
+            if self.jobs is None:
+                raise ValueError("No jobs available. Please call get_completed_batch_jobs first.")
+
+            batch = next((job for job in self.jobs.data if job.id == batch_id), None)
+
+            if not batch:
+                raise ValueError(f"Batch job with ID {batch_id} not found.")
+
+            input_file_id = batch.input_file_id
+            output_file_id = batch.output_file_id
+
+            print("Deleting job file " + input_file_id)
+            self.client.files.delete(input_file_id)
+
+            print("Deleting job file " + output_file_id)
+            self.client.files.delete(output_file_id)
+            
+            try:
+                print("Deleting job " + batch_id)
+                self.client.batches.delete(output_file_id)
+            except Exception:
+                error_message = f"Files are deleted, but the batch can't be deleted since openAI API currenlty doesn't support it"
+                self.response_generated.emit(error_message)
+            
+            print("Done")
+
+            
+        except Exception as e:
+            error_message = f"Error deleting batch results: {str(e)}"
+            self.response_generated.emit(error_message)

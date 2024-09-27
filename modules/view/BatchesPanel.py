@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QGroupBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QGroupBox, QHBoxLayout
 from PyQt5.QtCore import pyqtSignal
 
 class BatchesPanel(QWidget):
@@ -7,6 +7,9 @@ class BatchesPanel(QWidget):
 
     # Signal to trigger the action of fetching results for a selected batch job
     get_results = pyqtSignal(str)
+
+    # Signal to trigger the action of deleting a selected batch job
+    delete_job = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -28,14 +31,28 @@ class BatchesPanel(QWidget):
         self.batch_dropdown = QComboBox()  # Dropdown for displaying batch jobs
         groupbox_layout.addWidget(self.batch_dropdown)
 
+        # Horizontal layout to hold both "Get Results" and "Delete Job" buttons
+        buttons_layout = QHBoxLayout()
+
+        # "Get Results" button
         self.get_results_button = QPushButton("Get Results")
-        groupbox_layout.addWidget(self.get_results_button)
+        buttons_layout.addWidget(self.get_results_button)
+
+        # "Delete Job" button
+        self.delete_job_button = QPushButton("Delete Job")
+        buttons_layout.addWidget(self.delete_job_button)
+
+        # Add the buttons layout to the groupbox layout
+        groupbox_layout.addLayout(buttons_layout)
 
         # Connect the button click signal to the "get_completed_batch_jobs" signal
         self.get_jobs_button.clicked.connect(self.get_completed_batch_jobs.emit)
 
         # Connect the "Get Results" button to the method that emits the get_results signal
-        self.get_results_button.clicked.connect(self.emit_selected_batch_id)
+        self.get_results_button.clicked.connect(self.emit_selected_batch_id_for_results)
+
+        # Connect the "Delete Job" button to the method that emits the delete_job signal
+        self.delete_job_button.clicked.connect(self.emit_selected_batch_id_for_deletion)
 
         # Set the layout to the groupbox
         batch_groupbox.setLayout(groupbox_layout)
@@ -59,13 +76,13 @@ class BatchesPanel(QWidget):
         self.batch_dropdown.clear()
 
         # Add new items to the dropdown if the completed_batches list is not empty
-        if completed_batches:
+        if (completed_batches):
             self.batch_dropdown.addItems(completed_batches)
         else:
-            # If the list is empty, add a placeholder to indicate no jobs
+            # If the list is empty add a placeholder to indicate no jobs
             self.batch_dropdown.addItem("No completed jobs available")
 
-    def emit_selected_batch_id(self):
+    def emit_selected_batch_id_for_results(self):
         """
         Emits the 'get_results' signal with the currently selected batch job ID.
         """
@@ -75,3 +92,14 @@ class BatchesPanel(QWidget):
         # Emit the 'get_results' signal with the selected batch job ID
         if selected_batch_id != "No completed jobs available":
             self.get_results.emit(selected_batch_id)
+
+    def emit_selected_batch_id_for_deletion(self):
+        """
+        Emits the 'delete_job' signal with the currently selected batch job ID.
+        """
+        # Get the currently selected batch job ID from the dropdown
+        selected_batch_id = self.batch_dropdown.currentText()
+
+        # Emit the 'delete_job' signal with the selected batch job ID
+        if selected_batch_id != "No completed jobs available":
+            self.delete_job.emit(selected_batch_id)
