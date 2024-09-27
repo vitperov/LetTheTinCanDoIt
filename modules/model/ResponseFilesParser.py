@@ -1,10 +1,10 @@
 import os
-import re
+from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the FileSyntaxCorrector
 
 class ResponseFilesParser:
-    def __init__(self, project_dir, chosen_files):
+    def __init__(self, project_dir):
         self.project_dir = project_dir
-        self.chosen_files = chosen_files
+        self.syntax_corrector = FileSyntaxCorrector()  # Instantiate the FileSyntaxCorrector
 
     def parse_response_and_update_files_on_disk(self, response):
         """
@@ -12,7 +12,7 @@ class ResponseFilesParser:
         Assumes file contents in the response are provided within code blocks.
         """
         print("Parsing response to update files...")
-        
+
         # Extract the filenames from the response
         filenames_in_response = self.extract_filenames_from_response(response)
 
@@ -26,26 +26,41 @@ class ResponseFilesParser:
             file_content = self.extract_content_for_file(response, relative_path)
 
             if file_content:
-                # Replace the [BACKTICK] marker with actual backticks
-                file_content = file_content.replace("[BACKTICK]", "`")
-                
+                # Fix the file content after decoding using the FileSyntaxCorrector
+                file_content = self.syntax_corrector.fix_after_decoding(file_content)
+
                 # Update the file on disk with the new content
                 self.update_file_on_disk(relative_path, file_content)
 
     def extract_filenames_from_response(self, response):
         """
-        Tries to extract filenames from the response. Assumes filenames are listed in the response,
-        and they match the filenames in the chosen_files list.
+        Extracts potential filenames from the response by finding patterns like **filename**.
+        It assumes filenames are enclosed in double asterisks (**) and can later be filtered.
         """
         extracted_files = []
-        
-        # We'll check if the filenames in chosen_files appear in the response, possibly wrapped in **
-        for relative_path in self.chosen_files:
-            # Escape the file path to handle special regex characters and allow for ** wrapping
-            pattern = rf"\*\*{re.escape(relative_path)}\*\*"
-            if re.search(pattern, response):
-                extracted_files.append(relative_path)
-        
+        start_index = 0
+
+        while True:
+            # Find the next occurrence of **
+            start_marker = response.find("**", start_index)
+            if start_marker == -1:
+                break  # No more ** found, exit the loop
+
+            # Find the closing ** for the file name
+            end_marker = response.find("**", start_marker + 2)
+            if end_marker == -1:
+                break  # No closing **, exit the loop
+
+            # Extract the potential filename
+            potential_filename = response[start_marker + 2:end_marker].strip()
+
+            # Add it to the list of extracted files
+            if potential_filename:  # Ensure we don't add empty strings
+                extracted_files.append(potential_filename)
+
+            # Move the start index forward to search for the next filename
+            start_index = end_marker + 2
+
         return extracted_files
 
     def extract_content_for_file(self, response, relative_path):
