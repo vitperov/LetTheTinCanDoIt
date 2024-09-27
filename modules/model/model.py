@@ -56,6 +56,8 @@ class ProjectGPTModel(QObject):
         keepFilenamesRequest = (
             "Please return the content of each file with its corresponding file path. "
             "Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. "
+            "Do not use ### before file path. "
+            "Do not insert any strings between file path and it's content. "
             "The code block should not contain a language as first string. "
             "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
             "Do not modify or omit the file paths.\n"
@@ -105,7 +107,7 @@ class ProjectGPTModel(QObject):
             error_message = f"Error generating response: {str(e)}"
             self.response_generated.emit(error_message)
             
-    def generate_batch_response(self, model, role_string, full_request):
+    def generate_batch_response(self, model, role_string, full_request, description):
         try:
             # Construct the messages for the GPT model, with the role_string as the system role
             file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
@@ -156,7 +158,7 @@ class ProjectGPTModel(QObject):
                 endpoint="/v1/chat/completions",
                 completion_window="24h",
                 metadata={
-                    "description": "nightly eval job _"
+                    "description": description  # Use the provided description
                 }
             )
 
