@@ -16,6 +16,7 @@ class ProjectGPTController(QObject):
 
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
+        self.model.status_changed.connect(self.view.status_bar.update_status)  # Connect the new signal
         self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
         project_dir, _ = self.view.left_panel.get_checked_files()
