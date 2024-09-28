@@ -16,6 +16,10 @@ class ProjectGPTController(QObject):
 
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
+        self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
+
+        project_dir, _ = self.view.left_panel.get_checked_files()
+        self.view.top_panel.update_directory(project_dir)
 
     def handle_send_request(self, model, role_string, full_request):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
@@ -28,13 +32,10 @@ class ProjectGPTController(QObject):
         self.model.generate_batch_response(model, role_string, full_request_template, description)
 
     def handle_get_completed_batch_jobs(self):
-        # Handle the retrieval of completed batch jobs
         self.model.get_completed_batch_jobs()
 
     def handle_get_batch_results(self, batch_id):
-        # Handle the retrieval of results for a specific batch job
         self.model.get_batch_results(batch_id)
 
     def handle_delete_batch_job(self, batch_id):
-        # Handle the deletion of a specific batch job
         self.model.delete_batch_job(batch_id)
