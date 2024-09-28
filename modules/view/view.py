@@ -3,6 +3,8 @@ from PyQt5.QtCore import Qt
 from modules.view.FilesPanel import FilesPanel
 from modules.view.BatchesPanel import BatchesPanel
 from modules.view.RequestPanel import RequestPanel
+from modules.view.TopPanel import TopPanel  # Import the new TopPanel
+from modules.view.StatusBar import StatusBar  # Import the new StatusBar
 
 class ProjectGPTView(QWidget):
     def __init__(self, available_models):
@@ -11,9 +13,17 @@ class ProjectGPTView(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        main_layout = QHBoxLayout()
+        # Main layout for the entire view
+        main_layout = QVBoxLayout()
+
+        # Add the TopPanel at the top
+        self.top_panel = TopPanel()  # Create the TopPanel instance
+        main_layout.addWidget(self.top_panel)
+
+        # Create a splitter for the main middle section
         splitter = QSplitter(Qt.Horizontal)
 
+        # Left side layout with FilesPanel and BatchesPanel
         left_side_layout = QVBoxLayout()
         self.left_panel = FilesPanel()
         self.left_panel.setMinimumWidth(200)
@@ -25,6 +35,7 @@ class ProjectGPTView(QWidget):
         left_side_widget.setLayout(left_side_layout)
         splitter.addWidget(left_side_widget)
 
+        # Right side layout with RequestPanel and Response display
         right_panel_layout = QVBoxLayout()
         self.request_panel = RequestPanel(self.available_models)
         right_panel_layout.addWidget(self.request_panel)
@@ -42,15 +53,26 @@ class ProjectGPTView(QWidget):
         right_panel.setMinimumWidth(300)
         splitter.addWidget(right_panel)
 
+        # Set sizes for the splitter panels
         splitter.setSizes([250, 800])
         splitter.setHandleWidth(1)
         splitter.setChildrenCollapsible(False)
+
+        # Add the splitter to the main layout
         main_layout.addWidget(splitter)
 
+        # Add the StatusBar at the bottom
+        self.status_bar = StatusBar()  # Create the StatusBar instance
+        main_layout.addWidget(self.status_bar)
+
+        # Set the layout and window properties
         self.resize(1000, 800)
         self.setLayout(main_layout)
         self.setWindowTitle('ChatGPT Application')
         self.show()
 
     def update_response(self, response):
+        """
+        Updates the response display in the UI.
+        """
         self.response_display.setText(response)
