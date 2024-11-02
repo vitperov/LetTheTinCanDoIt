@@ -59,21 +59,25 @@ class BatchesPanel(QWidget):
         # Set the layout to the panel
         self.setLayout(layout)
 
-    def completed_job_list_updated(self, completed_batches):
+    def completed_job_list_updated(self, completed_batches, completed_descriptions):
         """
         Updates the batch dropdown with the list of completed batch jobs.
 
         Args:
             completed_batches (list of str): A list of completed batch job IDs.
+            completed_descriptions (list of str): A list of completed job descriptions.
         """
-        print("Completed job list updated:", completed_batches)
+        print("Completed job list updated:", completed_batches, completed_descriptions)
 
         # Clear the current items in the dropdown
         self.batch_dropdown.clear()
 
-        # Add new items to the dropdown if the completed_batches list is not empty
-        if completed_batches:
-            self.batch_dropdown.addItems(completed_batches)
+        # Add new items to the dropdown with descriptions as shown text
+        if completed_batches and completed_descriptions and len(completed_batches) == len(completed_descriptions):
+            for batch_id, description in zip(completed_batches, completed_descriptions):
+                index = self.batch_dropdown.count()  # Get the current count to be used as an index
+                self.batch_dropdown.addItem(description)  # Add the description as visible item text
+                self.batch_dropdown.setItemData(index, batch_id)  # Store batch_id as the data associated with this item
         else:
             # If the list is empty add a placeholder to indicate no jobs
             self.batch_dropdown.addItem("No completed jobs available")
@@ -82,20 +86,26 @@ class BatchesPanel(QWidget):
         """
         Emits the 'get_results' signal with the currently selected batch job ID.
         """
-        # Get the currently selected batch job ID from the dropdown
-        selected_batch_id = self.batch_dropdown.currentText()
+        # Get the currently selected index first
+        selected_index = self.batch_dropdown.currentIndex()
 
-        # Emit the 'get_results' signal with the selected batch job ID
-        if selected_batch_id != "No completed jobs available":
+        # Retrieve the batch ID using the selected index data
+        selected_batch_id = self.batch_dropdown.itemData(selected_index)
+
+        # Emit the 'get_results' signal if selected_batch_id is not None and not the placeholder text
+        if selected_batch_id is not None:
             self.get_results.emit(selected_batch_id)
 
     def emit_selected_batch_id_for_deletion(self):
         """
         Emits the 'delete_job' signal with the currently selected batch job ID.
         """
-        # Get the currently selected batch job ID from the dropdown
-        selected_batch_id = self.batch_dropdown.currentText()
+        # Get the currently selected index first
+        selected_index = self.batch_dropdown.currentIndex()
 
-        # Emit the 'delete_job' signal with the selected batch job ID
-        if selected_batch_id != "No completed jobs available":
+        # Retrieve the batch ID using the selected index data
+        selected_batch_id = self.batch_dropdown.itemData(selected_index)
+
+        # Emit the 'delete_job' signal if selected_batch_id is not None and not the placeholder text
+        if selected_batch_id is not None:
             self.delete_job.emit(selected_batch_id)

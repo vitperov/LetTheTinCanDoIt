@@ -8,7 +8,7 @@ from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the 
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
-    completed_job_list_updated = pyqtSignal(list)  # Signal to emit completed batches list
+    completed_job_list_updated = pyqtSignal(list, list)  # Signal to emit completed batches list along with descriptions
     status_changed = pyqtSignal(str)  # Signal to emit status updates
 
     def __init__(self):
@@ -20,12 +20,13 @@ class ProjectGPTModel(QObject):
             "o1-mini",
             "gpt-4o-2024-08-06",
             "gpt-4o-2024-05-13"
-            ]
+        ]
         self.api_key = self.load_api_key()  # Load the API key from the settings file
         self.client = OpenAI(api_key=self.api_key)
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
+        self.completed_jobs_descriptions = []  # List to store completed job descriptions
         self.jobs = None  # Variable to store jobs list
         self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
 
@@ -90,7 +91,7 @@ class ProjectGPTModel(QObject):
             print("Role: " + role_string)
             print("Request: " + full_request_with_files)
             print("--------------")
-            
+
             self.status_changed.emit("Waiting for the response ...")
 
             # Generate response using the selected model
@@ -101,13 +102,13 @@ class ProjectGPTModel(QObject):
 
             # Extract the generated response from the API result
             generated_response = response.choices[0].message.content
-            
+
             print("Response choices:" + str(len(response.choices)))
-            
+
             print("------------ USAGE ------")
             print(response.usage)
             self.status_changed.emit(str(response.usage))
-            
+
             print("------------ UPDATE FILES ------")
 
             # Create an instance of ResponseFilesParser and call the parsing function
@@ -119,15 +120,15 @@ class ProjectGPTModel(QObject):
         except Exception as e:
             error_message = f"Error generating response: {str(e)}"
             self.response_generated.emit(error_message)
-            
+
     def generate_batch_response(self, model, role_string, full_request, description):
         try:
             self.status_changed.emit("Uploading batch files ...")
-            
+
             # Construct the messages for the GPT model, with the role_string as the system role
             file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
             full_request_with_files = file_content_text + full_request
-            
+
             print("==== Request text ====")
             print(full_request_with_files)
             print("======================")
@@ -148,7 +149,7 @@ class ProjectGPTModel(QObject):
                     "messages": messages,  # The constructed messages
                 }
             }
-           
+
             # Ensure the "CWD/tmp/" directory exists
             tmp_dir = os.path.join(os.getcwd(), 'tmp')
             os.makedirs(tmp_dir, exist_ok=True)  # Create the directory if it doesn't exist
@@ -159,7 +160,7 @@ class ProjectGPTModel(QObject):
                 temp_file_path = temp_file.name
 
             print(f"Batch request JSON saved at: {temp_file_path}")
-            
+
             # Upload the file to the API
             with open(temp_file_path, "rb") as file_to_upload:
                 batch_input_file = self.client.files.create(
@@ -170,7 +171,7 @@ class ProjectGPTModel(QObject):
             # Get the file ID from the uploaded file
             batch_input_file_id = batch_input_file.id
             print("Batch input file ID: " + str(batch_input_file_id))
-            
+
             self.status_changed.emit("Waiting for the response ...")
 
             # Create a batch job using the uploaded file
@@ -188,7 +189,7 @@ class ProjectGPTModel(QObject):
 
             # Emit the batch job as the generated response (for testing)
             self.response_generated.emit(str(batch_obj))
-            
+
             self.status_changed.emit("Done")
 
         except Exception as e:
@@ -202,6 +203,7 @@ class ProjectGPTModel(QObject):
 
             batch_dict = {}
             self.completed_batches = []
+            self.completed_jobs_descriptions = []
 
             # Iterate over each batch object in the retrieved list
             for batch in self.jobs.data:
@@ -211,6 +213,7 @@ class ProjectGPTModel(QObject):
 
                 if (status == 'completed' or True) and batch_id not in self.completed_batches:
                     self.completed_batches.append(batch_id)
+                    self.completed_jobs_descriptions.append(description)
 
                 batch_dict[batch_id] = {'status': status, 'description': description}
 
@@ -220,20 +223,20 @@ class ProjectGPTModel(QObject):
 
             # Emit the result string
             self.response_generated.emit(result_str)
-            
-            # Emit the completed_batches list
-            self.completed_job_list_updated.emit(self.completed_batches)
-            
+
+            # Emit the completed_batches list and their descriptions
+            self.completed_job_list_updated.emit(self.completed_batches, self.completed_jobs_descriptions)
+
             self.status_changed.emit("Done")
 
         except Exception as e:
             error_message = f"Error retrieving completed batch jobs: {str(e)}"
             self.response_generated.emit(error_message)
-    
+
     def get_batch_results(self, batch_id):
         """
         Retrieves the results for a specific batch job.
-        
+
         Args:
             batch_id (str): The batch job ID for which to fetch the results.
         """
@@ -246,18 +249,18 @@ class ProjectGPTModel(QObject):
 
             if not batch:
                 raise ValueError(f"Batch job with ID {batch_id} not found.")
-                
+
             self.status_changed.emit("Getting batch results ...")
 
             # Extract the description and output_file_id
             description = batch.metadata.get('description', 'No description')
             print("Description: " + description)
             output_file_id = batch.output_file_id
-            
+
             file_response = self.client.files.content(output_file_id).text
             data = json.loads(file_response)
 
-            proj_dir = data['custom_id'] # We store project dir as custom_id
+            proj_dir = data['custom_id']  # We store project dir as custom_id
             print("Proj dir: " + proj_dir)
 
             # Extract choices[0] as response
@@ -265,7 +268,6 @@ class ProjectGPTModel(QObject):
 
             # Emit the results
             self.response_generated.emit(response)
-
 
             if not os.path.exists(proj_dir):
                 print("Project directory from batch custom_id field '" + str(proj_dir) + "' was not found. Using patch from GUI: " + str(self.project_dir))
@@ -275,19 +277,18 @@ class ProjectGPTModel(QObject):
             # Create an instance of ResponseFilesParser and call the parsing function
             parser = ResponseFilesParser(proj_dir)
             parser.parse_response_and_update_files_on_disk(response)
-            
+
             usage = str(data['response']['body']['usage'])
             self.status_changed.emit(usage)
 
         except Exception as e:
             error_message = f"Error retrieving batch results: {str(e)}"
             self.response_generated.emit(error_message)
-            
-            
+
     def delete_batch_job(self, batch_id):
         # Delete batch job (stub implementation)
         print(f"Deleting batch job with ID: {batch_id}")
-        
+
         try:
             # Find the batch in the stored jobs list
             if self.jobs is None:
@@ -306,17 +307,16 @@ class ProjectGPTModel(QObject):
 
             print("Deleting job file " + output_file_id)
             self.client.files.delete(output_file_id)
-            
+
             try:
                 print("Deleting job " + batch_id)
                 self.client.batches.delete(output_file_id)
             except Exception:
-                error_message = f"Files are deleted, but the batch can't be deleted since openAI API currenlty doesn't support it"
+                error_message = f"Files are deleted, but the batch can't be deleted since openAI API currently doesn't support it"
                 self.response_generated.emit(error_message)
-            
+
             print("Done")
 
-            
         except Exception as e:
             error_message = f"Error deleting batch results: {str(e)}"
             self.response_generated.emit(error_message)
