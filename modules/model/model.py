@@ -3,6 +3,7 @@ from openai import OpenAI
 import os
 import json
 import tempfile
+from datetime import datetime
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the new class
 
@@ -218,7 +219,9 @@ class ProjectGPTModel(QObject):
                 batch_dict[batch_id] = {'status': status, 'description': description}
 
             # Convert the dictionary into the desired string format
-            result_str = "\n".join([f"* {batch_id} -> {info['status']} // {info['description']};"
+            current_time = datetime.now().strftime("%H:%M:%S")
+            result_str = f"Current time: {current_time}\n"
+            result_str += "\n".join([f"* {batch_id} -> {info['status']} // {info['description']};"
                                     for batch_id, info in batch_dict.items()])
 
             # Emit the result string
