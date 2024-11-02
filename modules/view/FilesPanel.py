@@ -10,6 +10,7 @@ class FilesPanel(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.project_dir = self.load_last_project_directory()
         self.init_ui()
 
     def init_ui(self):
@@ -19,7 +20,6 @@ class FilesPanel(QWidget):
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
         self.tree_view.setModel(self.file_system_model)
-        self.project_dir = self.load_last_project_directory()
         self.file_system_model.setRootPath(self.project_dir)
         self.tree_view.setRootIndex(self.file_system_model.index(self.project_dir))
         self.tree_view.hideColumn(1)
@@ -30,7 +30,7 @@ class FilesPanel(QWidget):
         self.setLayout(main_layout)
 
     def choose_directory(self):
-        selected_dir = QFileDialog.getExistingDirectory(self, "Choose Project Directory", os.path.expanduser('~'))
+        selected_dir = QFileDialog.getExistingDirectory(self, "Choose Project Directory", self.project_dir)
         if selected_dir:
             self.file_system_model.setRootPath(selected_dir)
             self.tree_view.setRootIndex(self.file_system_model.index(selected_dir))
