@@ -189,12 +189,11 @@ class ProjectGPTModel(QObject):
 
     def get_completed_batch_jobs(self):
         try:
-            # Retrieve the jobs from the batch API
             self.status_changed.emit("Getting batches list ...")
-            self.jobs = self.client.batches.list(limit=10)  # Store the jobs in self.jobs
+            self.jobs = self.client.batches.list(limit=7)  # Store the jobs in self.jobs
 
-            # Create an empty dictionary to store the results
             batch_dict = {}
+            self.completed_batches = []
 
             # Iterate over each batch object in the retrieved list
             for batch in self.jobs.data:
@@ -202,11 +201,9 @@ class ProjectGPTModel(QObject):
                 status = batch.status
                 description = batch.metadata.get('description', 'No description')
 
-                # If the job is completed and not yet in the completed_batches list, add it
                 if (status == 'completed' or True) and batch_id not in self.completed_batches:
                     self.completed_batches.append(batch_id)
 
-                # Populate the dictionary with id as key, and status/description as values
                 batch_dict[batch_id] = {'status': status, 'description': description}
 
             # Convert the dictionary into the desired string format

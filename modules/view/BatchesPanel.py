@@ -34,18 +34,14 @@ class BatchesPanel(QWidget):
         # Horizontal layout to hold both "Get Results" and "Delete Job" buttons
         buttons_layout = QHBoxLayout()
 
-        # "Get Results" button
         self.get_results_button = QPushButton("Get Results")
         buttons_layout.addWidget(self.get_results_button)
 
-        # "Delete Job" button
         self.delete_job_button = QPushButton("Delete Job")
         buttons_layout.addWidget(self.delete_job_button)
 
-        # Add the buttons layout to the groupbox layout
         groupbox_layout.addLayout(buttons_layout)
 
-        # Connect the button click signal to the "get_completed_batch_jobs" signal
         self.get_jobs_button.clicked.connect(self.get_completed_batch_jobs.emit)
 
         # Connect the "Get Results" button to the method that emits the get_results signal
@@ -76,7 +72,7 @@ class BatchesPanel(QWidget):
         self.batch_dropdown.clear()
 
         # Add new items to the dropdown if the completed_batches list is not empty
-        if (completed_batches):
+        if completed_batches:
             self.batch_dropdown.addItems(completed_batches)
         else:
             # If the list is empty add a placeholder to indicate no jobs
