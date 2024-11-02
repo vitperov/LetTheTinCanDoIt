@@ -119,6 +119,10 @@ class ProjectGPTModel(QObject):
             # Construct the messages for the GPT model, with the role_string as the system role
             file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
             full_request_with_files = file_content_text + full_request
+            
+            print("==== Request text ====")
+            print(full_request_with_files)
+            print("======================")
 
             # Define the request body as per the API format
             messages = [
