@@ -62,6 +62,7 @@ class ProjectGPTModel(QObject):
             "The code block should not contain a language as first string. "
             "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
             "Do not modify or omit the file paths.\n"
+            "Don't tell me how I should modify the files, give me full content instead, so that I can just paste it over the previous content.\n"
         )
 
         return "\n".join(file_contents) + "\n" + keepFilenamesRequest
