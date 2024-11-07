@@ -22,15 +22,15 @@ class ProjectGPTController(QObject):
         project_dir, _ = self.view.left_panel.get_checked_files()
         self.view.top_panel.update_directory(project_dir)
 
-    def handle_send_request(self, model, role_string, full_request):
+    def handle_send_request(self, model, role_string, full_request, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.generate_response(model, role_string, full_request)
+        self.model.generate_response(model, role_string, full_request, editor_mode)
 
-    def handle_send_batch_request(self, model, role_string, full_request_template, description):
+    def handle_send_batch_request(self, model, role_string, full_request_template, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.generate_batch_response(model, role_string, full_request_template, description)
+        self.model.generate_batch_response(model, role_string, full_request_template, description, editor_mode)
 
     def handle_get_completed_batch_jobs(self):
         self.model.get_completed_batch_jobs()

@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup
 from PyQt5.QtCore import pyqtSignal
 from modules.view.RoleSelector import RoleSelector
 
 class RequestPanel(QWidget):
-    send_request_signal = pyqtSignal(str, str, str)  # Signal for sending a single request (model, role, request)
-    send_batch_request_signal = pyqtSignal(str, str, str, str)  # Signal for sending a batch request with description (model, role, request, description)
+    send_request_signal = pyqtSignal(str, str, str, bool)  # Signal for sending a single request with editorMode
+    send_batch_request_signal = pyqtSignal(str, str, str, str, bool)  # Signal for sending a batch request with description and editorMode
 
     def __init__(self, available_models):
         super().__init__()
@@ -27,6 +27,25 @@ class RequestPanel(QWidget):
         # Set layout to the groupbox
         parameters_groupbox.setLayout(parameters_layout)
         layout.addWidget(parameters_groupbox)
+
+        # Create radio buttons for mode selection
+        mode_groupbox = QGroupBox("Mode")
+        mode_layout = QHBoxLayout()  # Changed to QHBoxLayout to place buttons in one row
+
+        self.mode_button_group = QButtonGroup()
+
+        self.editor_mode_button = QRadioButton("Editor mode")
+        self.editor_mode_button.setChecked(True)  # Default selection
+        self.answer_mode_button = QRadioButton("Answer mode (do not modify my files)")
+
+        self.mode_button_group.addButton(self.editor_mode_button)
+        self.mode_button_group.addButton(self.answer_mode_button)
+
+        mode_layout.addWidget(self.editor_mode_button)
+        mode_layout.addWidget(self.answer_mode_button)
+
+        mode_groupbox.setLayout(mode_layout)
+        layout.addWidget(mode_groupbox)
 
         # ---------- Request GroupBox ----------
         request_groupbox = QGroupBox("Request")
@@ -98,8 +117,11 @@ class RequestPanel(QWidget):
             # Get the selected model from the dropdown
             selected_model = self.model_dropdown.currentText()
 
+            # Check which mode is selected
+            editor_mode = self.editor_mode_button.isChecked()
+
             # Emit the signal with description if it's for the batch request, else emit without description
             if is_batch:
-                signal.emit(selected_model, role_description, request_text, description_text)
+                signal.emit(selected_model, role_description, request_text, description_text, editor_mode)
             else:
-                signal.emit(selected_model, role_description, request_text)
+                signal.emit(selected_model, role_description, request_text, editor_mode)

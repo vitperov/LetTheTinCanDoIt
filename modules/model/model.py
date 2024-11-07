@@ -44,7 +44,7 @@ class ProjectGPTModel(QObject):
             return data.get('api_key', '')
         return ''
 
-    def make_file_content_text(self, project_dir, chosen_files):
+    def make_file_content_text(self, project_dir, chosen_files, editorMode):
         if not chosen_files:
             return ""
 
@@ -74,13 +74,17 @@ class ProjectGPTModel(QObject):
             "Don't tell me how I should modify the files, give me full content instead, so that I can just paste it over the previous content.\n"
         )
 
-        return "\n".join(file_contents) + "\n" + keepFilenamesRequest
+        out = "\n".join(file_contents) 
+        if editorMode:
+            out = out + "\n" + keepFilenamesRequest
+            
+        return out
 
-    def generate_response(self, model, role_string, full_request):
+    def generate_response(self, model, role_string, full_request, editor_mode):
         try:
             self.status_changed.emit("Sending the request ...")
             # Construct the messages for the GPT model, with the role_string as the system role
-            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
+            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
             full_request_with_files = file_content_text + full_request
 
             messages = [
@@ -90,6 +94,7 @@ class ProjectGPTModel(QObject):
 
             print("Model: " + model)
             print("Role: " + role_string)
+            print("Editor Mode: " + str(editor_mode))
             print("Request: " + full_request_with_files)
             print("--------------")
 
@@ -112,9 +117,10 @@ class ProjectGPTModel(QObject):
 
             print("------------ UPDATE FILES ------")
 
-            # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(self.project_dir)
-            parser.parse_response_and_update_files_on_disk(generated_response)
+            if editor_mode:
+                # Create an instance of ResponseFilesParser and call the parsing function
+                parser = ResponseFilesParser(self.project_dir)
+                parser.parse_response_and_update_files_on_disk(generated_response)
 
             self.response_generated.emit(generated_response)
 
@@ -122,7 +128,7 @@ class ProjectGPTModel(QObject):
             error_message = f"Error generating response: {str(e)}"
             self.response_generated.emit(error_message)
 
-    def generate_batch_response(self, model, role_string, full_request, description):
+    def generate_batch_response(self, model, role_string, full_request, description, editor_mode):
         try:
             self.status_changed.emit("Uploading batch files ...")
 
@@ -181,7 +187,7 @@ class ProjectGPTModel(QObject):
                 endpoint="/v1/chat/completions",
                 completion_window="24h",
                 metadata={
-                    "description": description  # Use the provided description
+                    "description": description,  # Use the provided description
                 }
             )
 
@@ -254,10 +260,14 @@ class ProjectGPTModel(QObject):
                 raise ValueError(f"Batch job with ID {batch_id} not found.")
 
             self.status_changed.emit("Getting batch results ...")
+            
+            editor_mode = True
 
             # Extract the description and output_file_id
             description = batch.metadata.get('description', 'No description')
             print("Description: " + description)
+            print("Editor Mode: " + str(editor_mode))
+
             output_file_id = batch.output_file_id
 
             file_response = self.client.files.content(output_file_id).text
@@ -277,9 +287,10 @@ class ProjectGPTModel(QObject):
                 proj_dir = self.project_dir
                 return
 
-            # Create an instance of ResponseFilesParser and call the parsing function
-            parser = ResponseFilesParser(proj_dir)
-            parser.parse_response_and_update_files_on_disk(response)
+            if editor_mode:
+                # Create an instance of ResponseFilesParser and call the parsing function
+                parser = ResponseFilesParser(proj_dir)
+                parser.parse_response_and_update_files_on_disk(response)
 
             usage = str(data['response']['body']['usage'])
             self.status_changed.emit(usage)
