@@ -133,7 +133,7 @@ class ProjectGPTModel(QObject):
             self.status_changed.emit("Uploading batch files ...")
 
             # Construct the messages for the GPT model, with the role_string as the system role
-            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files)
+            file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
             full_request_with_files = file_content_text + full_request
 
             print("==== Request text ====")
@@ -148,7 +148,7 @@ class ProjectGPTModel(QObject):
 
             # Prepare the batch request in the required format
             batch_request = {
-                "custom_id": self.project_dir,  # Store project dir to be able to parse it later
+                "custom_id": f"{self.project_dir}|{editor_mode}",  # Store project dir and editor_mode, separated by a delimiter
                 "method": "POST",  # HTTP method
                 "url": "/v1/chat/completions",  # API endpoint URL
                 "body": {
@@ -260,21 +260,21 @@ class ProjectGPTModel(QObject):
                 raise ValueError(f"Batch job with ID {batch_id} not found.")
 
             self.status_changed.emit("Getting batch results ...")
-            
-            editor_mode = True
 
             # Extract the description and output_file_id
             description = batch.metadata.get('description', 'No description')
             print("Description: " + description)
-            print("Editor Mode: " + str(editor_mode))
 
             output_file_id = batch.output_file_id
 
             file_response = self.client.files.content(output_file_id).text
             data = json.loads(file_response)
 
-            proj_dir = data['custom_id']  # We store project dir as custom_id
+            custom_id = data['custom_id']  # Retrieve custom_id which contains both project_dir and editor_mode
+            proj_dir, editor_mode_str = custom_id.split('|')
+            editor_mode = editor_mode_str.lower() == 'true'  # Convert string back to boolean
             print("Proj dir: " + proj_dir)
+            print("Editor Mode: " + str(editor_mode))
 
             # Extract choices[0] as response
             response = str(data['response']['body']['choices'][0]['message']['content'])
