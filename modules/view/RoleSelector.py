@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QComboBox, QLabel, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QComboBox, QLabel, QVBoxLayout, QHBoxLayout
 
 class RoleSelector(QWidget):
     def __init__(self, parent=None):
@@ -6,22 +6,28 @@ class RoleSelector(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Create layout
+        # Create main vertical layout
         layout = QVBoxLayout()
 
         # Create and add label
         self.label = QLabel('You are senior ')
         layout.addWidget(self.label)
 
+        # Create a horizontal layout for dropdowns
+        dropdown_layout = QHBoxLayout()
+
         # Create first dropdown for programming languages
         self.language_dropdown = QComboBox()
         self.language_dropdown.addItems(['python', 'C++', 'java', 'php', 'QA'])
-        layout.addWidget(self.language_dropdown)
+        dropdown_layout.addWidget(self.language_dropdown)
 
         # Create second dropdown for roles
         self.role_dropdown = QComboBox()
         self.role_dropdown.addItems(['developer', 'engineer'])
-        layout.addWidget(self.role_dropdown)
+        dropdown_layout.addWidget(self.role_dropdown)
+
+        # Add dropdown layout to main layout
+        layout.addLayout(dropdown_layout)
 
         # Set layout
         self.setLayout(layout)
