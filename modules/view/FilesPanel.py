@@ -37,6 +37,7 @@ class FilesPanel(QWidget):
             self.save_last_project_directory(selected_dir)
             self.project_dir = selected_dir
             self.proj_dir_changed.emit(selected_dir)
+            self.clear_checked_files()  # Clear the checked files when changing directory
 
     def load_last_project_directory(self):
         home_directory = os.path.expanduser('~')
@@ -61,10 +62,15 @@ class FilesPanel(QWidget):
         relative_files = [os.path.relpath(file_path, self.project_dir) for file_path, checked in self.file_system_model.checked_files.items() if checked]
         return self.project_dir, relative_files
 
+    def clear_checked_files(self):
+        self.file_system_model.clear_checked_files()
 
 class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.checked_files = {}
+
+    def clear_checked_files(self):  # Method to clear checked files
         self.checked_files = {}
 
     def flags(self, index):
