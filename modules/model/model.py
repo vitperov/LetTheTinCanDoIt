@@ -88,7 +88,7 @@ class ProjectGPTModel(QObject):
             full_request_with_files = file_content_text + full_request
 
             messages = [
-                {"role": "system", "content": role_string},
+                {"role": self.get_role_for_model(model), "content": role_string},
                 {"role": "user", "content": full_request_with_files}
             ]
 
@@ -142,7 +142,7 @@ class ProjectGPTModel(QObject):
 
             # Define the request body as per the API format
             messages = [
-                {"role": "system", "content": role_string},
+                {"role": self.get_role_for_model(model), "content": role_string},
                 {"role": "user", "content": full_request_with_files}
             ]
 
@@ -334,3 +334,13 @@ class ProjectGPTModel(QObject):
         except Exception as e:
             error_message = f"Error deleting batch results: {str(e)}"
             self.response_generated.emit(error_message)
+
+    def is_o1_model(self, model_name):
+        # Assuming that "o1" models have a specific naming pattern, e.g., they contain "o1" in their names.
+        return 'o1' in model_name.lower()
+
+    def get_role_for_model(self, model_name):
+        if self.is_o1_model(model_name):
+            return 'assistant'
+        else:
+            return 'system'
