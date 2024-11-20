@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QTextEdit, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox
+from PyQt5.QtWidgets import QApplication, QWidget, QTextEdit, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox, QSizePolicy
 from PyQt5.QtCore import Qt
 from modules.view.FilesPanel import FilesPanel
 from modules.view.BatchesPanel import BatchesPanel
@@ -18,6 +18,7 @@ class ProjectGPTView(QWidget):
 
         # Add the TopPanel at the top
         self.top_panel = TopPanel()  # Create the TopPanel instance
+        self.top_panel.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         main_layout.addWidget(self.top_panel)
 
         # Create a splitter for the main middle section
@@ -63,6 +64,7 @@ class ProjectGPTView(QWidget):
 
         # Add the StatusBar at the bottom
         self.status_bar = StatusBar()  # Create the StatusBar instance
+        self.status_bar.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         main_layout.addWidget(self.status_bar)
 
         # Set the layout and window properties
