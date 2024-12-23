@@ -1,7 +1,8 @@
 import os
 import json
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
+from PyQt5.QtGui import QPixmap
 
 SETTINGS_FILE = 'settings/settings.json'
 
@@ -15,8 +16,18 @@ class FilesPanel(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout()
+        button_layout = QHBoxLayout()
+
+        self.icon_label = QLabel()
+        pixmap = QPixmap('resources/tinCan.png')
+        self.icon_label.setPixmap(pixmap)
+
         self.choose_dir_button = QPushButton('Choose Project Directory')
         self.choose_dir_button.clicked.connect(self.choose_directory)
+
+        button_layout.addWidget(self.icon_label)
+        button_layout.addWidget(self.choose_dir_button)
+
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
         self.tree_view.setModel(self.file_system_model)
@@ -25,7 +36,8 @@ class FilesPanel(QWidget):
         self.tree_view.hideColumn(1)
         self.tree_view.hideColumn(2)
         self.tree_view.hideColumn(3)
-        main_layout.addWidget(self.choose_dir_button)
+
+        main_layout.addLayout(button_layout)
         main_layout.addWidget(self.tree_view)
         self.setLayout(main_layout)
 
