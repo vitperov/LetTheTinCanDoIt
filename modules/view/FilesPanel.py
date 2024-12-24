@@ -2,7 +2,8 @@ import os
 import json
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtWidgets import QStyle
 
 SETTINGS_FILE = 'settings/settings.json'
 
@@ -22,7 +23,8 @@ class FilesPanel(QWidget):
         pixmap = QPixmap('resources/tinCan.png')
         self.icon_label.setPixmap(pixmap)
 
-        self.choose_dir_button = QPushButton('Choose Project Directory')
+        self.choose_dir_button = QPushButton("Open Project")
+        self.choose_dir_button.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
         self.choose_dir_button.clicked.connect(self.choose_directory)
 
         button_layout.addWidget(self.icon_label)
