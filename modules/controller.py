@@ -21,6 +21,11 @@ class ProjectGPTController(QObject):
 
         project_dir, _ = self.view.left_panel.get_checked_files()
         self.view.top_panel.update_directory(project_dir)
+        
+        # Set additional requests in the view
+        additional_requests = self.model.get_additional_requests()
+        self.view.set_additional_requests(additional_requests)
+
 
     def handle_send_request(self, model, role_string, full_request, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()

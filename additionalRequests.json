@@ -1,0 +1,7 @@
+{
+"requests": [
+   "Preserve all comments in the code.",
+   "Avoid adding any new comments.",
+   "Do not remove any code, even if it appears unused."
+]
+}

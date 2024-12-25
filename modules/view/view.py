@@ -80,3 +80,9 @@ class ProjectGPTView(QWidget):
         Updates the response display in the UI.
         """
         self.response_display.setText(response)
+
+    def set_additional_requests(self, additional_requests):
+        """
+        Sets the additional requests in the RequestPanel.
+        """
+        self.request_panel.set_additional_requests(additional_requests)

@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, QCheckBox, QScrollArea, QGridLayout
 from PyQt5.QtCore import pyqtSignal
 from modules.view.RoleSelector import RoleSelector
 
@@ -9,6 +9,8 @@ class RequestPanel(QWidget):
     def __init__(self, available_models):
         super().__init__()
         self.available_models = available_models
+        self.additional_requests = []
+        self.checkbox_list = []
         self.init_ui()
 
     def init_ui(self):
@@ -58,6 +60,9 @@ class RequestPanel(QWidget):
         self.request_label = QLabel('Request:')
         self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
 
+        # ---------- Additional Requests GroupBox ----------
+        self.additional_requests_checkbox_layout = QGridLayout()
+
         # Create a layout for the "Send Batch" button and "Description" field
         batch_layout = QHBoxLayout()
 
@@ -85,6 +90,7 @@ class RequestPanel(QWidget):
         # Add widgets to the request layout
         request_layout.addWidget(self.request_label)
         request_layout.addWidget(self.request_input)
+        request_layout.addLayout(self.additional_requests_checkbox_layout)
         request_layout.addLayout(batch_layout)  # Add batch layout first (occupying the entire line)
         request_layout.addLayout(button_layout)  # Add Send button layout below batch layout
 
@@ -94,6 +100,25 @@ class RequestPanel(QWidget):
 
         # Set the main layout for the RequestPanel
         self.setLayout(layout)
+
+    def set_additional_requests(self, additional_requests):
+        """
+        Sets the additional requests and creates corresponding checkboxes.
+        """
+        self.additional_requests = additional_requests
+        # Clear existing checkboxes
+        for checkbox in self.checkbox_list:
+            self.additional_requests_checkbox_layout.removeWidget(checkbox)
+            checkbox.deleteLater()
+        self.checkbox_list = []
+
+        # Create new checkboxes in two columns
+        for index, request in enumerate(self.additional_requests):
+            checkbox = QCheckBox(request)
+            row = index // 2  # Compute row index
+            col = index % 2   # Compute column index
+            self.additional_requests_checkbox_layout.addWidget(checkbox, row, col)
+            self.checkbox_list.append(checkbox)
 
     def handle_send(self):
         self.handle_request(self.send_request_signal)
@@ -108,9 +133,6 @@ class RequestPanel(QWidget):
     def handle_request(self, signal, description_text='', is_batch=False):
         request_text = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
         if request_text:
-            # Clear the input field
-            self.request_input.clear()
-
             # Get the selected role string from RoleSelector
             role_description = self.role_selector.get_role_string()
 
@@ -119,6 +141,16 @@ class RequestPanel(QWidget):
 
             # Check which mode is selected
             editor_mode = self.editor_mode_button.isChecked()
+
+            # Collect checked additional requests
+            checked_additional_requests = [cb.text() for cb in self.checkbox_list if cb.isChecked()]
+
+            # Append checked additional requests to the main request
+            if checked_additional_requests:
+                request_text += "\n\n" + "\n".join(checked_additional_requests)
+
+            # Clear the input field
+            self.request_input.clear()
 
             # Emit the signal with description if it's for the batch request, else emit without description
             if is_batch:

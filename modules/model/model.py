@@ -30,6 +30,7 @@ class ProjectGPTModel(QObject):
         self.completed_jobs_descriptions = []  # List to store completed job descriptions
         self.jobs = None  # Variable to store jobs list
         self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
+        self.additionalRequests = self.load_additional_requests()  # Load additional requests
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
@@ -43,6 +44,19 @@ class ProjectGPTModel(QObject):
                 data = json.load(f)
             return data.get('api_key', '')
         return ''
+
+    def load_additional_requests(self):
+        # Load additional requests from additionalRequests.json file
+        additional_requests_path = os.path.join('additionalRequests.json')
+        if os.path.exists(additional_requests_path):
+            with open(additional_requests_path, 'r') as f:
+                data = json.load(f)
+            return data.get('requests', [])
+        return []
+    
+    def get_additional_requests(self):
+        # Return the loaded additional requests
+        return self.additionalRequests
 
     def make_file_content_text(self, project_dir, chosen_files, editorMode):
         if not chosen_files:
@@ -71,7 +85,7 @@ class ProjectGPTModel(QObject):
             "The code block should not contain a language as first string. "
             "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
             "Do not modify or omit the file paths.\n"
-            "If any files are modified, provide the entire content of each modified file, including any unmodified sections. This should allow me to replace the previous content with your response directly. Only include files that were modified; if a file remains unchanged, do not include it in your response.\n"
+            "If any files are modified, provide the entire content of each modified file, including any unmodified sections. This should allow me to replace the previous content with your response directly. Only include files that were modified; if a file remains unchanged, do not include it in your response.\n\n"
         )
 
         out = "\n".join(file_contents) 
