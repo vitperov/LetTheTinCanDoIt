@@ -15,6 +15,8 @@ class ProjectGPTView(QWidget):
     def init_ui(self):
         # Main layout for the entire view
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(10, 10, 0, 10)  # Set 10px margins on top and bottom
+        main_layout.setSpacing(0)  # Minimize spacing between widgets
 
         # Add the TopPanel at the top
         self.top_panel = TopPanel()  # Create the TopPanel instance
@@ -55,7 +57,7 @@ class ProjectGPTView(QWidget):
         splitter.addWidget(right_panel)
 
         # Set sizes for the splitter panels
-        splitter.setSizes([250, 800])
+        splitter.setSizes([300, 700])
         splitter.setHandleWidth(1)
         splitter.setChildrenCollapsible(False)
 
@@ -68,9 +70,9 @@ class ProjectGPTView(QWidget):
         main_layout.addWidget(self.status_bar)
 
         # Set the layout and window properties
-        self.resize(1000, 800)
+        self.resize(1200, 1000)
         self.setLayout(main_layout)
-        self.setWindowTitle('ChatGPT Application')
+        self.setWindowTitle('LetTheTinCanDoIt')
         self.show()
 
     def update_response(self, response):
@@ -78,3 +80,9 @@ class ProjectGPTView(QWidget):
         Updates the response display in the UI.
         """
         self.response_display.setText(response)
+
+    def set_additional_requests(self, additional_requests):
+        """
+        Sets the additional requests in the RequestPanel.
+        """
+        self.request_panel.set_additional_requests(additional_requests)

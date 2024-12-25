@@ -6,8 +6,9 @@ class TopPanel(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Create a layout and label for the panel
+        # Create a layout and label for the panel with margins minimized
         layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         self.label = QLabel("Project directory:")
         layout.addWidget(self.label)
 
