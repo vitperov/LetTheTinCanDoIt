@@ -1,5 +1,6 @@
 # LetTheTinCanDoIt
 ![LetTheTinCanDoIt](resources/tinCan_big.png)
+
 **LetTheTinCanDoIt** is a time-saving tool designed to streamline interactions with GPT models during development. It simplifies the process of sending multiple project files to a GPT-based assistant (such as OpenAI's models) and automatically updating the files on your local disk based on the model's response. This ensures that developers can focus on more valuable tasks while LetTheTinCanDoIt handles file inclusion, modification, and updates.
 
 ## Key Features
