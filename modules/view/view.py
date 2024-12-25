@@ -15,6 +15,8 @@ class ProjectGPTView(QWidget):
     def init_ui(self):
         # Main layout for the entire view
         main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(10, 10, 0, 10)  # Set 10px margins on top and bottom
+        main_layout.setSpacing(0)  # Minimize spacing between widgets
 
         # Add the TopPanel at the top
         self.top_panel = TopPanel()  # Create the TopPanel instance

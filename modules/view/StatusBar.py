@@ -8,6 +8,8 @@ class StatusBar(QWidget):
     def init_ui(self):
         # Create a layout for the panel
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins for the status bar
+        layout.setSpacing(0)  # Minimize spacing within the status bar
 
         # Create a QStatusBar instance
         self.status_bar = QStatusBar()
