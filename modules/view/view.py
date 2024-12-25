@@ -57,7 +57,7 @@ class ProjectGPTView(QWidget):
         splitter.addWidget(right_panel)
 
         # Set sizes for the splitter panels
-        splitter.setSizes([250, 800])
+        splitter.setSizes([300, 700])
         splitter.setHandleWidth(1)
         splitter.setChildrenCollapsible(False)
 
@@ -70,9 +70,9 @@ class ProjectGPTView(QWidget):
         main_layout.addWidget(self.status_bar)
 
         # Set the layout and window properties
-        self.resize(1000, 800)
+        self.resize(1200, 1000)
         self.setLayout(main_layout)
-        self.setWindowTitle('ChatGPT Application')
+        self.setWindowTitle('LetTheTinCanDoIt')
         self.show()
 
     def update_response(self, response):
