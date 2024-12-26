@@ -59,6 +59,8 @@ class RequestPanel(QWidget):
 
         self.request_label = QLabel('Request:')
         self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
+        # Set plain text format for request input
+        self.request_input.setAcceptRichText(False)
 
         # ---------- Additional Requests GroupBox ----------
         self.additional_requests_checkbox_layout = QGridLayout()
