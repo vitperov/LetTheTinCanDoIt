@@ -18,7 +18,7 @@ class RoleSelector(QWidget):
 
         # Create first dropdown for programming languages
         self.language_dropdown = QComboBox()
-        self.language_dropdown.addItems(['python', 'C++', 'java', 'php', 'QA', 'C#', 'Unity', 'Matlab'])
+        self.language_dropdown.addItems(['python', 'C++', 'java', 'php', 'QA', 'C#', 'Unity', 'Matlab', 'TypeScript', 'javascript'])
         dropdown_layout.addWidget(self.language_dropdown)
 
         # Create second dropdown for roles
