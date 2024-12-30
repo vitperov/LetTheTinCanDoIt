@@ -58,6 +58,9 @@ To install and use **LetTheTinCanDoIt**, follow these steps:
 
 Contributions are welcome! If you'd like to contribute to LetTheTinCanDoIt, please fork the repository and submit a pull request.
 
+## Project website
+[Here is](https://vt-tech.eu/en/articles/programming/9-letthetincandoit-how-a-programmer-can-achieve-5x-more-in-the-same-time) project web page. Feel free to leave comments if something isn’t working, or something is missing, or you just want to show some respect to the author. I love comments!
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
