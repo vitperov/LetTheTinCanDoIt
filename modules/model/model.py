@@ -19,8 +19,8 @@ class ProjectGPTModel(QObject):
             "gpt-4o", 
             "o1-preview", 
             "o1-mini",
-            "gpt-4o-2024-08-06",
-            "gpt-4o-2024-05-13"
+            "o1", 
+            "o3-mini",
         ]
         self.api_key = self.load_api_key()  # Load the API key from the settings file
         self.client = OpenAI(api_key=self.api_key)
