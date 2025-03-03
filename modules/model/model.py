@@ -23,7 +23,7 @@ class ProjectGPTModel(QObject):
             "o3-mini",
         ]
         self.api_key = self.load_api_key()  # Load the API key from the settings file
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
