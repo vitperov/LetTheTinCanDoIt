@@ -21,6 +21,7 @@ class ProjectGPTModel(QObject):
             "o1-mini",
             "o1", 
             "o3-mini",
+            "deepseek-chat",
         ]
         self.api_key = self.load_api_key()  # Load the API key from the settings file
         self.client = OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")
