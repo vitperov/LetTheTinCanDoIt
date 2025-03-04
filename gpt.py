@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import sys
 from PyQt5.QtWidgets import QApplication
 from modules.controller import *
