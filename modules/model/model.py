@@ -6,6 +6,7 @@ import tempfile
 from datetime import datetime
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the new class
+from modules.model.serviceProviders.openAIServiceProvider import OpenAIServiceProvider
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
@@ -33,7 +34,8 @@ class ProjectGPTModel(QObject):
         self.additionalRequests = self.load_additional_requests()  # Load additional requests
 
     def getClient(self):
-        return OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")
+        service_provider = OpenAIServiceProvider()
+        return OpenAI(api_key=self.api_key, base_url=service_provider.get_base_url())
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
