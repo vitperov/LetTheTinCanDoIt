@@ -1,6 +1,17 @@
 from .serviceProviderBase import ServiceProviderBase
 
 class OpenAIServiceProvider(ServiceProviderBase):
+    def __init__(self):
+        self.available_models = [
+            "gpt-4o-mini", 
+            "gpt-4o", 
+            "o1-preview", 
+            "o1-mini",
+            "o1", 
+            "o3-mini",
+            "deepseek-chat",
+        ]
+
     def get_base_url(self):
         return "https://api.openai.com/v1"
 

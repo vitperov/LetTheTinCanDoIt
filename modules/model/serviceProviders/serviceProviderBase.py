@@ -13,3 +13,9 @@ class ServiceProviderBase:
                 data = json.load(f)
             return data.get(key_name, '')
         return ''
+        
+    def getAvailableModels(self):
+        """
+        Return the list of available models.
+        """
+        return self.available_models

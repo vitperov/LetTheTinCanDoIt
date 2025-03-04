@@ -15,15 +15,7 @@ class ProjectGPTModel(QObject):
 
     def __init__(self):
         super().__init__()
-        self.available_models = [
-            "gpt-4o-mini", 
-            "gpt-4o", 
-            "o1-preview", 
-            "o1-mini",
-            "o1", 
-            "o3-mini",
-            "deepseek-chat",
-        ]
+        self.available_models = []
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
@@ -31,9 +23,16 @@ class ProjectGPTModel(QObject):
         self.jobs = None  # Variable to store jobs list
         self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
         self.additionalRequests = self.load_additional_requests()  # Load additional requests
+        
+        self.service_providers = []
+        self.service_providers.append(OpenAIServiceProvider())
+
+        for service_provider in self.service_providers:
+            self.available_models.extend(service_provider.getAvailableModels())
 
     def getClient(self):
-        service_provider = OpenAIServiceProvider()
+        # As a temporary stub, use the first service provider
+        service_provider = self.service_providers[0]
         api_key = service_provider.get_api_key()  # Obtain API key directly from service provider
         return OpenAI(api_key=api_key, base_url=service_provider.get_base_url())
 
