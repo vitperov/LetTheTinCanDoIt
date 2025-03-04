@@ -24,7 +24,6 @@ class ProjectGPTModel(QObject):
             "deepseek-chat",
         ]
         self.api_key = self.load_api_key()  # Load the API key from the settings file
-        self.client = OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
@@ -32,6 +31,9 @@ class ProjectGPTModel(QObject):
         self.jobs = None  # Variable to store jobs list
         self.syntax_corrector = FileSyntaxCorrector()  # Instantiate FileSyntaxCorrector
         self.additionalRequests = self.load_additional_requests()  # Load additional requests
+
+    def getClient(self):
+        return OpenAI(api_key=self.api_key, base_url="https://api.openai.com/v1")
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
@@ -116,7 +118,8 @@ class ProjectGPTModel(QObject):
             self.status_changed.emit("Waiting for the response ...")
 
             # Generate response using the selected model
-            response = self.client.chat.completions.create(
+            client = self.getClient()
+            response = client.chat.completions.create(
                 model=model,  # Use the selected model here
                 messages=messages,
             )
@@ -184,8 +187,9 @@ class ProjectGPTModel(QObject):
             print(f"Batch request JSON saved at: {temp_file_path}")
 
             # Upload the file to the API
+            client = self.getClient()
             with open(temp_file_path, "rb") as file_to_upload:
-                batch_input_file = self.client.files.create(
+                batch_input_file = client.files.create(
                     file=file_to_upload,
                     purpose="batch"
                 )
@@ -197,7 +201,7 @@ class ProjectGPTModel(QObject):
             self.status_changed.emit("Waiting for the response ...")
 
             # Create a batch job using the uploaded file
-            batch_obj = self.client.batches.create(
+            batch_obj = client.batches.create(
                 input_file_id=batch_input_file_id,
                 endpoint="/v1/chat/completions",
                 completion_window="24h",
@@ -221,7 +225,8 @@ class ProjectGPTModel(QObject):
     def get_completed_batch_jobs(self):
         try:
             self.status_changed.emit("Getting batches list ...")
-            self.jobs = self.client.batches.list(limit=7)  # Store the jobs in self.jobs
+            client = self.getClient()
+            self.jobs = client.batches.list(limit=7)  # Store the jobs in self.jobs
 
             batch_dict = {}
             self.completed_batches = []
@@ -282,7 +287,8 @@ class ProjectGPTModel(QObject):
 
             output_file_id = batch.output_file_id
 
-            file_response = self.client.files.content(output_file_id).text
+            client = self.getClient()
+            file_response = client.files.content(output_file_id).text
             data = json.loads(file_response)
 
             custom_id = data['custom_id']  # Retrieve custom_id which contains both project_dir and editor_mode
@@ -331,15 +337,16 @@ class ProjectGPTModel(QObject):
             input_file_id = batch.input_file_id
             output_file_id = batch.output_file_id
 
+            client = self.getClient()
             print("Deleting job file " + input_file_id)
-            self.client.files.delete(input_file_id)
+            client.files.delete(input_file_id)
 
             print("Deleting job file " + output_file_id)
-            self.client.files.delete(output_file_id)
+            client.files.delete(output_file_id)
 
             try:
                 print("Deleting job " + batch_id)
-                self.client.batches.delete(output_file_id)
+                client.batches.delete(output_file_id)
             except Exception:
                 error_message = f"Files are deleted, but the batch can't be deleted since openAI API currently doesn't support it"
                 self.response_generated.emit(error_message)
