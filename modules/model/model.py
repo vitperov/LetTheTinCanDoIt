@@ -30,11 +30,14 @@ class ProjectGPTModel(QObject):
         for service_provider in self.service_providers:
             self.available_models.extend(service_provider.getAvailableModels())
 
-    def getClient(self):
-        # As a temporary stub, use the first service provider
-        service_provider = self.service_providers[0]
-        api_key = service_provider.get_api_key()  # Obtain API key directly from service provider
-        return OpenAI(api_key=api_key, base_url=service_provider.get_base_url())
+    def getClient(self, modelName):
+        # Iterate through service providers to find the one offering the specified model
+        for service_provider in self.service_providers:
+            if service_provider.hasModel(modelName):
+                api_key = service_provider.get_api_key()  # Obtain API key directly from service provider
+                return OpenAI(api_key=api_key, base_url=service_provider.get_base_url())
+        raise ValueError(f"No service provider found for model: {modelName}")
+
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
@@ -112,7 +115,7 @@ class ProjectGPTModel(QObject):
             self.status_changed.emit("Waiting for the response ...")
 
             # Generate response using the selected model
-            client = self.getClient()
+            client = self.getClient(model)
             response = client.chat.completions.create(
                 model=model,  # Use the selected model here
                 messages=messages,
@@ -181,7 +184,7 @@ class ProjectGPTModel(QObject):
             print(f"Batch request JSON saved at: {temp_file_path}")
 
             # Upload the file to the API
-            client = self.getClient()
+            client = self.getClient(model)
             with open(temp_file_path, "rb") as file_to_upload:
                 batch_input_file = client.files.create(
                     file=file_to_upload,
@@ -219,7 +222,10 @@ class ProjectGPTModel(QObject):
     def get_completed_batch_jobs(self):
         try:
             self.status_changed.emit("Getting batches list ...")
-            client = self.getClient()
+            
+            #FIXME: we should ask all the providers
+            temporarySolutionModel = "gpt-4o"
+            client = self.getClient(temporarySolutionModel)
             self.jobs = client.batches.list(limit=7)  # Store the jobs in self.jobs
 
             batch_dict = {}
@@ -281,7 +287,10 @@ class ProjectGPTModel(QObject):
 
             output_file_id = batch.output_file_id
 
-            client = self.getClient()
+			#FIXME: we should ask all the providers
+            temporarySolutionModel = "gpt-4o"
+            client = self.getClient(temporarySolutionModel)
+
             file_response = client.files.content(output_file_id).text
             data = json.loads(file_response)
 
@@ -331,7 +340,9 @@ class ProjectGPTModel(QObject):
             input_file_id = batch.input_file_id
             output_file_id = batch.output_file_id
 
-            client = self.getClient()
+            #FIXME: we should ask all the providers
+            temporarySolutionModel = "gpt-4o"
+            client = self.getClient(temporarySolutionModel)
             print("Deleting job file " + input_file_id)
             client.files.delete(input_file_id)
 

@@ -2,6 +2,9 @@ import json
 import os
 
 class ServiceProviderBase:
+    def __init__(self):
+        self.available_models = []
+
     def get_base_url(self):
         raise NotImplementedError("This method should be overridden in a derived class.")
 
@@ -19,3 +22,9 @@ class ServiceProviderBase:
         Return the list of available models.
         """
         return self.available_models
+
+    def hasModel(self, modelName):
+        """
+        Check if the given model belongs to this provider.
+        """
+        return modelName in self.available_models
