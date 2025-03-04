@@ -9,7 +9,6 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1-mini",
             "o1", 
             "o3-mini",
-            "deepseek-chat",
         ]
 
     def get_base_url(self):

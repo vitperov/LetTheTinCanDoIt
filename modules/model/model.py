@@ -7,6 +7,7 @@ from datetime import datetime
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the new class
 from modules.model.serviceProviders.openAIServiceProvider import OpenAIServiceProvider
+from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
@@ -26,6 +27,7 @@ class ProjectGPTModel(QObject):
         
         self.service_providers = []
         self.service_providers.append(OpenAIServiceProvider())
+        self.service_providers.append(DeepSeekServiceProvider())
 
         for service_provider in self.service_providers:
             self.available_models.extend(service_provider.getAvailableModels())
