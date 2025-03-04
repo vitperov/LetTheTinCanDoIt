@@ -24,7 +24,6 @@ class ProjectGPTModel(QObject):
             "o3-mini",
             "deepseek-chat",
         ]
-        self.api_key = self.load_api_key()  # Load the API key from the settings file
         self.project_dir = None
         self.chosen_files = []
         self.completed_batches = []  # List to store completed job IDs
@@ -35,20 +34,12 @@ class ProjectGPTModel(QObject):
 
     def getClient(self):
         service_provider = OpenAIServiceProvider()
-        return OpenAI(api_key=self.api_key, base_url=service_provider.get_base_url())
+        api_key = service_provider.get_api_key()  # Obtain API key directly from service provider
+        return OpenAI(api_key=api_key, base_url=service_provider.get_base_url())
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
         self.chosen_files = chosen_files
-
-    def load_api_key(self):
-        # Load the API key from a JSON file
-        settings_path = os.path.join('settings', 'key.json')
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r') as f:
-                data = json.load(f)
-            return data.get('api_key', '')
-        return ''
 
     def load_additional_requests(self):
         # Load additional requests from additionalRequests.json file
