@@ -81,14 +81,16 @@ class ProjectGPTModel(QObject):
                 file_contents.append(f"**{relative_path}**\n```\n{content}\n```\n")
 
         keepFilenamesRequest = (
-            "Please return the content of each file with its corresponding file path. "
-            "Each file path should be enclosed in double asterisks (**file_path**), followed by the modified content in a code block. "
+            "Please return the content of each file with its corresponding file path.\n"
+            "Each file path should be enclosed in double asterisks (**file_path**), followed immediately by the modified content inside a code block. "
             "Do not use ### before file path. "
-            "Do not insert any strings between file path and it's content. "
-            "The code block should not contain a language as first string. "
+            "Do not insert any text, explanations, or comments before, after, or between the file path and the code block. "
+            "The code block should not contain a language as first string.\n"
+            "The code block should not contain file path as first string. File path should be provided in the format mentioned above.\n"
             "The content inside the code block should be the file content only, with no additional comments, explanations, or markers. "
             "Do not modify or omit the file paths.\n"
-            "If any files are modified, provide the entire content of each modified file, including any unmodified sections. This should allow me to replace the previous content with your response directly. Only include files that were modified; if a file remains unchanged, do not include it in your response.\n\n"
+            "If a file remains unchanged, do not include it in the response.\n"
+            "If any files are modified, provide the entire content of each modified file, including any unmodified sections to allow direct replacement.\n\n"
         )
 
         out = "\n".join(file_contents) 
