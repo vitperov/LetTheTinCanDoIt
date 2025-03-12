@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QStatusBar, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QStatusBar, QVBoxLayout, QLabel
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QMovie
 
 class StatusBar(QWidget):
     def __init__(self):
@@ -6,23 +8,28 @@ class StatusBar(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Create a layout for the panel
         layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)  # Minimize margins for the status bar
-        layout.setSpacing(0)  # Minimize spacing within the status bar
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-        # Create a QStatusBar instance
         self.status_bar = QStatusBar()
-        self.status_bar.showMessage("---")  # Set default message
+        self.status_bar.showMessage("---")
 
-        # Add the QStatusBar to the layout
+        self.spinner = QLabel()
+        self.movie = QMovie("spinner.gif")
+        self.spinner.setMovie(self.movie)
+        self.spinner.hide()
+
+        self.status_bar.addPermanentWidget(self.spinner)
+
         layout.addWidget(self.status_bar)
-
-        # Set the layout to the widget
         self.setLayout(layout)
 
     def update_status(self, status):
-        """
-        Slot to update the status bar message.
-        """
         self.status_bar.showMessage(status)
+        if "Waiting for" in status or "Uploading" in status or "Sending" in status:
+            self.movie.start()
+            self.spinner.show()
+        else:
+            self.movie.stop()
+            self.spinner.hide()
