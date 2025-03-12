@@ -16,7 +16,7 @@ class StatusBar(QWidget):
         self.status_bar.showMessage("---")
 
         self.spinner = QLabel()
-        self.movie = QMovie("spinner.gif")
+        self.movie = QMovie("resources/spinner.gif")
         self.spinner.setMovie(self.movie)
         self.spinner.hide()
 
