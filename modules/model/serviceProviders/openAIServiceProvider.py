@@ -9,6 +9,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1-mini",
             "o1", 
             "o3-mini",
+            "gpt-4.5-preview",
         ]
 
     def get_base_url(self):
