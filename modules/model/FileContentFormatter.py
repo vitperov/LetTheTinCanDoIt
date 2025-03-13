@@ -33,25 +33,25 @@ class FileContentFormatter:
                 file_contents.append(f"**{relative_path}**\n```\n{content}\n```\n")
 
         keep_filenames_request = (
-            "Here are the rules of formatting which you MUST follow formatting your response:\n"
-			"- Rules how to provide path of modified file:\n"
+            "Here are the formatting rules you MUST follow when formatting your response:\n"
+			"- Rules for providing the path of a modified file:\n"
             "  * Please return the content of each file with its corresponding file path.\n"
             "  * Do not omit the file paths.\n"
-            "  * If you are editing file provided by user, do not modify original file path.\n"
+            "  * If you are editing a file provided by the user, do not modify the original file path.\n"
             "  * Each file path should be enclosed in double asterisks (**file_path**), followed immediately by the modified content inside a code block.\n"
             "  * Do not use ### before file path.\n"
             "  * Do not use row of '─' before or after file path.\n"
             "  * Do not insert any text, explanations, or comments before, after, or between the file path and the code block.\n"
-            " - Rules how to format file content:\n"
+            "- Rules for formatting file content:\n"
             "  * The code block should not contain a language as first string.\n"
             "  * The code block should not contain file path as first string. File path should be provided in the format mentioned above.\n"
             "  * The content inside the code block should be the file content only, with no additional comments, explanations, or markers.\n"
             "  * If any files are modified, provide the entire content of each modified file, including any unmodified sections to allow direct replacement.\n"
-            "  * Do not write '# (No changes below this point)' - return entire content of modified file instead.\n"
-            "  * Do not write '# (No changes above this point)' - return entire content of modified file instead.\n"
-            " - Rules which files include into the response:\n"
+            "  * Do not write '# (No changes below this point)' - return the entire content of the modified file instead.\n"
+            "  * Do not write '# (No changes above this point)' - return the entire content of the modified file instead.\n"
+            "- Rules for including files in the response:\n"
             "  * If a file provided by user remains unchanged, do not include it in the response.\n"
-            "  * If you modified some provided file, include it's entire content.\n"
+            "  * If you modified a provided file, include its entire content.\n"
             " \n\n"
          )
 
