@@ -8,23 +8,7 @@ from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector  # Import the new class
 from modules.model.serviceProviders.openAIServiceProvider import OpenAIServiceProvider
 from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
-
-class Worker(QObject):
-    finished = pyqtSignal(object)
-    error = pyqtSignal(Exception)
-
-    def __init__(self, fn, *args, **kwargs):
-        super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-
-    def run(self):
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-            self.finished.emit(result)
-        except Exception as e:
-            self.error.emit(e)
+from modules.model.ThreadManager import ThreadManager  # Import ThreadManager from new file
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)  # Signal to send the generated response back to the view
@@ -49,8 +33,8 @@ class ProjectGPTModel(QObject):
         for service_provider in self.service_providers:
             self.available_models.extend(service_provider.getAvailableModels())
         
-        # Store threads to prevent them from being garbage collected while running
-        self.threads = []
+        # Initialize thread manager for async operations
+        self.thread_manager = ThreadManager()
 
     def getClient(self, modelName):
         # Iterate through service providers to find the one offering the specified model
@@ -115,25 +99,6 @@ class ProjectGPTModel(QObject):
             
         return out
 
-    def run_in_thread(self, fn, *args, **kwargs):
-        thread = QThread()
-        worker = Worker(fn, *args, **kwargs)
-        worker.moveToThread(thread)
-        thread.started.connect(lambda: print("Thread started:", thread))
-        thread.started.connect(lambda: QTimer.singleShot(0, worker.run))
-        worker.finished.connect(thread.quit)
-        worker.finished.connect(worker.deleteLater)
-        thread.finished.connect(lambda: print("Thread finished:", thread))
-        thread.finished.connect(lambda: self._remove_thread(thread))
-        thread.finished.connect(thread.deleteLater)
-        self.threads.append(thread)
-        return thread, worker
-
-    def _remove_thread(self, thread):
-        if thread in self.threads:
-            self.threads.remove(thread)
-            print("Removed thread:", thread)
-
     def do_generate_response(self, model, role_string, full_request, editor_mode):
         print("Response thread: Sending...")
         file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
@@ -173,10 +138,11 @@ class ProjectGPTModel(QObject):
         try:
             self.status_changed.emit("Sending the request ...")
             print("Sending the request in a new tread")
-            thread, worker = self.run_in_thread(self.do_generate_response, model, role_string, full_request, editor_mode)
-            worker.finished.connect(lambda result: self.handle_generate_response(result))
-            worker.error.connect(lambda e: self.response_generated.emit(f"Error generating response: {str(e)}"))
-            thread.start()
+            self.thread_manager.execute_async(
+                lambda: self.do_generate_response(model, role_string, full_request, editor_mode),
+                lambda result: self.handle_generate_response(result),
+                lambda e: self.response_generated.emit(f"Error generating response: {str(e)}")
+            )
             print("Done. Waiting for the result")
         except Exception as e:
             error_message = f"Error generating response: {str(e)}"
@@ -247,10 +213,11 @@ class ProjectGPTModel(QObject):
 
     def generate_batch_response(self, model, role_string, full_request, description, editor_mode):
         try:
-            thread, worker = self.run_in_thread(self.do_generate_batch_response, model, role_string, full_request, description, editor_mode)
-            worker.finished.connect(lambda result: self.response_generated.emit(str(result)))
-            worker.error.connect(lambda e: self.response_generated.emit(f"Error generating batch response: {str(e)}"))
-            thread.start()
+            self.thread_manager.execute_async(
+                lambda: self.do_generate_batch_response(model, role_string, full_request, description, editor_mode),
+                lambda result: self.response_generated.emit(str(result)),
+                lambda e: self.response_generated.emit(f"Error generating batch response: {str(e)}")
+            )
         except Exception as e:
             error_message = f"Error generating batch response: {str(e)}"
             self.response_generated.emit(error_message)
