@@ -25,13 +25,25 @@ To install and use **LetTheTinCanDoIt**, follow these steps:
     cd LetTheTinCanDoIt
     ```
 
-2. Install the required dependencies:
+2. Create a virtual environment:
+
+    ```bash
+    python3 -m venv venv
+    ```
+
+3. Activate the virtual environment:
+
+    ```bash
+    source venv/bin/activate
+    ```
+
+4. Install the required dependencies:
 
     ```bash
     pip install -r requirements.txt
     ```
 
-3. Add your OpenAI API key:
+5. Add your OpenAI API key:
 
    - Create a `settings/key.json` file and add your API key in the following format:
 
@@ -45,9 +57,18 @@ To install and use **LetTheTinCanDoIt**, follow these steps:
 
 1. Run the application:
 
-    ```bash
-    python gpt.py
-    ```
+   - Option 1 (recommended for Linux): Use the provided run script:
+   
+     ```bash
+     ./run.sh
+     ```
+   
+   - Option 2: Manually activate the virtual environment and run the command:
+   
+     ```bash
+     source venv/bin/activate
+     python3 gpt.py
+     ```
 
 2. Select the files you want to include in your request using the **FilesPanel**.
 3. Input your prompt and specify a role or instructions in the **RoleSelector**.

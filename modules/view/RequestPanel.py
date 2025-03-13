@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, QCheckBox, QScrollArea, QGridLayout
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QMovie
 from modules.view.RoleSelector import RoleSelector
 
 class RequestPanel(QWidget):
@@ -85,9 +86,16 @@ class RequestPanel(QWidget):
         self.send_button = QPushButton('Send')
         self.send_button.clicked.connect(self.handle_send)
 
-        # Create a layout to hold the "Send" button
+        # Create spinner
+        self.spinner = QLabel()
+        self.movie = QMovie("resources/spinner.gif")
+        self.spinner.setMovie(self.movie)
+        self.spinner.hide()
+
+        # Create a layout to hold the "Send" button and spinner
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.send_button)
+        button_layout.addWidget(self.spinner)
 
         # Add widgets to the request layout
         request_layout.addWidget(self.request_label)
@@ -133,6 +141,11 @@ class RequestPanel(QWidget):
         self.handle_request(self.send_batch_request_signal, description_text, True)
 
     def handle_request(self, signal, description_text='', is_batch=False):
+        self.send_button.setEnabled(False)
+        self.send_batch_button.setEnabled(False)
+        self.movie.start()
+        self.spinner.show()
+
         request_text = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
         if request_text:
             # Get the selected role string from RoleSelector
@@ -159,3 +172,13 @@ class RequestPanel(QWidget):
                 signal.emit(selected_model, role_description, request_text, description_text, editor_mode)
             else:
                 signal.emit(selected_model, role_description, request_text, editor_mode)
+
+    def set_processing(self, is_processing):
+        self.send_button.setEnabled(not is_processing)
+        self.send_batch_button.setEnabled(not is_processing)
+        if is_processing:
+            self.movie.start()
+            self.spinner.show()
+        else:
+            self.movie.stop()
+            self.spinner.hide()
