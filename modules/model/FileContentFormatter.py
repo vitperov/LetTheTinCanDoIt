@@ -1,3 +1,4 @@
+import os
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector
 
 class FileContentFormatter:
