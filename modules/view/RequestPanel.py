@@ -182,3 +182,9 @@ class RequestPanel(QWidget):
         else:
             self.movie.stop()
             self.spinner.hide()
+
+    def set_batch_support(self, supportBatch):
+        """
+        Enables or disables the Send Batch button based on supportBatch.
+        """
+        self.send_batch_button.setEnabled(supportBatch)

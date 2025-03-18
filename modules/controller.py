@@ -26,6 +26,10 @@ class ProjectGPTController(QObject):
         additional_requests = self.model.get_additional_requests()
         self.view.set_additional_requests(additional_requests)
 
+        # Connect model dropdown change to update batch support UI
+        self.view.request_panel.model_dropdown.currentTextChanged.connect(self.handle_model_change)
+        # Initialize UI state based on the initial model selection
+        self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
     def handle_send_request(self, model, role_string, full_request, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
@@ -45,3 +49,8 @@ class ProjectGPTController(QObject):
 
     def handle_delete_batch_job(self, batch_id):
         self.model.delete_batch_job(batch_id)
+        
+    def handle_model_change(self, model_name):
+        model_options = self.model.get_model_options(model_name)
+        self.view.request_panel.set_batch_support(model_options.supportBatch)
+        self.view.batches_panel.set_batch_support(model_options.supportBatch)

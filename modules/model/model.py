@@ -319,3 +319,9 @@ class ProjectGPTModel(QObject):
             return 'assistant'
         else:
             return 'system'
+
+    def get_model_options(self, model_name):
+        for service_provider in self.service_providers:
+            if service_provider.hasModel(model_name):
+                return service_provider.getModelOptions(model_name)
+        raise ValueError(f"Model options for model {model_name} not found.")

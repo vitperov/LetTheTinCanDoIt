@@ -109,3 +109,9 @@ class BatchesPanel(QWidget):
         # Emit the 'delete_job' signal if selected_batch_id is not None and not the placeholder text
         if selected_batch_id is not None:
             self.delete_job.emit(selected_batch_id)
+
+    def set_batch_support(self, supportBatch):
+        """
+        Enables or disables the entire batch panel based on supportBatch.
+        """
+        self.setEnabled(supportBatch)
