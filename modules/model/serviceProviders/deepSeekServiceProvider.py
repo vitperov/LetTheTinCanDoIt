@@ -1,4 +1,5 @@
 from .serviceProviderBase import ServiceProviderBase
+from ..modelOptions import ModelOptions
 
 class DeepSeekServiceProvider(ServiceProviderBase):
     def __init__(self):
@@ -12,3 +13,6 @@ class DeepSeekServiceProvider(ServiceProviderBase):
 
     def get_api_key(self):
         return super().get_api_key('deepseek_api_key')
+
+    def getModelOptions(self, modelName):
+        return ModelOptions(supportBatch=False, supportReasoningEffort=False)

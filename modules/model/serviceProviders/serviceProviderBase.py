@@ -28,3 +28,6 @@ class ServiceProviderBase:
         Check if the given model belongs to this provider.
         """
         return modelName in self.available_models
+
+    def getModelOptions(self, modelName):
+        raise NotImplementedError("This method should be overridden in a derived class.")
