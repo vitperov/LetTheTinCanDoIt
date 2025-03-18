@@ -5,7 +5,7 @@ class ServiceProviderBase:
     def __init__(self):
         self.available_models = []
 
-    def get_base_url(self):
+    def getBaseUrl(self):
         raise NotImplementedError("This method should be overridden in a derived class.")
 
     def get_api_key(self, key_name):
@@ -30,4 +30,7 @@ class ServiceProviderBase:
         return modelName in self.available_models
 
     def getModelOptions(self, modelName):
+        raise NotImplementedError("This method should be overridden in a derived class.")
+    
+    def getRoleForModel(self, modelName):
         raise NotImplementedError("This method should be overridden in a derived class.")

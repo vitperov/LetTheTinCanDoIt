@@ -13,7 +13,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "gpt-4.5-preview",
         ]
 
-    def get_base_url(self):
+    def getBaseUrl(self):
         return "https://api.openai.com/v1"
 
     def get_api_key(self):
@@ -23,3 +23,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
     def getModelOptions(self, modelName):
         supportReasoningEffort = modelName in ["o3-mini", "o1"]
         return ModelOptions(supportBatch=True, supportReasoningEffort=supportReasoningEffort)
+    
+    def getRoleForModel(self, modelName):
+        if "o1" in modelName.lower():
+            return "assistant"
+        else:
+            return "system"

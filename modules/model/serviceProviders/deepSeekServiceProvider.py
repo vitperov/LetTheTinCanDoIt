@@ -8,7 +8,7 @@ class DeepSeekServiceProvider(ServiceProviderBase):
             "deepseek-reasoner",
         ]
 
-    def get_base_url(self):
+    def getBaseUrl(self):
         return "https://api.deepseek.com/v1"
 
     def get_api_key(self):
@@ -16,3 +16,6 @@ class DeepSeekServiceProvider(ServiceProviderBase):
 
     def getModelOptions(self, modelName):
         return ModelOptions(supportBatch=False, supportReasoningEffort=False)
+    
+    def getRoleForModel(self, modelName):
+        return "system"

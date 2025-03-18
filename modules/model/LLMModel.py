@@ -25,14 +25,14 @@ class LLMModel(QObject):
 
     def getClient(self):
         api_key = self.provider.get_api_key()
-        return OpenAI(api_key=api_key, base_url=self.provider.get_base_url())
+        return OpenAI(api_key=api_key, base_url=self.provider.getBaseUrl())
 
     def do_generate_response(self, role_string, full_request, editor_mode):
         print("Response thread: Sending...")
         file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
         full_request_with_files = file_content_text + full_request
         messages = [
-            {"role": self.get_role_for_model(), "content": role_string},
+            {"role": self.provider.getRoleForModel(self.modelName), "content": role_string},
             {"role": "user", "content": full_request_with_files}
         ]
         print("Model: " + self.modelName)
@@ -79,7 +79,7 @@ class LLMModel(QObject):
         file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
         full_request_with_files = file_content_text + full_request
         messages = [
-            {"role": self.get_role_for_model(), "content": role_string},
+            {"role": self.provider.getRoleForModel(self.modelName), "content": role_string},
             {"role": "user", "content": full_request_with_files}
         ]
         print("==== Request text ====")
@@ -211,12 +211,3 @@ class LLMModel(QObject):
             print("Done")
         except Exception as e:
             self.response_generated.emit("Error deleting batch results: " + str(e))
-
-    def is_o1_model(self):
-        return 'o1' in self.modelName.lower()
-
-    def get_role_for_model(self):
-        if self.is_o1_model():
-            return 'assistant'
-        else:
-            return 'system'
