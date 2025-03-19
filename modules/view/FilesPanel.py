@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileS
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QStyle
+from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
 
 SETTINGS_FILE = 'settings/settings.json'
 
@@ -27,8 +28,12 @@ class FilesPanel(QWidget):
         self.choose_dir_button.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
         self.choose_dir_button.clicked.connect(self.choose_directory)
 
+        self.last_projects_button = QPushButton("Last projects")
+        self.last_projects_button.clicked.connect(self.show_projects_history)
+
         button_layout.addWidget(self.icon_label)
         button_layout.addWidget(self.choose_dir_button)
+        button_layout.addWidget(self.last_projects_button)
 
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
@@ -46,12 +51,21 @@ class FilesPanel(QWidget):
     def choose_directory(self):
         selected_dir = QFileDialog.getExistingDirectory(self, "Choose Project Directory", self.project_dir)
         if selected_dir:
-            self.file_system_model.setRootPath(selected_dir)
-            self.tree_view.setRootIndex(self.file_system_model.index(selected_dir))
-            self.save_last_project_directory(selected_dir)
-            self.project_dir = selected_dir
-            self.proj_dir_changed.emit(selected_dir)
-            self.clear_checked_files()  # Clear the checked files when changing directory
+            self.handle_project_selected(selected_dir)
+
+    def show_projects_history(self):
+        self.history_window = ProjectsHistoryWindow()
+        self.history_window.project_selected.connect(self.handle_project_selected)
+        self.history_window.exec_()
+
+    def handle_project_selected(self, directory):
+        if directory:
+            self.file_system_model.setRootPath(directory)
+            self.tree_view.setRootIndex(self.file_system_model.index(directory))
+            self.project_dir = directory
+            self.proj_dir_changed.emit(directory)
+            self.clear_checked_files()
+            self.update_settings(directory)
 
     def load_last_project_directory(self):
         home_directory = os.path.expanduser('~')
@@ -66,9 +80,25 @@ class FilesPanel(QWidget):
         
         return home_directory
 
-    def save_last_project_directory(self, directory):
+    def update_settings(self, directory):
+        settings = {}
+        if os.path.exists(SETTINGS_FILE):
+            try:
+                with open(SETTINGS_FILE, 'r') as f:
+                    settings = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                pass
+        
+        settings['last_project_dir'] = directory
+
+        last_projects = settings.get('lastProjects', [])
+        if directory in last_projects:
+            last_projects.remove(directory)
+        last_projects.insert(0, directory)
+        projectsMaxHistory = 5
+        settings['lastProjects'] = last_projects[:projectsMaxHistory]
+
         os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
-        settings = {'last_project_dir': directory}
         with open(SETTINGS_FILE, 'w') as f:
             json.dump(settings, f)
 
@@ -84,7 +114,7 @@ class CustomFileSystemModel(QFileSystemModel):
         super().__init__(parent)
         self.checked_files = {}
 
-    def clear_checked_files(self):  # Method to clear checked files
+    def clear_checked_files(self):
         self.checked_files = {}
 
     def flags(self, index):

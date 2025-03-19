@@ -16,32 +16,39 @@ class ProjectGPTController(QObject):
 
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
-        self.model.status_changed.connect(self.view.status_bar.update_status)  # Connect the new signal
+        self.model.status_changed.connect(self.view.status_bar.update_status)
         self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
         project_dir, _ = self.view.left_panel.get_checked_files()
         self.view.top_panel.update_directory(project_dir)
         
-        # Set additional requests in the view
         additional_requests = self.model.get_additional_requests()
         self.view.set_additional_requests(additional_requests)
 
+        self.view.request_panel.model_dropdown.currentTextChanged.connect(self.handle_model_change)
+        self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
     def handle_send_request(self, model, role_string, full_request, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.generate_response(model, role_string, full_request, editor_mode)
+        self.model.getCurrentModel().generate_response(role_string, full_request, editor_mode)
 
     def handle_send_batch_request(self, model, role_string, full_request_template, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.generate_batch_response(model, role_string, full_request_template, description, editor_mode)
+        self.model.getCurrentModel().generate_batch_response(role_string, full_request_template, description, editor_mode)
 
     def handle_get_completed_batch_jobs(self):
-        self.model.get_completed_batch_jobs()
+        self.model.getCurrentModel().get_completed_batch_jobs()
 
     def handle_get_batch_results(self, batch_id):
-        self.model.get_batch_results(batch_id)
+        self.model.getCurrentModel().get_batch_results(batch_id)
 
     def handle_delete_batch_job(self, batch_id):
-        self.model.delete_batch_job(batch_id)
+        self.model.getCurrentModel().delete_batch_job(batch_id)
+        
+    def handle_model_change(self, model_name):
+        self.model.switchModel(model_name)
+        model_options = self.model.get_model_options(model_name)
+        self.view.request_panel.set_batch_support(model_options.supportBatch)
+        self.view.batches_panel.set_batch_support(model_options.supportBatch)
