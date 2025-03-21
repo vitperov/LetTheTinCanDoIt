@@ -25,7 +25,7 @@ class FileContentFormatter:
         for relative_path in chosen_files:
             file_path = os.path.join(project_dir, relative_path)
             if os.path.exists(file_path):
-                with open(file_path, 'r') as file:
+                with open(file_path, 'r', encoding='utf-8', errors='replace') as file:
                     content = file.read()
 
                     # Correct the file content syntax using FileSyntaxCorrector
