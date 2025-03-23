@@ -54,10 +54,6 @@ class ProjectGPTModel(QObject):
     def get_additional_requests(self):
         return self.additionalRequests
 
-    def make_file_content_text(self, project_dir, chosen_files, editorMode):
-        formatter = FileContentFormatter()
-        return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
-
     def switchModel(self, modelName):
         for provider in self.service_providers:
             if provider.hasModel(modelName):
@@ -65,7 +61,6 @@ class ProjectGPTModel(QObject):
                 self.currentModel = LLMModel(provider, modelName)
                 self.currentModel.project_dir = self.project_dir
                 self.currentModel.chosen_files = self.chosen_files
-                self.currentModel.make_file_content_text = self.make_file_content_text
                 self.currentModel.response_generated.connect(self.response_generated.emit)
                 self.currentModel.completed_job_list_updated.connect(self.completed_job_list_updated.emit)
                 self.currentModel.status_changed.connect(self.status_changed.emit)

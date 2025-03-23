@@ -6,6 +6,7 @@ from datetime import datetime
 from openai import OpenAI
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.ThreadManager import ThreadManager
+from modules.model.FileContentFormatter import FileContentFormatter
 
 class LLMModel(QObject):
     response_generated = pyqtSignal(str)
@@ -26,6 +27,10 @@ class LLMModel(QObject):
     def getClient(self):
         api_key = self.provider.get_api_key()
         return OpenAI(api_key=api_key, base_url=self.provider.getBaseUrl())
+
+    def make_file_content_text(self, project_dir, chosen_files, editorMode):
+        formatter = FileContentFormatter()
+        return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
     def do_generate_response(self, role_string, full_request, editor_mode):
         print("Response thread: Sending...")
