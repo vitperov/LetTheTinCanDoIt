@@ -1,8 +1,9 @@
-from .serviceProviderBase import ServiceProviderBase
+from .openAiLikeBaseProvider import OpenAiLikeBaseProvider
 from ..modelOptions import ModelOptions
 
-class DeepSeekServiceProvider(ServiceProviderBase):
+class DeepSeekServiceProvider(OpenAiLikeBaseProvider):
     def __init__(self):
+        super().__init__()
         self.available_models = [
             "deepseek-chat",
             "deepseek-reasoner",
@@ -19,3 +20,15 @@ class DeepSeekServiceProvider(ServiceProviderBase):
     
     def getRoleForModel(self, modelName):
         return "system"
+
+    def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode):
+        model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
+
+    def get_completed_batch_jobs(self, model_context):
+        model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
+
+    def get_batch_results(self, model_context, batch_id):
+        model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
+
+    def delete_batch_job(self, model_context, batch_id):
+        model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
