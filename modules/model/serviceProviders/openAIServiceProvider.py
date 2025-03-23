@@ -37,7 +37,7 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
         else:
             return "system"
 
-    def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode):
+    def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode, reasoning_effort):
         model_context["status_changed"]("Uploading batch files ...")
         file_content_text = self.make_file_content_text(model_context["project_dir"], model_context["chosen_files"], editor_mode)
         full_request_with_files = file_content_text + full_request
@@ -57,6 +57,8 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
                 "messages": messages,
             }
         }
+        if reasoning_effort:
+            batch_request["body"]["reasoning_effort"] = reasoning_effort
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".jsonl", dir=tmp_dir, delete=False) as temp_file:

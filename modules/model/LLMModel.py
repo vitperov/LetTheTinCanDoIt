@@ -27,7 +27,7 @@ class LLMModel(QObject):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def generate_response_async(self, role_string, full_request, editor_mode):
+    def generate_response_async(self, role_string, full_request, editor_mode, reasoning_effort):
         try:
             self.status_changed.emit("Sending the request ...")
             print("Sending the request in a new thread")
@@ -39,7 +39,7 @@ class LLMModel(QObject):
                 "response_generated": self.response_generated.emit,
             }
             self.thread_manager.execute_async(
-                lambda: self.provider._generate_response_sync(model_context, role_string, full_request, editor_mode),
+                lambda: self.provider._generate_response_sync(model_context, role_string, full_request, editor_mode, reasoning_effort),
                 lambda result: self._handle_generated_response(result),
                 lambda e: self.response_generated.emit("Error generating response: " + str(e))
             )
@@ -52,7 +52,7 @@ class LLMModel(QObject):
         self.response_generated.emit(generated_response)
         self.status_changed.emit(str(usage))
 
-    def generate_batch_response_async(self, role_string, full_request, description, editor_mode):
+    def generate_batch_response_async(self, role_string, full_request, description, editor_mode, reasoning_effort):
         try:
             model_context = {
                 "project_dir": self.project_dir,
@@ -62,7 +62,7 @@ class LLMModel(QObject):
                 "response_generated": self.response_generated.emit,
             }
             self.thread_manager.execute_async(
-                lambda: self.provider._generate_batch_response_sync(model_context, role_string, full_request, description, editor_mode),
+                lambda: self.provider._generate_batch_response_sync(model_context, role_string, full_request, description, editor_mode, reasoning_effort),
                 lambda result: self.response_generated.emit(str(result)),
                 lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
             )

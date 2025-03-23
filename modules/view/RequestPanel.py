@@ -4,8 +4,8 @@ from PyQt5.QtGui import QMovie
 from modules.view.RoleSelector import RoleSelector
 
 class RequestPanel(QWidget):
-    send_request_signal = pyqtSignal(str, str, str, bool)  # Signal for sending a single request with editorMode
-    send_batch_request_signal = pyqtSignal(str, str, str, str, bool)  # Signal for sending a batch request with description and editorMode
+    send_request_signal = pyqtSignal(str, str, str, str, bool)  # model, role, request, reasoning, editorMode
+    send_batch_request_signal = pyqtSignal(str, str, str, str, str, bool)  # model, role, request, reasoning, description, editorMode
 
     def __init__(self, available_models):
         super().__init__()
@@ -15,30 +15,34 @@ class RequestPanel(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Main layout for the RequestPanel
         layout = QVBoxLayout()
 
-        # ---------- Parameters GroupBox ----------
         parameters_groupbox = QGroupBox("Parameters")
-        parameters_layout = QVBoxLayout()
+        parameters_layout = QHBoxLayout()
 
-        # Create the dropdown for available models
+        self.model_label = QLabel("Model:")
         self.model_dropdown = QComboBox()
         self.model_dropdown.addItems(self.available_models)
-        parameters_layout.addWidget(self.model_dropdown)
 
-        # Set layout to the groupbox
+        self.reasoning_label = QLabel("Reasoning:")
+        self.reasoning_dropdown = QComboBox()
+        self.reasoning_dropdown.addItems(["low", "medium", "high"])
+        self.reasoning_dropdown.setCurrentText("medium")
+
+        parameters_layout.addWidget(self.model_label)
+        parameters_layout.addWidget(self.model_dropdown)
+        parameters_layout.addWidget(self.reasoning_label)
+        parameters_layout.addWidget(self.reasoning_dropdown)
         parameters_groupbox.setLayout(parameters_layout)
         layout.addWidget(parameters_groupbox)
 
-        # Create radio buttons for mode selection
         mode_groupbox = QGroupBox("Mode")
-        mode_layout = QHBoxLayout()  # Changed to QHBoxLayout to place buttons in one row
+        mode_layout = QHBoxLayout()
 
         self.mode_button_group = QButtonGroup()
 
         self.editor_mode_button = QRadioButton("Editor mode")
-        self.editor_mode_button.setChecked(True)  # Default selection
+        self.editor_mode_button.setChecked(True)
         self.answer_mode_button = QRadioButton("Answer mode (do not modify my files)")
 
         self.mode_button_group.addButton(self.editor_mode_button)
@@ -50,83 +54,63 @@ class RequestPanel(QWidget):
         mode_groupbox.setLayout(mode_layout)
         layout.addWidget(mode_groupbox)
 
-        # ---------- Request GroupBox ----------
         request_groupbox = QGroupBox("Request")
         request_layout = QVBoxLayout()
 
-        # Add RoleSelector widget to the request layout
         self.role_selector = RoleSelector()
         request_layout.addWidget(self.role_selector)
 
         self.request_label = QLabel('Request:')
-        self.request_input = QTextEdit()  # Change to QTextEdit for multiline input
-        # Set plain text format for request input
+        self.request_input = QTextEdit()
         self.request_input.setAcceptRichText(False)
 
-        # ---------- Additional Requests GroupBox ----------
         self.additional_requests_checkbox_layout = QGridLayout()
 
-        # Create a layout for the "Send Batch" button and "Description" field
         batch_layout = QHBoxLayout()
 
-        # Add "Description" label and input field
         self.description_label = QLabel('Description:')
-        self.description_input = QLineEdit()  # Input for description
+        self.description_input = QLineEdit()
 
-        # Create "Send Batch" button for batch request
         self.send_batch_button = QPushButton('Send Batch')
         self.send_batch_button.clicked.connect(self.handle_send_batch)
 
-        # Add widgets to the batch layout
         batch_layout.addWidget(self.description_label)
         batch_layout.addWidget(self.description_input)
         batch_layout.addWidget(self.send_batch_button)
 
-        # Create "Send" button for single request
         self.send_button = QPushButton('Send')
         self.send_button.clicked.connect(self.handle_send)
 
-        # Create spinner
         self.spinner = QLabel()
         self.movie = QMovie("resources/spinner.gif")
         self.spinner.setMovie(self.movie)
         self.spinner.hide()
 
-        # Create a layout to hold the "Send" button and spinner
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.send_button)
         button_layout.addWidget(self.spinner)
 
-        # Add widgets to the request layout
         request_layout.addWidget(self.request_label)
         request_layout.addWidget(self.request_input)
         request_layout.addLayout(self.additional_requests_checkbox_layout)
-        request_layout.addLayout(batch_layout)  # Add batch layout first (occupying the entire line)
-        request_layout.addLayout(button_layout)  # Add Send button layout below batch layout
+        request_layout.addLayout(batch_layout)
+        request_layout.addLayout(button_layout)
 
-        # Set layout to the groupbox
         request_groupbox.setLayout(request_layout)
         layout.addWidget(request_groupbox)
 
-        # Set the main layout for the RequestPanel
         self.setLayout(layout)
 
     def set_additional_requests(self, additional_requests):
-        """
-        Sets the additional requests and creates corresponding checkboxes.
-        """
         self.additional_requests = additional_requests
-        # Clear existing checkboxes
         for checkbox in self.checkbox_list:
             self.additional_requests_checkbox_layout.removeWidget(checkbox)
             checkbox.deleteLater()
         self.checkbox_list = []
-
-        # Create new checkboxes in two columns
         for index, request in enumerate(self.additional_requests):
             checkbox = QCheckBox(request)
-            row = index // 2  # Compute row index
-            col = index % 2   # Compute column index
+            row = index // 2
+            col = index % 2
             self.additional_requests_checkbox_layout.addWidget(checkbox, row, col)
             self.checkbox_list.append(checkbox)
 
@@ -134,10 +118,7 @@ class RequestPanel(QWidget):
         self.handle_request(self.send_request_signal)
 
     def handle_send_batch(self):
-        # Get the description text from the input field
         description_text = self.description_input.text()
-
-        # Pass the description text as the last parameter of the send_batch_request_signal
         self.handle_request(self.send_batch_request_signal, description_text, True)
 
     def handle_request(self, signal, description_text='', is_batch=False):
@@ -146,32 +127,20 @@ class RequestPanel(QWidget):
         self.movie.start()
         self.spinner.show()
 
-        request_text = self.request_input.toPlainText()  # Use the toPlainText() method for QTextEdit
+        request_text = self.request_input.toPlainText()
         if request_text:
-            # Get the selected role string from RoleSelector
             role_description = self.role_selector.get_role_string()
-
-            # Get the selected model from the dropdown
             selected_model = self.model_dropdown.currentText()
-
-            # Check which mode is selected
+            reasoning_effort = self.reasoning_dropdown.currentText() if self.reasoning_dropdown.isEnabled() else ""
             editor_mode = self.editor_mode_button.isChecked()
-
-            # Collect checked additional requests
             checked_additional_requests = [cb.text() for cb in self.checkbox_list if cb.isChecked()]
-
-            # Append checked additional requests to the main request
             if checked_additional_requests:
                 request_text += "\n\n" + "\n".join(checked_additional_requests)
-
-            # Clear the input field
             self.request_input.clear()
-
-            # Emit the signal with description if it's for the batch request, else emit without description
             if is_batch:
-                signal.emit(selected_model, role_description, request_text, description_text, editor_mode)
+                signal.emit(selected_model, role_description, request_text, reasoning_effort, description_text, editor_mode)
             else:
-                signal.emit(selected_model, role_description, request_text, editor_mode)
+                signal.emit(selected_model, role_description, request_text, reasoning_effort, editor_mode)
 
     def set_processing(self, is_processing):
         self.send_button.setEnabled(not is_processing)
@@ -184,7 +153,8 @@ class RequestPanel(QWidget):
             self.spinner.hide()
 
     def set_batch_support(self, supportBatch):
-        """
-        Enables or disables the Send Batch button based on supportBatch.
-        """
         self.send_batch_button.setEnabled(supportBatch)
+
+    def set_reasoning_support(self, supportReasoningEffort):
+        self.reasoning_dropdown.setEnabled(supportReasoningEffort)
+        self.reasoning_label.setEnabled(supportReasoningEffort)
