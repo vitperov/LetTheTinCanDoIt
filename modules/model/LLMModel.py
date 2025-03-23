@@ -32,7 +32,7 @@ class LLMModel(QObject):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def do_generate_response(self, role_string, full_request, editor_mode):
+    def _generate_response_sync(self, role_string, full_request, editor_mode):
         print("Response thread: Sending...")
         file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
         full_request_with_files = file_content_text + full_request
@@ -61,25 +61,25 @@ class LLMModel(QObject):
             parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def generate_response(self, role_string, full_request, editor_mode):
+    def generate_response_async(self, role_string, full_request, editor_mode):
         try:
             self.status_changed.emit("Sending the request ...")
-            print("Sending the request in a new tread")
+            print("Sending the request in a new thread")
             self.thread_manager.execute_async(
-                lambda: self.do_generate_response(role_string, full_request, editor_mode),
-                lambda result: self.handle_generate_response(result),
+                lambda: self._generate_response_sync(role_string, full_request, editor_mode),
+                lambda result: self._handle_generated_response(result),
                 lambda e: self.response_generated.emit("Error generating response: " + str(e))
             )
             print("Done. Waiting for the result")
         except Exception as e:
             self.response_generated.emit("Error generating response: " + str(e))
 
-    def handle_generate_response(self, result):
+    def _handle_generated_response(self, result):
         generated_response, usage = result
         self.response_generated.emit(generated_response)
         self.status_changed.emit(str(usage))
 
-    def do_generate_batch_response(self, role_string, full_request, description, editor_mode):
+    def _generate_batch_response_sync(self, role_string, full_request, description, editor_mode):
         self.status_changed.emit("Uploading batch files ...")
         file_content_text = self.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
         full_request_with_files = file_content_text + full_request
@@ -126,10 +126,10 @@ class LLMModel(QObject):
         print(batch_obj)
         return batch_obj
 
-    def generate_batch_response(self, role_string, full_request, description, editor_mode):
+    def generate_batch_response_async(self, role_string, full_request, description, editor_mode):
         try:
             self.thread_manager.execute_async(
-                lambda: self.do_generate_batch_response(role_string, full_request, description, editor_mode),
+                lambda: self._generate_batch_response_sync(role_string, full_request, description, editor_mode),
                 lambda result: self.response_generated.emit(str(result)),
                 lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
             )
