@@ -9,6 +9,7 @@ from modules.model.FileSyntaxCorrector import FileSyntaxCorrector
 from modules.model.FileContentFormatter import FileContentFormatter
 from modules.model.serviceProviders.openAIServiceProvider import OpenAIServiceProvider
 from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
+from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
 from modules.model.ThreadManager import ThreadManager
 
 class ProjectGPTModel(QObject):
@@ -29,6 +30,7 @@ class ProjectGPTModel(QObject):
         self.service_providers = []
         self.service_providers.append(OpenAIServiceProvider())
         self.service_providers.append(DeepSeekServiceProvider())
+        self.service_providers.append(OllamaServiceProvider())
         for service_provider in self.service_providers:
             self.available_models.extend(service_provider.getAvailableModels())
         self.thread_manager = ThreadManager()
