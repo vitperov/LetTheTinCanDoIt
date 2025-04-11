@@ -28,15 +28,15 @@ class ProjectGPTController(QObject):
         self.view.request_panel.model_dropdown.currentTextChanged.connect(self.handle_model_change)
         self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
-    def handle_send_request(self, model, role_string, full_request, editor_mode):
+    def handle_send_request(self, model, role_string, full_request, reasoning_effort, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.getCurrentModel().generate_response(role_string, full_request, editor_mode)
+        self.model.getCurrentModel().generate_response_async(role_string, full_request, editor_mode, reasoning_effort)
 
-    def handle_send_batch_request(self, model, role_string, full_request_template, description, editor_mode):
+    def handle_send_batch_request(self, model, role_string, full_request_template, reasoning_effort, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
-        self.model.getCurrentModel().generate_batch_response(role_string, full_request_template, description, editor_mode)
+        self.model.getCurrentModel().generate_batch_response_async(role_string, full_request_template, description, editor_mode, reasoning_effort)
 
     def handle_get_completed_batch_jobs(self):
         self.model.getCurrentModel().get_completed_batch_jobs()
@@ -51,4 +51,5 @@ class ProjectGPTController(QObject):
         self.model.switchModel(model_name)
         model_options = self.model.get_model_options(model_name)
         self.view.request_panel.set_batch_support(model_options.supportBatch)
+        self.view.request_panel.set_reasoning_support(getattr(model_options, 'supportReasoningEffort', False))
         self.view.batches_panel.set_batch_support(model_options.supportBatch)
