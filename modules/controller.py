@@ -13,6 +13,7 @@ class ProjectGPTController(QObject):
         self.view.batches_panel.get_completed_batch_jobs.connect(self.handle_get_completed_batch_jobs)
         self.view.batches_panel.get_results.connect(self.handle_get_batch_results)
         self.view.batches_panel.delete_job.connect(self.handle_delete_batch_job)
+        self.view.batches_panel.cancel_job.connect(self.handle_cancel_batch_job)
 
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
@@ -46,6 +47,9 @@ class ProjectGPTController(QObject):
 
     def handle_delete_batch_job(self, batch_id):
         self.model.getCurrentModel().delete_batch_job(batch_id)
+        
+    def handle_cancel_batch_job(self, batch_id):
+        self.model.cancel_batch_job(batch_id)
         
     def handle_model_change(self, model_name):
         self.model.switchModel(model_name)

@@ -168,3 +168,12 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
             print("Done")
         except Exception as e:
             model_context["response_generated"]("Error deleting batch results: " + str(e))
+
+    def cancel_batch_job(self, model_context, batch_id):
+        try:
+            model_context["status_changed"]("Canceling batch job ...")
+            client = self.getClient(model_context)
+            client.batches.cancel(batch_id)
+            model_context["status_changed"]("Batch job canceled successfully")
+        except Exception as e:
+            model_context["response_generated"]("Error canceling batch job: " + str(e))

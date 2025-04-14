@@ -77,3 +77,20 @@ class ProjectGPTModel(QObject):
             if service_provider.hasModel(model_name):
                 return service_provider.getModelOptions(model_name)
         raise ValueError(f"Model options for model {model_name} not found.")
+
+    def cancel_batch_job(self, batch_id):
+        if self.currentModel:
+            model_context = {
+                "project_dir": self.project_dir,
+                "chosen_files": self.chosen_files,
+                "modelName": self.currentModel.modelName,
+                "status_changed": self.status_changed.emit,
+                "response_generated": self.response_generated.emit,
+            }
+            try:
+                self.currentModel.provider.cancel_batch_job(model_context, batch_id)
+                self.response_generated.emit(f"Batch job {batch_id} has been cancelled successfully.")
+            except Exception as e:
+                self.response_generated.emit("Error canceling batch job: " + str(e))
+        else:
+            print("No current model selected")

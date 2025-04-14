@@ -10,6 +10,9 @@ class BatchesPanel(QWidget):
 
     # Signal to trigger the action of deleting a selected batch job
     delete_job = pyqtSignal(str)
+    
+    # Signal to trigger the action of canceling a selected batch job
+    cancel_job = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -31,7 +34,7 @@ class BatchesPanel(QWidget):
         self.batch_dropdown = QComboBox()  # Dropdown for displaying batch jobs
         groupbox_layout.addWidget(self.batch_dropdown)
 
-        # Horizontal layout to hold both "Get Results" and "Delete Job" buttons
+        # Horizontal layout to hold "Get Results", "Delete Job" and "Cancel Job" buttons
         buttons_layout = QHBoxLayout()
 
         self.get_results_button = QPushButton("Get Results")
@@ -39,6 +42,9 @@ class BatchesPanel(QWidget):
 
         self.delete_job_button = QPushButton("Delete Job")
         buttons_layout.addWidget(self.delete_job_button)
+        
+        self.cancel_job_button = QPushButton("Cancel Job")
+        buttons_layout.addWidget(self.cancel_job_button)
 
         groupbox_layout.addLayout(buttons_layout)
 
@@ -49,6 +55,9 @@ class BatchesPanel(QWidget):
 
         # Connect the "Delete Job" button to the method that emits the delete_job signal
         self.delete_job_button.clicked.connect(self.emit_selected_batch_id_for_deletion)
+        
+        # Connect the "Cancel Job" button to the method that emits the cancel_job signal
+        self.cancel_job_button.clicked.connect(self.emit_selected_batch_id_for_cancel)
 
         # Set the layout to the groupbox
         batch_groupbox.setLayout(groupbox_layout)
@@ -109,6 +118,20 @@ class BatchesPanel(QWidget):
         # Emit the 'delete_job' signal if selected_batch_id is not None and not the placeholder text
         if selected_batch_id is not None:
             self.delete_job.emit(selected_batch_id)
+            
+    def emit_selected_batch_id_for_cancel(self):
+        """
+        Emits the 'cancel_job' signal with the currently selected batch job ID.
+        """
+        # Get the currently selected index first
+        selected_index = self.batch_dropdown.currentIndex()
+
+        # Retrieve the batch ID using the selected index data
+        selected_batch_id = self.batch_dropdown.itemData(selected_index)
+
+        # Emit the 'cancel_job' signal if selected_batch_id is not None and not the placeholder text
+        if selected_batch_id is not None:
+            self.cancel_job.emit(selected_batch_id)
 
     def set_batch_support(self, supportBatch):
         """
