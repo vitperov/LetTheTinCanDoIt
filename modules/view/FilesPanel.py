@@ -31,9 +31,13 @@ class FilesPanel(QWidget):
         self.last_projects_button = QPushButton("Last projects")
         self.last_projects_button.clicked.connect(self.show_projects_history)
 
+        self.settings_button = QPushButton("Settings")
+        self.settings_button.clicked.connect(self.open_settings)
+
         button_layout.addWidget(self.icon_label)
         button_layout.addWidget(self.choose_dir_button)
         button_layout.addWidget(self.last_projects_button)
+        button_layout.addWidget(self.settings_button)
 
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
@@ -57,6 +61,11 @@ class FilesPanel(QWidget):
         self.history_window = ProjectsHistoryWindow()
         self.history_window.project_selected.connect(self.handle_project_selected)
         self.history_window.exec_()
+
+    def open_settings(self):
+        from modules.view.SettingsDialog import SettingsDialog
+        settings_dialog = SettingsDialog(self)
+        settings_dialog.exec_()
 
     def handle_project_selected(self, directory):
         if directory:
