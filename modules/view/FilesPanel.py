@@ -64,7 +64,7 @@ class FilesPanel(QWidget):
 
     def open_settings(self):
         from modules.view.SettingsDialog import SettingsDialog
-        settings_dialog = SettingsDialog(self)
+        settings_dialog = SettingsDialog(self, model=self.window().model)
         settings_dialog.exec_()
 
     def handle_project_selected(self, directory):

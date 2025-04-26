@@ -177,3 +177,18 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
             model_context["status_changed"]("Batch job canceled successfully")
         except Exception as e:
             model_context["response_generated"]("Error canceling batch job: " + str(e))
+
+    def delete_all_server_files(self, model_context):
+        model_context["status_changed"]("Listing server files ...")
+        client = self.getClient(model_context)
+        files_list = client.files.list()
+        print("Files list:", files_list)
+        files = files_list.data
+        total = len(files)
+        for idx, file_obj in enumerate(files, start=1):
+            file_id = file_obj.id
+            client.files.delete(file_id)
+            msg = f"Deleting file [{idx}/{total}] - OK"
+            print(msg)
+            model_context["response_generated"](msg)
+        model_context["status_changed"]("All files deleted.")

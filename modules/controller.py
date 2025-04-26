@@ -7,6 +7,7 @@ class ProjectGPTController(QObject):
         super().__init__()
         self.model = ProjectGPTModel()
         self.view = ProjectGPTView(self.model.available_models)
+        self.view.set_model(self.model)
 
         self.view.request_panel.send_request_signal.connect(self.handle_send_request)
         self.view.request_panel.send_batch_request_signal.connect(self.handle_send_batch_request)

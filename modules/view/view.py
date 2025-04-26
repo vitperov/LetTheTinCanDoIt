@@ -10,6 +10,7 @@ class ProjectGPTView(QWidget):
     def __init__(self, available_models):
         super().__init__()
         self.available_models = available_models
+        self.model = None
         self.init_ui()
 
     def init_ui(self):
@@ -28,7 +29,7 @@ class ProjectGPTView(QWidget):
 
         # Left side layout with FilesPanel and BatchesPanel
         left_side_layout = QVBoxLayout()
-        self.left_panel = FilesPanel()
+        self.left_panel = FilesPanel(self)
         self.left_panel.setMinimumWidth(200)
         self.batches_panel = BatchesPanel()
         left_side_layout.addWidget(self.left_panel)
@@ -87,3 +88,6 @@ class ProjectGPTView(QWidget):
         Sets the additional requests in the RequestPanel.
         """
         self.request_panel.set_additional_requests(additional_requests)
+
+    def set_model(self, model):
+        self.model = model
