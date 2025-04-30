@@ -5,10 +5,10 @@ from datetime import datetime
 from openai import OpenAI
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileContentFormatter import FileContentFormatter
-from .openAiLikeBaseProvider import OpenAiLikeBaseProvider
+from modules.model.serviceProviders.serviceProviderBase import ServiceProviderBase
 from ..modelOptions import ModelOptions
 
-class OpenAIServiceProvider(OpenAiLikeBaseProvider):
+class OpenAIServiceProvider(ServiceProviderBase):
     def __init__(self):
         super().__init__()
         self.available_models = [
@@ -20,6 +20,7 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
             "o3-mini",
             "gpt-4.5-preview",
         ]
+        self.jobs = None
 
     def getBaseUrl(self):
         return "https://api.openai.com/v1"
@@ -36,6 +37,50 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
             return "assistant"
         else:
             return "system"
+
+    def getClient(self, model_context):
+        api_key = self.get_api_key()
+        return OpenAI(api_key=api_key, base_url=self.getBaseUrl())
+
+    def make_file_content_text(self, project_dir, chosen_files, editorMode):
+        formatter = FileContentFormatter()
+        return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
+
+    def _generate_response_sync(self, model_context, role_string, full_request, editor_mode, reasoning_effort):
+        print("Response thread: Sending...")
+        file_content_text = self.make_file_content_text(model_context["project_dir"], model_context["chosen_files"], editor_mode)
+        full_request_with_files = file_content_text + full_request
+        messages = [
+            {"role": self.getRoleForModel(model_context["modelName"]), "content": role_string},
+            {"role": "user", "content": full_request_with_files}
+        ]
+        print("Model: " + model_context["modelName"])
+        print("Role: " + role_string)
+        print("Editor Mode: " + str(editor_mode))
+        print("Request: " + full_request_with_files)
+        print("--------------")
+        model_context["status_changed"]("Waiting for the response ...")
+        client = self.getClient(model_context)
+        if reasoning_effort:
+            response = client.chat.completions.create(
+                model=model_context["modelName"],
+                messages=messages,
+                reasoning_effort=reasoning_effort
+            )
+        else:
+            response = client.chat.completions.create(
+                model=model_context["modelName"],
+                messages=messages
+            )
+        generated_response = response.choices[0].message.content
+        print("Response choices:" + str(len(response.choices)))
+        print("------------ USAGE ------")
+        print(response.usage)
+        model_context["status_changed"](str(response.usage))
+        if editor_mode:
+            parser = ResponseFilesParser(model_context["project_dir"])
+            parser.parse_response_and_update_files_on_disk(generated_response)
+        return (generated_response, response.usage)
 
     def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode, reasoning_effort):
         model_context["status_changed"]("Uploading batch files ...")
@@ -179,16 +224,19 @@ class OpenAIServiceProvider(OpenAiLikeBaseProvider):
             model_context["response_generated"]("Error canceling batch job: " + str(e))
 
     def delete_all_server_files(self, model_context):
-        model_context["status_changed"]("Listing server files ...")
-        client = self.getClient(model_context)
-        files_list = client.files.list()
-        print("Files list:", files_list)
-        files = files_list.data
-        total = len(files)
-        for idx, file_obj in enumerate(files, start=1):
-            file_id = file_obj.id
-            client.files.delete(file_id)
-            msg = f"Deleting file [{idx}/{total}] - OK"
-            print(msg)
-            model_context["response_generated"](msg)
-        model_context["status_changed"]("All files deleted.")
+        try:
+            model_context["status_changed"]("Listing server files ...")
+            client = self.getClient(model_context)
+            files_list = client.files.list()
+            print("Files list:", files_list)
+            files = files_list.data
+            total = len(files)
+            for idx, file_obj in enumerate(files, start=1):
+                file_id = file_obj.id
+                client.files.delete(file_id)
+                msg = f"Deleting file [{idx}/{total}] - OK"
+                print(msg)
+                model_context["response_generated"](msg)
+            model_context["status_changed"]("All files deleted.")
+        except Exception as e:
+            model_context["response_generated"]("Error deleting server files: " + str(e))

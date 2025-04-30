@@ -7,7 +7,6 @@ def remove_ansi_escape(text):
 	ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 	return ansi_escape.sub('', text)
 
-
 class OllamaServiceProvider(ServiceProviderBase):
     def __init__(self):
         super().__init__()
@@ -19,7 +18,6 @@ class OllamaServiceProvider(ServiceProviderBase):
                 self.available_models = []
             else:
                 models = []
-                # Skip header line and parse each subsequent line
                 for line in lines[1:]:
                     parts = line.split()
                     if parts:
@@ -47,21 +45,16 @@ class OllamaServiceProvider(ServiceProviderBase):
         try:
             model_name = model_context["modelName"].replace("ollama-", "", 1)
             combined_prompt = f"{role_string}\n\n{full_request}"
-            
             command = ["ollama", "run", model_name, combined_prompt]
-            
             output = subprocess.check_output(
                 command,
                 stderr=subprocess.STDOUT,
                 universal_newlines=True
             )
-            
             output = remove_ansi_escape(output)
-            
             generated_response = output.strip()
             model_context["status_changed"]("OllamaServiceProvider: Response generated.")
             return (generated_response, "Usage information not available for ollama")
-            
         except subprocess.CalledProcessError as e:
             error_msg = f"Ollama command failed: {e.output.strip()}"
             return (error_msg, "Error")
@@ -79,4 +72,10 @@ class OllamaServiceProvider(ServiceProviderBase):
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
     def delete_batch_job(self, model_context, batch_id):
+        model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
+
+    def cancel_batch_job(self, model_context, batch_id):
+        model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
+
+    def delete_all_server_files(self, model_context):
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
