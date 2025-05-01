@@ -40,7 +40,7 @@ class ProjectMeta:
                     project_files.append(self._get_relative_path(full_path))
         return project_files
 
-    def _get_existing_record(self, relative_path: str) -> DescriptionRecord:
+    def _get_existing_record(self, relative_path: str):
         FileQuery = Query()
         result = self.db.search(FileQuery.file_path == relative_path)
         return DescriptionRecord(**result[0]) if result else None
@@ -96,3 +96,15 @@ class ProjectMeta:
         print(f"Up-to-date files: {len(stats['up_to_date_files'])}")
         
         return stats
+
+    def load_settings(self):
+        settings_table = self.db.table('settings')
+        settings = settings_table.get(Query().id == "project_settings")
+        if settings:
+            self.index_extensions = settings.get("index_extensions", self.index_extensions)
+        return self.index_extensions
+
+    def save_settings(self, index_extensions):
+        self.index_extensions = index_extensions
+        settings_table = self.db.table('settings')
+        settings_table.upsert({"id": "project_settings", "index_extensions": index_extensions}, Query().id == "project_settings")
