@@ -30,11 +30,15 @@ class FilesPanel(QWidget):
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.clicked.connect(self.open_settings)
+        
+        self.project_settings_button = QPushButton("Project settings")
+        self.project_settings_button.clicked.connect(self.open_project_settings)
 
         button_layout.addWidget(self.icon_label)
         button_layout.addWidget(self.choose_dir_button)
         button_layout.addWidget(self.last_projects_button)
         button_layout.addWidget(self.settings_button)
+        button_layout.addWidget(self.project_settings_button)
 
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
@@ -66,6 +70,15 @@ class FilesPanel(QWidget):
         from modules.view.SettingsDialog import SettingsDialog
         settings_dialog = SettingsDialog(self, model=self.window().model)
         settings_dialog.exec_()
+        
+    def open_project_settings(self):
+        from PyQt5.QtWidgets import QMessageBox
+        if self.window() and hasattr(self.window(), "model") and self.window().model.project_meta:
+            from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
+            dialog = ProjectMetaSettingsDialog(self.window().model.project_meta, self)
+            dialog.exec_()
+        else:
+            QMessageBox.warning(self, "Warning", "Project metadata is not available. Please select a project first.")
 
     def handle_project_selected(self, directory):
         if directory:
