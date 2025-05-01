@@ -5,7 +5,7 @@ from tinydb import TinyDB, Query
 from tinydb.storages import JSONStorage
 from tinydb.middlewares import CachingMiddleware
 
-from .dbRecords/DescriptionRecord import DescriptionRecord
+from .dbRecords.DescriptionRecord import DescriptionRecord
 
 class ProjectMeta:
     def __init__(self, project_path: str, index_extensions: list = None):
