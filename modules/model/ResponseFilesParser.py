@@ -15,6 +15,8 @@ class ResponseFilesParser:
 
         # Extract the filenames from the response
         filenames_in_response = self.extract_filenames_from_response(response)
+        print("Filenames found:")
+        print(filenames_in_response)
 
         if not filenames_in_response:
             print("No filenames found in the response. Skipping update.")
