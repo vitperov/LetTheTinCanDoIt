@@ -5,18 +5,7 @@ from tinydb import TinyDB, Query
 from tinydb.storages import JSONStorage
 from tinydb.middlewares import CachingMiddleware
 
-class DescriptionRecord:
-    def __init__(self, file_path: str, checksum: str, description: str):
-        self.file_path = file_path
-        self.checksum = checksum
-        self.description = description
-
-    def to_dict(self):
-        return {
-            'file_path': self.file_path,
-            'checksum': self.checksum,
-            'description': self.description
-        }
+from .dbRecords/DescriptionRecord import DescriptionRecord
 
 class ProjectMeta:
     def __init__(self, project_path: str, index_extensions: list = None):
@@ -56,7 +45,7 @@ class ProjectMeta:
         return f"Description for {relative_path}"
 
     def update_descriptions(self):
-        files = self.get_all_project_files()
+        files = self.getAll_project_files()
         for rel_path in files:
             current_checksum = self.calculate_checksum(rel_path)
             existing = self._get_existing_record(rel_path)
@@ -67,7 +56,7 @@ class ProjectMeta:
                 self.db.upsert(record.to_dict(), Query().file_path == rel_path)
 
     def force_update_descriptions(self):
-        files = self.get_all_project_files()
+        files = self.getAll_project_files()
         for rel_path in files:
             current_checksum = self.calculate_checksum(rel_path)
             new_description = self.compose_file_description(rel_path)
@@ -75,7 +64,7 @@ class ProjectMeta:
             self.db.upsert(record.to_dict(), Query().file_path == rel_path)
 
     def stat_descriptions(self) -> dict:
-        files_in_project = set(self.get_all_project_files())
+        files_in_project = set(self.getAll_project_files())
         db_records = {rec['file_path']: rec for rec in self.db.all()}
         
         stats = {
