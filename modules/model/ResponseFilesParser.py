@@ -43,18 +43,18 @@ class ResponseFilesParser:
         start_index = 0
 
         while True:
-            # Find the next occurrence of **
-            start_marker = response.find("**", start_index)
+            # Find the next occurrence of ***
+            start_marker = response.find("***", start_index)
             if start_marker == -1:
-                break  # No more ** found, exit the loop
+                break  # No more *** found, exit the loop
 
-            # Find the closing ** for the file name
-            end_marker = response.find("**", start_marker + 2)
+            # Find the closing *** for the file name
+            end_marker = response.find("***", start_marker + 3)
             if end_marker == -1:
-                break  # No closing **, exit the loop
+                break  # No closing ***, exit the loop
 
             # Extract the potential filename
-            potential_filename = response[start_marker + 2:end_marker].strip()
+            potential_filename = response[start_marker + 3:end_marker].strip()
 
             # Add it to the list of extracted files
             if potential_filename:  # Ensure we don't add empty strings
@@ -72,7 +72,7 @@ class ResponseFilesParser:
         which can be wrapped in **.
         """
         # Try to find the file name enclosed in ** in the response
-        file_marker = f"**{relative_path}**"
+        file_marker = f"***{relative_path}***"
 
         start_index = response.find(file_marker)
         if start_index == -1:

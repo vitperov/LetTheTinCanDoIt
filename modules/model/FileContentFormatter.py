@@ -39,7 +39,7 @@ class FileContentFormatter:
             "  * Please return the content of each file with its corresponding file path.\n"
             "  * Do not omit the file paths.\n"
             "  * If you are editing a file provided by the user, do not modify the original file path.\n"
-            "  * Each file path should be enclosed in double asterisks (**file_path**), followed immediately by the modified content inside a code block.\n"
+            "  * Each file path should be enclosed in triple asterisks (***file_path***), followed immediately by the modified content inside a code block.\n"
             "  * Do not use ### before file path.\n"
             "  * Do not use row of '─' before or after file path.\n"
             "  * Do not insert any text, explanations, or comments before, after, or between the file path and the code block.\n"
