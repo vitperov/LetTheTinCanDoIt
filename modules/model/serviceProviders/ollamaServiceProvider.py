@@ -46,16 +46,8 @@ class OllamaServiceProvider(ServiceProviderBase):
 		
     def _generate_response_sync(self, model_context, role_string, full_request, editor_mode, reasoning_effort):
         print("OllamaServiceProvider: Generating response...")
-        # Prepare file attachments if any
-        formatter = FileContentFormatter()
-        file_content_text = formatter.make_file_content_text(
-            model_context["project_dir"],
-            model_context["chosen_files"],
-            editor_mode
-        )
-        # Combine role, attached file contents and additional request text
-        combined_prompt = f"{role_string}\n\n{file_content_text}{full_request}"
-        # Print the combined prompt to the console for debugging
+        # Use the pre-composed full_request directly
+        combined_prompt = full_request
         print("OllamaServiceProvider: Sending request:")
         print(combined_prompt)
         try:

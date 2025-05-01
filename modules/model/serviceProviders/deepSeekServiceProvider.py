@@ -38,16 +38,14 @@ class DeepSeekServiceProvider(ServiceProviderBase):
 
     def _generate_response_sync(self, model_context, role_string, full_request, editor_mode, reasoning_effort):
         print("Response thread: Sending...")
-        file_content_text = self.make_file_content_text(model_context["project_dir"], model_context["chosen_files"], editor_mode)
-        full_request_with_files = file_content_text + full_request
         messages = [
             {"role": self.getRoleForModel(model_context["modelName"]), "content": role_string},
-            {"role": "user", "content": full_request_with_files}
+            {"role": "user", "content": full_request}
         ]
         print("Model: " + model_context["modelName"])
         print("Role: " + role_string)
         print("Editor Mode: " + str(editor_mode))
-        print("Request: " + full_request_with_files)
+        print("Request: " + full_request)
         print("--------------")
         model_context["status_changed"]("Waiting for the response ...")
         client = self.getClient(model_context)
