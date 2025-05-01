@@ -1,12 +1,9 @@
 import os
-import json
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
-
-SETTINGS_FILE = 'settings/settings.json'
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
@@ -58,7 +55,10 @@ class FilesPanel(QWidget):
             self.handle_project_selected(selected_dir)
 
     def show_projects_history(self):
-        self.history_window = ProjectsHistoryWindow()
+        history_model = None
+        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
+            history_model = self.window().model.historyModel
+        self.history_window = ProjectsHistoryWindow(history_model)
         self.history_window.project_selected.connect(self.handle_project_selected)
         self.history_window.exec_()
 
@@ -77,39 +77,13 @@ class FilesPanel(QWidget):
             self.update_settings(directory)
 
     def load_last_project_directory(self):
-        home_directory = os.path.expanduser('~')
-
-        if os.path.exists(SETTINGS_FILE):
-            try:
-                with open(SETTINGS_FILE, 'r') as f:
-                    settings = json.load(f)
-                    return settings.get('last_project_dir', home_directory)
-            except (json.JSONDecodeError, IOError):
-                pass
-        
-        return home_directory
+        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
+            return self.window().model.historyModel.get_last_project_directory()
+        return os.path.expanduser('~')
 
     def update_settings(self, directory):
-        settings = {}
-        if os.path.exists(SETTINGS_FILE):
-            try:
-                with open(SETTINGS_FILE, 'r') as f:
-                    settings = json.load(f)
-            except (json.JSONDecodeError, IOError):
-                pass
-        
-        settings['last_project_dir'] = directory
-
-        last_projects = settings.get('lastProjects', [])
-        if directory in last_projects:
-            last_projects.remove(directory)
-        last_projects.insert(0, directory)
-        projectsMaxHistory = 5
-        settings['lastProjects'] = last_projects[:projectsMaxHistory]
-
-        os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
-        with open(SETTINGS_FILE, 'w') as f:
-            json.dump(settings, f)
+        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
+            self.window().model.historyModel.update_last_project(directory)
 
     def get_checked_files(self):
         relative_files = [os.path.relpath(file_path, self.project_dir) for file_path, checked in self.file_system_model.checked_files.items() if checked]
