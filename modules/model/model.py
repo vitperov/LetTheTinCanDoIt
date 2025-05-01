@@ -12,6 +12,7 @@ from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServi
 from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
 from modules.model.ThreadManager import ThreadManager
 from modules.model.HistoryModel import HistoryModel
+from modules.model.RequestHistoryModel import RequestHistoryModel
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)
@@ -40,6 +41,7 @@ class ProjectGPTModel(QObject):
             self.switchModel(self.available_models[0])
         
         self.historyModel = HistoryModel()
+        self.requestHistoryModel = RequestHistoryModel()
 
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir

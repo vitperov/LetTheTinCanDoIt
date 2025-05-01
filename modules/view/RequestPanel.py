@@ -1,6 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, QCheckBox, QScrollArea, QGridLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QTextEdit, QPushButton, QHBoxLayout, QLineEdit, QRadioButton, QButtonGroup, QCheckBox, QScrollArea, QGridLayout, QMenu
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QMovie
+from PyQt5.QtGui import QMovie, QCursor
 from modules.view.RoleSelector import RoleSelector
 
 class RequestPanel(QWidget):
@@ -64,7 +64,19 @@ class RequestPanel(QWidget):
         self.request_input = QTextEdit()
         self.request_input.setAcceptRichText(False)
 
+        # New layout for request input and history button
+        text_edit_layout = QHBoxLayout()
+        text_edit_layout.addWidget(self.request_input)
+        self.history_button = QPushButton("H")
+        self.history_button.setFixedWidth(30)
+        self.history_button.clicked.connect(self.show_history_menu)
+        text_edit_layout.addWidget(self.history_button)
+
+        request_layout.addWidget(self.request_label)
+        request_layout.addLayout(text_edit_layout)
+
         self.additional_requests_checkbox_layout = QGridLayout()
+        request_layout.addLayout(self.additional_requests_checkbox_layout)
 
         batch_layout = QHBoxLayout()
 
@@ -77,23 +89,17 @@ class RequestPanel(QWidget):
         batch_layout.addWidget(self.description_label)
         batch_layout.addWidget(self.description_input)
         batch_layout.addWidget(self.send_batch_button)
+        request_layout.addLayout(batch_layout)
 
+        button_layout = QHBoxLayout()
         self.send_button = QPushButton('Send')
         self.send_button.clicked.connect(self.handle_send)
-
+        button_layout.addWidget(self.send_button)
         self.spinner = QLabel()
         self.movie = QMovie("resources/spinner.gif")
         self.spinner.setMovie(self.movie)
         self.spinner.hide()
-
-        button_layout = QHBoxLayout()
-        button_layout.addWidget(self.send_button)
         button_layout.addWidget(self.spinner)
-
-        request_layout.addWidget(self.request_label)
-        request_layout.addWidget(self.request_input)
-        request_layout.addLayout(self.additional_requests_checkbox_layout)
-        request_layout.addLayout(batch_layout)
         request_layout.addLayout(button_layout)
 
         request_groupbox.setLayout(request_layout)
@@ -158,3 +164,19 @@ class RequestPanel(QWidget):
     def set_reasoning_support(self, supportReasoningEffort):
         self.reasoning_dropdown.setEnabled(supportReasoningEffort)
         self.reasoning_label.setEnabled(supportReasoningEffort)
+
+    def show_history_menu(self):
+        menu = QMenu()
+        parent = self.window()
+        model = getattr(parent, "model", None)
+        history = []
+        if model is not None and hasattr(model, "requestHistoryModel"):
+            history = model.requestHistoryModel.get_last_requests()
+        for req in history:
+            display_text = req if len(req) <= 20 else req[:20] + "..."
+            action = menu.addAction(display_text)
+            action.setData(req)
+        action = menu.exec_(QCursor.pos())
+        if action:
+            full_request = action.data()
+            self.request_input.setText(full_request)
