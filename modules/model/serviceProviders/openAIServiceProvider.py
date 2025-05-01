@@ -19,6 +19,10 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1", 
             "o3-mini",
             "gpt-4.5-preview",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "o4-mini",
         ]
         self.jobs = None
 
