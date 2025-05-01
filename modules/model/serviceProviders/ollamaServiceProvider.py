@@ -2,6 +2,7 @@ import subprocess
 import re
 from modules.model.serviceProviders.serviceProviderBase import ServiceProviderBase
 from modules.model.modelOptions import ModelOptions
+from modules.model.FileContentFormatter import FileContentFormatter  # Added to attach file content
 
 def remove_ansi_escape(text):
 	ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
@@ -39,12 +40,23 @@ class OllamaServiceProvider(ServiceProviderBase):
 
     def getRoleForModel(self, modelName):
         return "assistant"
-        
+		
     def _generate_response_sync(self, model_context, role_string, full_request, editor_mode, reasoning_effort):
         print("OllamaServiceProvider: Generating response...")
+        # Prepare file attachments if any
+        formatter = FileContentFormatter()
+        file_content_text = formatter.make_file_content_text(
+            model_context["project_dir"],
+            model_context["chosen_files"],
+            editor_mode
+        )
+        # Combine role, attached file contents and additional request text
+        combined_prompt = f"{role_string}\n\n{file_content_text}{full_request}"
+        # Print the combined prompt to the console for debugging
+        print("OllamaServiceProvider: Sending request:")
+        print(combined_prompt)
         try:
             model_name = model_context["modelName"].replace("ollama-", "", 1)
-            combined_prompt = f"{role_string}\n\n{full_request}"
             command = ["ollama", "run", model_name, combined_prompt]
             output = subprocess.check_output(
                 command,
