@@ -70,7 +70,7 @@ class DeepSeekServiceProvider(ServiceProviderBase):
             parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode, reasoning_effort):
+    def _generate_batch_response_sync(self, model_context, description):
         model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
 
     def get_completed_batch_jobs(self, model_context):
