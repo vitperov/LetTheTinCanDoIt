@@ -8,6 +8,9 @@ def remove_ansi_escape(text):
 	ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 	return ansi_escape.sub('', text)
 
+def remove_progress_symbols(text):
+    return re.sub(r'[\u2800-\u28FF]', '', text)
+
 class OllamaServiceProvider(ServiceProviderBase):
     def __init__(self):
         super().__init__()
@@ -64,6 +67,7 @@ class OllamaServiceProvider(ServiceProviderBase):
                 universal_newlines=True
             )
             output = remove_ansi_escape(output)
+            output = remove_progress_symbols(output)
             generated_response = output.strip()
             model_context["status_changed"]("OllamaServiceProvider: Response generated.")
             return (generated_response, "Usage information not available for ollama")
