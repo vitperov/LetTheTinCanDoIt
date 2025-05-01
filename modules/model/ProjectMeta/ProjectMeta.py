@@ -10,8 +10,12 @@ from .dbRecords/DescriptionRecord import DescriptionRecord
 class ProjectMeta:
     def __init__(self, project_path: str, index_extensions: list = None):
         self.project_path = project_path
-        self.db_path = os.path.join(project_path, '.projectgpt', 'metadata.json')
+        self.db_path = os.path.join(project_path, '.lttcdi', 'metadata.json')
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        
+        if not os.path.exists(self.db_path):
+            with open(self.db_path, "w") as f:
+                f.write('{}')
         
         self.db = TinyDB(self.db_path, storage=CachingMiddleware(JSONStorage))
         self.index_extensions = index_extensions if index_extensions else ['py']
