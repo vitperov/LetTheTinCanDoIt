@@ -50,14 +50,12 @@ class OpenAIServiceProvider(ServiceProviderBase):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def _generate_response_sync(self, model_context, role_string, full_request, editor_mode, reasoning_effort):
+    def _generate_response_sync(self, model_context, full_request, editor_mode, reasoning_effort):
         print("Response thread: Sending...")
         messages = [
-            {"role": self.getRoleForModel(model_context["modelName"]), "content": role_string},
-            {"role": "user", "content": full_request}
+            {"role": "user", "content": full_request},
         ]
         print("Model: " + model_context["modelName"])
-        print("Role: " + role_string)
         print("Editor Mode: " + str(editor_mode))
         print("Request: " + full_request)
         print("--------------")
@@ -84,11 +82,10 @@ class OpenAIServiceProvider(ServiceProviderBase):
             parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, role_string, full_request, description, editor_mode, reasoning_effort):
+    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode, reasoning_effort):
         model_context["status_changed"]("Uploading batch files ...")
         messages = [
-            {"role": self.getRoleForModel(model_context["modelName"]), "content": role_string},
-            {"role": "user", "content": full_request}
+            {"role": "user", "content": full_request},
         ]
         print("==== Request text ====")
         print(full_request)

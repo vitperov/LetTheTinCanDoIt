@@ -41,10 +41,7 @@ class OllamaServiceProvider(ServiceProviderBase):
     def getModelOptions(self, modelName):
         return ModelOptions(supportBatch=False, supportReasoningEffort=False)
 
-    def getRoleForModel(self, modelName):
-        return "assistant"
-		
-    def _generate_response_sync(self, model_context, full_request):
+    def _generate_response_sync(self, model_context, full_request, editor_mode, reasoning_effort):
         print("OllamaServiceProvider: Generating response...")
         combined_prompt = full_request
         print("OllamaServiceProvider: Sending request:")
@@ -69,7 +66,7 @@ class OllamaServiceProvider(ServiceProviderBase):
             error_msg = f"Error generating response: {str(e)}"
             return (error_msg, "Error")
 
-    def _generate_batch_response_sync(self, model_context, description):
+    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode, reasoning_effort):
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
     def get_completed_batch_jobs(self, model_context):

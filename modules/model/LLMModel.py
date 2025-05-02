@@ -31,14 +31,11 @@ class LLMModel(QObject):
         try:
             self.status_changed.emit("Sending the request ...")
             print("Sending the request in a new thread")
-            user_message = full_request
+            user_message = role_string + "\n\n"
             if self.project_dir and self.chosen_files and editor_mode:
                 formatter = FileContentFormatter()
-                user_message = formatter.make_file_content_text(self.project_dir, self.chosen_files, editor_mode) + full_request
-            if self.modelName.startswith("ollama-"):
-                user_message = role_string + "\n\n" + user_message
-            else:
-                effective_role = role_string
+                user_message += formatter.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
+            user_message += full_request
             model_context = {
                 "project_dir": self.project_dir,
                 "chosen_files": self.chosen_files,
@@ -46,18 +43,11 @@ class LLMModel(QObject):
                 "status_changed": self.status_changed.emit,
                 "response_generated": self.response_generated.emit,
             }
-            if self.modelName.startswith("ollama-"):
-                self.thread_manager.execute_async(
-                    lambda: self.provider._generate_response_sync(model_context, user_message),
-                    lambda result: self._handle_generated_response(result),
-                    lambda e: self.response_generated.emit("Error generating response: " + str(e))
-                )
-            else:
-                self.thread_manager.execute_async(
-                    lambda: self.provider._generate_response_sync(model_context, effective_role, user_message, editor_mode, reasoning_effort),
-                    lambda result: self._handle_generated_response(result),
-                    lambda e: self.response_generated.emit("Error generating response: " + str(e))
-                )
+            self.thread_manager.execute_async(
+                lambda: self.provider._generate_response_sync(model_context, user_message, editor_mode, reasoning_effort),
+                lambda result: self._handle_generated_response(result),
+                lambda e: self.response_generated.emit("Error generating response: " + str(e))
+            )
             print("Done. Waiting for the result")
         except Exception as e:
             self.response_generated.emit("Error generating response: " + str(e))
@@ -69,14 +59,11 @@ class LLMModel(QObject):
 
     def generate_batch_response_async(self, role_string, full_request, description, editor_mode, reasoning_effort):
         try:
-            user_message = full_request
+            user_message = role_string + "\n\n"
             if self.project_dir and self.chosen_files and editor_mode:
                 formatter = FileContentFormatter()
-                user_message = formatter.make_file_content_text(self.project_dir, self.chosen_files, editor_mode) + full_request
-            if self.modelName.startswith("ollama-"):
-                user_message = role_string + "\n\n" + user_message
-            else:
-                effective_role = role_string
+                user_message += formatter.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
+            user_message += full_request
             model_context = {
                 "project_dir": self.project_dir,
                 "chosen_files": self.chosen_files,
@@ -85,18 +72,11 @@ class LLMModel(QObject):
                 "response_generated": self.response_generated.emit,
                 "completed_job_list_updated": self.completed_job_list_updated.emit,
             }
-            if self.modelName.startswith("ollama-") or self.modelName.startswith("deepseek-"):
-                self.thread_manager.execute_async(
-                    lambda: self.provider._generate_batch_response_sync(model_context, description),
-                    lambda result: self.response_generated.emit(str(result)),
-                    lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
-                )
-            else:
-                self.thread_manager.execute_async(
-                    lambda: self.provider._generate_batch_response_sync(model_context, effective_role, user_message, description, editor_mode, reasoning_effort),
-                    lambda result: self.response_generated.emit(str(result)),
-                    lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
-                )
+            self.thread_manager.execute_async(
+                lambda: self.provider._generate_batch_response_sync(model_context, user_message, description, editor_mode, reasoning_effort),
+                lambda result: self.response_generated.emit(str(result)),
+                lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
+            )
         except Exception as e:
             self.response_generated.emit("Error generating batch response: " + str(e))
 
