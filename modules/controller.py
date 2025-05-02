@@ -21,8 +21,8 @@ class ProjectGPTController(QObject):
         self.model.status_changed.connect(self.view.status_bar.update_status)
         self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
-        project_dir, _ = self.view.left_panel.get_checked_files()
-        self.view.top_panel.update_directory(project_dir)
+        last_project_directory = self.model.historyModel.get_last_project_directory()
+        self.view.top_panel.update_directory(last_project_directory)
         
         additional_requests = self.model.get_additional_requests()
         self.view.set_additional_requests(additional_requests)
