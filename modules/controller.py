@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject
 from modules.model.model import ProjectGPTModel
 from modules.view.view import ProjectGPTView
+from modules.view.FilesPanel import FilesPanel
 
 class ProjectGPTController(QObject):
     def __init__(self):
@@ -8,6 +9,8 @@ class ProjectGPTController(QObject):
         self.model = ProjectGPTModel()
         self.view = ProjectGPTView(self.model.available_models)
         self.view.set_model(self.model)
+
+        self.view.left_panel.set_model(self.model)
 
         self.view.request_panel.send_request_signal.connect(self.handle_send_request)
         self.view.request_panel.send_batch_request_signal.connect(self.handle_send_batch_request)

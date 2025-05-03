@@ -4,14 +4,20 @@ from PyQt5.QtCore import QDir, Qt, pyqtSignal
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
+from PyQt5.QtWidgets import QMessageBox
+from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, model=None):
         super().__init__(parent)
+        self.model = model
         self.project_dir = self.load_last_project_directory()
         self.init_ui()
+
+    def set_model(self, model):
+        self.model = model
 
     def init_ui(self):
         main_layout = QVBoxLayout()
@@ -60,25 +66,26 @@ class FilesPanel(QWidget):
 
     def show_projects_history(self):
         history_model = None
-        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
-            history_model = self.window().model.historyModel
+        if self.model and hasattr(self.model, "historyModel"):
+            history_model = self.model.historyModel
         self.history_window = ProjectsHistoryWindow(history_model)
         self.history_window.project_selected.connect(self.handle_project_selected)
         self.history_window.exec_()
 
     def open_settings(self):
         from modules.view.SettingsDialog import SettingsDialog
-        settings_dialog = SettingsDialog(self, model=self.window().model)
+        if self.model is None:
+            QMessageBox.critical(self, "Error", "Model is not set.")
+            return
+        settings_dialog = SettingsDialog(self, model=self.model)
         settings_dialog.exec_()
         
     def open_project_settings(self):
-        from PyQt5.QtWidgets import QMessageBox
-        if self.window() and hasattr(self.window(), "model") and self.window().model.project_meta:
-            from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
-            dialog = ProjectMetaSettingsDialog(self.window().model.project_meta, self)
-            dialog.exec_()
-        else:
-            QMessageBox.warning(self, "Warning", "Project metadata is not available. Please select a project first.")
+        if self.model is None or getattr(self.model, "project_meta", None) is None:
+            QMessageBox.critical(self, "Error", "Project Meta information is not available.")
+            return
+        dialog = ProjectMetaSettingsDialog(self.model.project_meta, self)
+        dialog.exec_()
 
     def handle_project_selected(self, directory):
         if directory:
@@ -90,13 +97,13 @@ class FilesPanel(QWidget):
             self.update_settings(directory)
 
     def load_last_project_directory(self):
-        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
-            return self.window().model.historyModel.get_last_project_directory()
+        if self.model and hasattr(self.model, "historyModel"):
+            return self.model.historyModel.get_last_project_directory()
         return os.path.expanduser('~')
 
     def update_settings(self, directory):
-        if self.window() and hasattr(self.window(), "model") and hasattr(self.window().model, "historyModel"):
-            self.window().model.historyModel.update_last_project(directory)
+        if self.model and hasattr(self.model, "historyModel"):
+            self.model.historyModel.update_last_project(directory)
 
     def get_checked_files(self):
         relative_files = [os.path.relpath(file_path, self.project_dir) for file_path, checked in self.file_system_model.checked_files.items() if checked]
