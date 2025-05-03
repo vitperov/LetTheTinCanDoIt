@@ -11,6 +11,9 @@ from modules.model.serviceProviders.openAIServiceProvider import OpenAIServicePr
 from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
 from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
 from modules.model.ThreadManager import ThreadManager
+from modules.model.HistoryModel import HistoryModel
+from modules.model.RequestHistoryModel import RequestHistoryModel
+from modules.model.ProjectMeta.ProjectMeta import ProjectMeta
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)
@@ -37,8 +40,13 @@ class ProjectGPTModel(QObject):
         self.currentModel = None
         if self.available_models:
             self.switchModel(self.available_models[0])
+        
+        self.historyModel = HistoryModel()
+        self.requestHistoryModel = RequestHistoryModel()
+        self.project_meta = None
 
     def set_project_files(self, project_dir, chosen_files):
+        self.project_meta = ProjectMeta(project_dir)
         self.project_dir = project_dir
         self.chosen_files = chosen_files
         if self.currentModel:

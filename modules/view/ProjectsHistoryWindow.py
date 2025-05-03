@@ -1,31 +1,20 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QPushButton, QLabel
 from PyQt5.QtCore import pyqtSignal
-import json
-import os
-
-SETTINGS_FILE = 'settings/settings.json'
 
 class ProjectsHistoryWindow(QDialog):
     project_selected = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, history_model):
         super().__init__()
         self.setWindowTitle("Last opened projects")
+        self.history_model = history_model
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        last_projects = []
-        if os.path.exists(SETTINGS_FILE):
-            try:
-                with open(SETTINGS_FILE, 'r') as f:
-                    settings = json.load(f)
-                    last_projects = settings.get('lastProjects', [])
-            except:
-                pass
-
+        last_projects = self.history_model.get_last_projects() if self.history_model else []
         if not last_projects:
             label = QLabel("Projects history is empty")
             layout.addWidget(label)

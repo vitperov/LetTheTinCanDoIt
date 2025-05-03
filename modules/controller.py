@@ -7,6 +7,7 @@ class ProjectGPTController(QObject):
         super().__init__()
         self.model = ProjectGPTModel()
         self.view = ProjectGPTView(self.model.available_models)
+        self.view.set_model(self.model)
 
         self.view.request_panel.send_request_signal.connect(self.handle_send_request)
         self.view.request_panel.send_batch_request_signal.connect(self.handle_send_batch_request)
@@ -20,8 +21,8 @@ class ProjectGPTController(QObject):
         self.model.status_changed.connect(self.view.status_bar.update_status)
         self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
-        project_dir, _ = self.view.left_panel.get_checked_files()
-        self.view.top_panel.update_directory(project_dir)
+        last_project_directory = self.model.historyModel.get_last_project_directory()
+        self.view.top_panel.update_directory(last_project_directory)
         
         additional_requests = self.model.get_additional_requests()
         self.view.set_additional_requests(additional_requests)
@@ -32,11 +33,13 @@ class ProjectGPTController(QObject):
     def handle_send_request(self, model, role_string, full_request, reasoning_effort, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
+        self.model.requestHistoryModel.update_request_history(full_request)
         self.model.getCurrentModel().generate_response_async(role_string, full_request, editor_mode, reasoning_effort)
 
     def handle_send_batch_request(self, model, role_string, full_request_template, reasoning_effort, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
+        self.model.requestHistoryModel.update_request_history(full_request_template)
         self.model.getCurrentModel().generate_batch_response_async(role_string, full_request_template, description, editor_mode, reasoning_effort)
 
     def handle_get_completed_batch_jobs(self):
