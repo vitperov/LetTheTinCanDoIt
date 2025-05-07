@@ -18,6 +18,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1-mini",
             "o1", 
             "o3-mini",
+            "o3-mini-high",
             "gpt-4.5-preview",
             "gpt-4.1",
             "gpt-4.1-mini",
@@ -33,8 +34,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
         return super().get_api_key('api_key')
 
     def getModelOptions(self, modelName):
-        supportReasoningEffort = modelName in ["o3-mini", "o1"]
-        return ModelOptions(supportBatch=True, supportReasoningEffort=supportReasoningEffort)
+        return ModelOptions(supportBatch=True)
     
     def getRoleForModel(self, modelName):
         if "o1" in modelName.lower():
@@ -50,7 +50,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def _generate_response_sync(self, model_context, full_request, editor_mode, reasoning_effort):
+    def _generate_response_sync(self, model_context, full_request, editor_mode):
         print("Response thread: Sending...")
         messages = [
             {"role": "user", "content": full_request},
@@ -61,15 +61,26 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("--------------")
         model_context["status_changed"]("Waiting for the response ...")
         client = self.getClient(model_context)
-        if reasoning_effort:
+
+        model_name = model_context["modelName"]
+        api_model_name = model_name
+        used_reasoning_effort = None
+
+        if model_name == "o3-mini-high":
+            api_model_name = "o3-mini"
+            used_reasoning_effort = "high"
+        elif model_name == "o3-mini":
+            used_reasoning_effort = "medium"
+
+        if used_reasoning_effort:
             response = client.chat.completions.create(
-                model=model_context["modelName"],
+                model=api_model_name,
                 messages=messages,
-                reasoning_effort=reasoning_effort
+                reasoning_effort=used_reasoning_effort
             )
         else:
             response = client.chat.completions.create(
-                model=model_context["modelName"],
+                model=api_model_name,
                 messages=messages
             )
         generated_response = response.choices[0].message.content
@@ -82,7 +93,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode, reasoning_effort):
+    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode):
         model_context["status_changed"]("Uploading batch files ...")
         messages = [
             {"role": "user", "content": full_request},
@@ -90,17 +101,26 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("==== Request text ====")
         print(full_request)
         print("======================")
+        model_name = model_context["modelName"]
+        api_model_name = model_name
+        used_reasoning_effort = None
+        if model_name == "o3-mini-high":
+            api_model_name = "o3-mini"
+            used_reasoning_effort = "high"
+        elif model_name == "o3-mini":
+            used_reasoning_effort = "medium"
+
         batch_request = {
             "custom_id": f"{model_context['project_dir']}|{editor_mode}",
             "method": "POST",
             "url": "/v1/chat/completions",
             "body": {
-                "model": model_context["modelName"],
+                "model": api_model_name,
                 "messages": messages,
             }
         }
-        if reasoning_effort:
-            batch_request["body"]["reasoning_effort"] = reasoning_effort
+        if used_reasoning_effort:
+            batch_request["body"]["reasoning_effort"] = used_reasoning_effort
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".jsonl", dir=tmp_dir, delete=False) as temp_file:

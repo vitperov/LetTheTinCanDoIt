@@ -33,7 +33,7 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def _generate_response_sync(self, model_context, full_request, editor_mode, reasoning_effort):
+    def _generate_response_sync(self, model_context, full_request, editor_mode):
         print("Response thread: Sending...")
         messages = [
             {"role": "user", "content": full_request}
@@ -44,17 +44,10 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         print("--------------")
         model_context["status_changed"]("Waiting for the response ...")
         client = self.getClient(model_context)
-        if reasoning_effort:
-            response = client.chat.completions.create(
-                model=model_context["modelName"],
-                messages=messages,
-                reasoning_effort=reasoning_effort
-            )
-        else:
-            response = client.chat.completions.create(
-                model=model_context["modelName"],
-                messages=messages
-            )
+        response = client.chat.completions.create(
+            model=model_context["modelName"],
+            messages=messages
+        )
         generated_response = response.choices[0].message.content
         print("Response choices:" + str(len(response.choices)))
         print("------------ USAGE ------")
@@ -65,5 +58,5 @@ class DeepSeekServiceProvider(ServiceProviderBase):
             parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode, reasoning_effort):
+    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode):
         model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
