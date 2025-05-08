@@ -1,12 +1,14 @@
 import json
 import os
+from abc import ABC, abstractmethod
 
-class ServiceProviderBase:
+class ServiceProviderBase(ABC):
     def __init__(self):
         self.available_models = []
 
+    @abstractmethod
     def getBaseUrl(self):
-        raise NotImplementedError("getBaseUrl method must be implemented by the child class.")
+        pass
 
     def get_api_key(self, key_name):
         settings_path = os.path.join('settings', 'key.json')
@@ -25,26 +27,34 @@ class ServiceProviderBase:
         """
         return modelName in self.available_models
 
+    @abstractmethod
     def getModelOptions(self, modelName):
-        raise NotImplementedError("getModelOptions method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def _generate_response_sync(self, model_context, full_request):
-        raise NotImplementedError("_generate_response_sync method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):
-        raise NotImplementedError("_generate_batch_response_sync method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def get_completed_batch_jobs(self, model_context):
-        raise NotImplementedError("get_completed_batch_jobs method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def get_batch_results(self, model_context, batch_id):
-        raise NotImplementedError("get_batch_results method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def delete_batch_job(self, model_context, batch_id):
-        raise NotImplementedError("delete_batch_job method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def cancel_batch_job(self, model_context, batch_id):
-        raise NotImplementedError("cancel_batch_job method must be implemented by the child class.")
+        pass
 
+    @abstractmethod
     def delete_all_server_files(self, model_context):
-        raise NotImplementedError("delete_all_server_files method must be implemented by the child class.")
+        pass

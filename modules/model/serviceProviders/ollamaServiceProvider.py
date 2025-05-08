@@ -32,16 +32,16 @@ class OllamaServiceProvider(ServiceProviderBase):
             print("Warning: Failed to retrieve ollama models: " + str(e))
             self.available_models = []
 
-    def getBaseUrl(self):
+    def getBaseUrl(self):  # override
         return ""
 
-    def get_api_key(self):
+    def get_api_key(self):  # override (even though this only returns empty string)
         return ""
 
-    def getModelOptions(self, modelName):
+    def getModelOptions(self, modelName):  # override
         return ModelOptions(supportBatch=False, supportReasoningEffort=False)
 
-    def _generate_response_sync(self, model_context, full_request):
+    def _generate_response_sync(self, model_context, full_request):  # override
         print("OllamaServiceProvider: Generating response...")
         combined_prompt = full_request
         print("OllamaServiceProvider: Sending request:")
@@ -66,20 +66,20 @@ class OllamaServiceProvider(ServiceProviderBase):
             error_msg = f"Error generating response: {str(e)}"
             return (error_msg, "Error")
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):
+    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
-    def get_completed_batch_jobs(self, model_context):
+    def get_completed_batch_jobs(self, model_context):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
-    def get_batch_results(self, model_context, batch_id):
+    def get_batch_results(self, model_context, batch_id):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
-    def delete_batch_job(self, model_context, batch_id):
+    def delete_batch_job(self, model_context, batch_id):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
-    def cancel_batch_job(self, model_context, batch_id):
+    def cancel_batch_job(self, model_context, batch_id):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
 
-    def delete_all_server_files(self, model_context):
+    def delete_all_server_files(self, model_context):  # override
         model_context["response_generated"]("Batch functionality is not supported by OllamaServiceProvider")
