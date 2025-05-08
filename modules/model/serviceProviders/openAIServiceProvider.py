@@ -45,13 +45,12 @@ class OpenAIServiceProvider(ServiceProviderBase):
         api_key = self.get_api_key()
         return OpenAI(api_key=api_key, base_url=self.getBaseUrl())
 
-    def _generate_response_sync(self, model_context, full_request, editor_mode):
+    def _generate_response_sync(self, model_context, full_request):
         print("Response thread: Sending...")
         messages = [
             {"role": "user", "content": full_request},
         ]
         print("Model: " + model_context["modelName"])
-        print("Editor Mode: " + str(editor_mode))
         print("Request: " + full_request)
         print("--------------")
         model_context["status_changed"]("Waiting for the response ...")
@@ -83,12 +82,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("------------ USAGE ------")
         print(response.usage)
         model_context["status_changed"](str(response.usage))
-        if editor_mode:
-            parser = ResponseFilesParser(model_context["project_dir"])
-            parser.parse_response_and_update_files_on_disk(generated_response)
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode):
+    def _generate_batch_response_sync(self, model_context, full_request, description):
         model_context["status_changed"]("Uploading batch files ...")
         messages = [
             {"role": "user", "content": full_request},
@@ -106,7 +102,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             used_reasoning_effort = "medium"
 
         batch_request = {
-            "custom_id": f"{model_context['project_dir']}|{editor_mode}",
+            "custom_id": f"{model_context['project_dir']}|{True}",  # Always True, editor_mode not used anymore
             "method": "POST",
             "url": "/v1/chat/completions",
             "body": {
@@ -192,16 +188,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
             usage = str(data['response']['body']['usage'])
             print("------------ USAGE ------")
             print(usage)
-            model_context["response_generated"](response_text)
-            if not os.path.exists(proj_dir):
-                print("Project directory from batch custom_id field '" + str(proj_dir) + "' was not found. Using patch from GUI: " + str(model_context["project_dir"]))
-                proj_dir = model_context["project_dir"]
-            if editor_mode:
-                parser = ResponseFilesParser(proj_dir)
-                parser.parse_response_and_update_files_on_disk(response_text)
-            model_context["status_changed"](usage)
+            return (response_text, usage, editor_mode)
         except Exception as e:
-            model_context["response_generated"]("Error retrieving batch results: " + str(e))
+            return (f"Error retrieving batch results: {str(e)}", "Error", False)
 
     def delete_batch_job(self, model_context, batch_id):
         print(f"Deleting batch job with ID: {batch_id}")

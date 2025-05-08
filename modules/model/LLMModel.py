@@ -44,16 +44,19 @@ class LLMModel(QObject):
                 "response_generated": self.response_generated.emit,
             }
             self.thread_manager.execute_async(
-                lambda: self.provider._generate_response_sync(model_context, user_message, editor_mode),
-                lambda result: self._handle_generated_response(result),
+                lambda: self.provider._generate_response_sync(model_context, user_message),
+                lambda result: self._handle_generated_response(result, editor_mode),
                 lambda e: self.response_generated.emit("Error generating response: " + str(e))
             )
             print("Done. Waiting for the result")
         except Exception as e:
             self.response_generated.emit("Error generating response: " + str(e))
 
-    def _handle_generated_response(self, result):
+    def _handle_generated_response(self, result, editor_mode):
         generated_response, usage = result
+        if editor_mode:
+            parser = ResponseFilesParser(self.project_dir)
+            parser.parse_response_and_update_files_on_disk(generated_response)
         self.response_generated.emit(generated_response)
         self.status_changed.emit(str(usage))
 
@@ -73,7 +76,7 @@ class LLMModel(QObject):
                 "completed_job_list_updated": self.completed_job_list_updated.emit,
             }
             self.thread_manager.execute_async(
-                lambda: self.provider._generate_batch_response_sync(model_context, user_message, description, editor_mode),
+                lambda: self.provider._generate_batch_response_sync(model_context, user_message, description),
                 lambda result: self.response_generated.emit(str(result)),
                 lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
             )
@@ -103,7 +106,17 @@ class LLMModel(QObject):
                 "status_changed": self.status_changed.emit,
                 "response_generated": self.response_generated.emit,
             }
-            self.provider.get_batch_results(model_context, batch_id)
+            def _handle_results(response_text, usage, editor_mode):
+                if editor_mode:
+                    parser = ResponseFilesParser(self.project_dir)
+                    parser.parse_response_and_update_files_on_disk(response_text)
+                self.response_generated.emit(response_text)
+                self.status_changed.emit(usage)
+            # Now, get_batch_results will return response_text, usage, editor_mode
+            result = self.provider.get_batch_results(model_context, batch_id)
+            if result:
+                response_text, usage, editor_mode = result
+                _handle_results(response_text, usage, editor_mode)
         except Exception as e:
             self.response_generated.emit("Error retrieving batch results: " + str(e))
 

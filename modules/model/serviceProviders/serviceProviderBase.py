@@ -28,10 +28,10 @@ class ServiceProviderBase:
     def getModelOptions(self, modelName):
         raise NotImplementedError("getModelOptions method must be implemented by the child class.")
 
-    def _generate_response_sync(self, model_context, full_request, editor_mode):
+    def _generate_response_sync(self, model_context, full_request):
         raise NotImplementedError("_generate_response_sync method must be implemented by the child class.")
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, editor_mode):
+    def _generate_batch_response_sync(self, model_context, full_request, description):
         raise NotImplementedError("_generate_batch_response_sync method must be implemented by the child class.")
 
     def get_completed_batch_jobs(self, model_context):
