@@ -67,6 +67,8 @@ class LLMModel(QObject):
                 formatter = FileContentFormatter()
                 user_message += formatter.make_file_content_text(self.project_dir, self.chosen_files, editor_mode)
             user_message += full_request
+            # Compose custom_id here with proper editor_mode value
+            custom_id = f"{self.project_dir}|{editor_mode}"
             model_context = {
                 "project_dir": self.project_dir,
                 "chosen_files": self.chosen_files,
@@ -76,7 +78,7 @@ class LLMModel(QObject):
                 "completed_job_list_updated": self.completed_job_list_updated.emit,
             }
             self.thread_manager.execute_async(
-                lambda: self.provider._generate_batch_response_sync(model_context, user_message, description),
+                lambda: self.provider._generate_batch_response_sync(model_context, user_message, description, custom_id),
                 lambda result: self.response_generated.emit(str(result)),
                 lambda e: self.response_generated.emit("Error generating batch response: " + str(e))
             )

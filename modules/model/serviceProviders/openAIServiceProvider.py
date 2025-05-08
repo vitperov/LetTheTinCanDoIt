@@ -84,7 +84,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
         model_context["status_changed"](str(response.usage))
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description):
+    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):
         model_context["status_changed"]("Uploading batch files ...")
         messages = [
             {"role": "user", "content": full_request},
@@ -102,7 +102,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             used_reasoning_effort = "medium"
 
         batch_request = {
-            "custom_id": f"{model_context['project_dir']}|{True}",  # Always True, editor_mode not used anymore
+            "custom_id": custom_id,  # Passed directly
             "method": "POST",
             "url": "/v1/chat/completions",
             "body": {

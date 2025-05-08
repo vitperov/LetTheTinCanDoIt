@@ -49,5 +49,5 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         model_context["status_changed"](str(response.usage))
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description):
+    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):
         model_context["response_generated"]("Batch functionality is not supported by DeepSeekServiceProvider")
