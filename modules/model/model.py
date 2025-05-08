@@ -15,6 +15,14 @@ from modules.model.HistoryModel import HistoryModel
 from modules.model.RequestHistoryModel import RequestHistoryModel
 from modules.model.ProjectMeta.ProjectMeta import ProjectMeta
 
+def get_api_key(key_name):
+    settings_path = os.path.join('settings', 'key.json')
+    if os.path.exists(settings_path):
+        with open(settings_path, 'r') as f:
+            data = json.load(f)
+        return data.get(key_name, '')
+    return ''
+
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)
     completed_job_list_updated = pyqtSignal(list, list)
@@ -31,8 +39,10 @@ class ProjectGPTModel(QObject):
         self.syntax_corrector = FileSyntaxCorrector()
         self.additionalRequests = self.load_additional_requests()
         self.service_providers = []
-        self.service_providers.append(OpenAIServiceProvider())
-        self.service_providers.append(DeepSeekServiceProvider())
+        openai_api_key = get_api_key("openai_api_key")
+        deepseek_api_key = get_api_key("deepseek_api_key")
+        self.service_providers.append(OpenAIServiceProvider(api_key=openai_api_key))
+        self.service_providers.append(DeepSeekServiceProvider(api_key=deepseek_api_key))
         self.service_providers.append(OllamaServiceProvider())
         for service_provider in self.service_providers:
             self.available_models.extend(service_provider.getAvailableModels())

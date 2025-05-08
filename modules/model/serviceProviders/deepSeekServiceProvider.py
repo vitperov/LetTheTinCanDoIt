@@ -7,26 +7,25 @@ import tempfile
 from modules.model.ResponseFilesParser import ResponseFilesParser
 
 class DeepSeekServiceProvider(ServiceProviderBase):
-    def __init__(self):
+    def __init__(self, api_key=None):
         super().__init__()
         self.available_models = [
             "deepseek-chat",
             "deepseek-reasoner",
         ]
         self.jobs = None
+        self.api_key = api_key
+
+    # REMOVED get_api_key - handled in model.py and passed to providers via constructor
 
     def getBaseUrl(self) -> str:
         return "https://api.deepseek.com/v1"
-
-    def get_api_key(self) -> str:
-        return super().get_api_key('deepseek_api_key')
 
     def getModelOptions(self, modelName) -> ModelOptions:  # override
         return ModelOptions(supportBatch=False, supportReasoningEffort=False)
     
     def getClient(self, model_context):
-        api_key = self.get_api_key()
-        return OpenAI(api_key=api_key, base_url=self.getBaseUrl())
+        return OpenAI(api_key=self.api_key, base_url=self.getBaseUrl())
 
     def _generate_response_sync(self, model_context, full_request):  # override
         print("Response thread: Sending...")

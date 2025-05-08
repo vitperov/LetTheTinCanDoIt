@@ -35,9 +35,6 @@ class OllamaServiceProvider(ServiceProviderBase):
     def getBaseUrl(self):  # override
         return ""
 
-    def get_api_key(self):  # override (even though this only returns empty string)
-        return ""
-
     def getModelOptions(self, modelName):  # override
         return ModelOptions(supportBatch=False, supportReasoningEffort=False)
 

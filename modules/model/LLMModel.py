@@ -23,6 +23,8 @@ class LLMModel(QObject):
         self.completed_batches = []
         self.completed_jobs_descriptions = []
 
+    # REMOVED get_api_key - handled in model.py and passed to providers via constructor
+
     def make_file_content_text(self, project_dir, chosen_files, editorMode):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)

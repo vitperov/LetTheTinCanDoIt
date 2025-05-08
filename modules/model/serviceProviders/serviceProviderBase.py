@@ -10,13 +10,7 @@ class ServiceProviderBase(ABC):
     def getBaseUrl(self):
         pass
 
-    def get_api_key(self, key_name):
-        settings_path = os.path.join('settings', 'key.json')
-        if os.path.exists(settings_path):
-            with open(settings_path, 'r') as f:
-                data = json.load(f)
-            return data.get(key_name, '')
-        return ''
+    # get_api_key removed from here
 
     def getAvailableModels(self):
         return self.available_models

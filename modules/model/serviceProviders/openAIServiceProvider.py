@@ -8,7 +8,7 @@ from modules.model.serviceProviders.serviceProviderBase import ServiceProviderBa
 from ..modelOptions import ModelOptions
 
 class OpenAIServiceProvider(ServiceProviderBase):
-    def __init__(self):
+    def __init__(self, api_key=None):
         super().__init__()
         self.available_models = [
             "gpt-4o-mini", 
@@ -25,12 +25,12 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o4-mini",
         ]
         self.jobs = None
+        self.api_key = api_key
+
+    # REMOVED get_api_key - handled in model.py and passed to providers via constructor
 
     def getBaseUrl(self):  # override
         return "https://api.openai.com/v1"
-
-    def get_api_key(self):  # override
-        return super().get_api_key('api_key')
 
     def getModelOptions(self, modelName):  # override
         return ModelOptions(supportBatch=True)
@@ -42,8 +42,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             return "system"
 
     def getClient(self, model_context):
-        api_key = self.get_api_key()
-        return OpenAI(api_key=api_key, base_url=self.getBaseUrl())
+        return OpenAI(api_key=self.api_key, base_url=self.getBaseUrl())
 
     def _generate_response_sync(self, model_context, full_request):  # override
         print("Response thread: Sending...")
