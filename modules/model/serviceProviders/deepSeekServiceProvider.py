@@ -4,7 +4,6 @@ from openai import OpenAI
 import os
 import json
 import tempfile
-from modules.model.FileContentFormatter import FileContentFormatter
 from modules.model.ResponseFilesParser import ResponseFilesParser
 
 class DeepSeekServiceProvider(ServiceProviderBase):
@@ -28,10 +27,6 @@ class DeepSeekServiceProvider(ServiceProviderBase):
     def getClient(self, model_context):
         api_key = self.get_api_key()
         return OpenAI(api_key=api_key, base_url=self.getBaseUrl())
-
-    def make_file_content_text(self, project_dir, chosen_files, editorMode):
-        formatter = FileContentFormatter()
-        return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
     def _generate_response_sync(self, model_context, full_request, editor_mode):
         print("Response thread: Sending...")
