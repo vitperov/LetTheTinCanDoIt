@@ -194,6 +194,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
             print("Proj dir: " + proj_dir)
             print("Editor Mode: " + str(editor_mode))
             response_text = str(data['response']['body']['choices'][0]['message']['content'])
+            usage = str(data['response']['body']['usage'])
+            print("------------ USAGE ------")
+            print(usage)
             model_context["response_generated"](response_text)
             if not os.path.exists(proj_dir):
                 print("Project directory from batch custom_id field '" + str(proj_dir) + "' was not found. Using patch from GUI: " + str(model_context["project_dir"]))
@@ -201,7 +204,6 @@ class OpenAIServiceProvider(ServiceProviderBase):
             if editor_mode:
                 parser = ResponseFilesParser(proj_dir)
                 parser.parse_response_and_update_files_on_disk(response_text)
-            usage = str(data['response']['body']['usage'])
             model_context["status_changed"](usage)
         except Exception as e:
             model_context["response_generated"]("Error retrieving batch results: " + str(e))
