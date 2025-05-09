@@ -4,6 +4,7 @@ import os
 import json
 import tempfile
 from datetime import datetime
+from modules.model.LLMModel import LLMModel
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector
 from modules.model.FileContentFormatter import FileContentFormatter
@@ -58,13 +59,11 @@ class ProjectGPTModel(QObject):
         self.project_meta = ProjectMeta(last_project_directory)
 
     def set_project_files(self, project_dir, chosen_files):
-        print(">>>>> SET project dir")
+        if self.currentModel:
+            self.currentModel.set_project_files(project_dir, chosen_files)
         self.project_meta = ProjectMeta(project_dir)
         self.project_dir = project_dir
         self.chosen_files = chosen_files
-        if self.currentModel:
-            self.currentModel.project_dir = project_dir
-            self.currentModel.chosen_files = chosen_files
 
     def load_additional_requests(self):
         additional_requests_path = os.path.join('additionalRequests.json')
@@ -80,7 +79,6 @@ class ProjectGPTModel(QObject):
     def switchModel(self, modelName):
         for provider in self.service_providers:
             if provider.hasModel(modelName):
-                from modules.model.LLMModel import LLMModel
                 self.currentModel = LLMModel(provider, modelName)
                 self.currentModel.project_dir = self.project_dir
                 self.currentModel.chosen_files = self.chosen_files

@@ -25,6 +25,10 @@ class LLMModel(QObject):
 
     # REMOVED get_api_key - handled in model.py and passed to providers via constructor
 
+    def set_project_files(self, project_dir, chosen_files):
+        self.project_dir = project_dir
+        self.chosen_files = chosen_files
+
     def make_file_content_text(self, project_dir, chosen_files, editorMode):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
