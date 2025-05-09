@@ -26,29 +26,29 @@ class ServiceProviderBase(ABC):
         pass
 
     @abstractmethod
-    def _generate_response_sync(self, model_context, full_request):
+    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):
+    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def get_completed_batch_jobs(self, model_context):
+    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def get_batch_results(self, model_context, batch_id):
+    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def delete_batch_job(self, model_context, batch_id):
+    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def cancel_batch_job(self, model_context, batch_id):
+    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         pass
 
     @abstractmethod
-    def delete_all_server_files(self, model_context):
+    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):
         pass

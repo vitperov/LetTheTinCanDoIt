@@ -40,7 +40,7 @@ class ProjectGPTModel(QObject):
         self.syntax_corrector = FileSyntaxCorrector()
         self.additionalRequests = self.load_additional_requests()
         self.service_providers = []
-        openai_api_key = get_api_key("openai_api_key")
+        openai_api_key = get_api_key("api_key")
         deepseek_api_key = get_api_key("deepseek_api_key")
         self.service_providers.append(OpenAIServiceProvider(api_key=openai_api_key))
         self.service_providers.append(DeepSeekServiceProvider(api_key=deepseek_api_key))
@@ -99,15 +99,15 @@ class ProjectGPTModel(QObject):
 
     def cancel_batch_job(self, batch_id):
         if self.currentModel:
-            model_context = {
-                "project_dir": self.project_dir,
-                "chosen_files": self.chosen_files,
-                "modelName": self.currentModel.modelName,
-                "status_changed": self.status_changed.emit,
-                "response_generated": self.response_generated.emit,
-            }
             try:
-                self.currentModel.provider.cancel_batch_job(model_context, batch_id)
+                self.currentModel.provider.cancel_batch_job(
+                    self.currentModel.modelName,
+                    batch_id,
+                    self.status_changed.emit,
+                    self.response_generated.emit,
+                    self.project_dir,
+                    self.chosen_files
+                )
                 self.response_generated.emit(f"Batch job {batch_id} has been cancelled successfully.")
             except Exception as e:
                 self.response_generated.emit("Error canceling batch job: " + str(e))

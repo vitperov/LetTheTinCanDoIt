@@ -41,28 +41,27 @@ class OpenAIServiceProvider(ServiceProviderBase):
         else:
             return "system"
 
-    def getClient(self, model_context):
+    def getClient(self):
         return OpenAI(api_key=self.api_key, base_url=self.getBaseUrl())
 
-    def _generate_response_sync(self, model_context, full_request):  # override
+    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
         print("Response thread: Sending...")
         messages = [
             {"role": "user", "content": full_request},
         ]
-        print("Model: " + model_context["modelName"])
+        print("Model: " + modelName)
         print("Request: " + full_request)
         print("--------------")
-        model_context["status_changed"]("Waiting for the response ...")
-        client = self.getClient(model_context)
+        status_changed("Waiting for the response ...")
+        client = self.getClient()
 
-        model_name = model_context["modelName"]
-        api_model_name = model_name
+        api_model_name = modelName
         used_reasoning_effort = None
 
-        if model_name == "o3-mini-high":
+        if modelName == "o3-mini-high":
             api_model_name = "o3-mini"
             used_reasoning_effort = "high"
-        elif model_name == "o3-mini":
+        elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
 
         if used_reasoning_effort:
@@ -80,24 +79,23 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("Response choices:" + str(len(response.choices)))
         print("------------ USAGE ------")
         print(response.usage)
-        model_context["status_changed"](str(response.usage))
+        status_changed(str(response.usage))
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, model_context, full_request, description, custom_id):  # override
-        model_context["status_changed"]("Uploading batch files ...")
+    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
+        status_changed("Uploading batch files ...")
         messages = [
             {"role": "user", "content": full_request},
         ]
         print("==== Request text ====")
         print(full_request)
         print("======================")
-        model_name = model_context["modelName"]
-        api_model_name = model_name
+        api_model_name = modelName
         used_reasoning_effort = None
-        if model_name == "o3-mini-high":
+        if modelName == "o3-mini-high":
             api_model_name = "o3-mini"
             used_reasoning_effort = "high"
-        elif model_name == "o3-mini":
+        elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
 
         batch_request = {
@@ -117,7 +115,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             temp_file.write(json.dumps(batch_request) + '\n')
             temp_file_path = temp_file.name
         print(f"Batch request JSON saved at: {temp_file_path}")
-        client = self.getClient(model_context)
+        client = self.getClient()
         with open(temp_file_path, "rb") as file_to_upload:
             batch_input_file = client.files.create(
                 file=file_to_upload,
@@ -125,7 +123,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             )
         batch_input_file_id = batch_input_file.id
         print("Batch input file ID: " + str(batch_input_file_id))
-        model_context["status_changed"]("Waiting for the response ...")
+        status_changed("Waiting for the response ...")
         batch_obj = client.batches.create(
             input_file_id=batch_input_file_id,
             endpoint="/v1/chat/completions",
@@ -138,10 +136,10 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print(batch_obj)
         return batch_obj
 
-    def get_completed_batch_jobs(self, model_context):  # override
+    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
         try:
-            model_context["status_changed"]("Getting batches list ...")
-            client = self.getClient(model_context)
+            status_changed("Getting batches list ...")
+            client = self.getClient()
             jobs = client.batches.list(limit=7)
             batch_dict = {}
             completed_batches = []
@@ -156,17 +154,17 @@ class OpenAIServiceProvider(ServiceProviderBase):
                 batch_dict[batch_id] = {'status': status, 'description': description}
             current_time = datetime.now().strftime("%H:%M:%S")
             result_str = f"Current time: {current_time}\n" + "\n".join([f"* {bid} -> {info['status']} // {info['description']};" for bid, info in batch_dict.items()])
-            model_context["response_generated"](result_str)
-            model_context["completed_job_list_updated"](completed_batches, completed_jobs_descriptions)
-            model_context["status_changed"]("Done")
+            response_generated(result_str)
+            completed_job_list_updated(completed_batches, completed_jobs_descriptions)
+            status_changed("Done")
             self.jobs = jobs
         except Exception as e:
-            model_context["response_generated"]("Error retrieving completed batch jobs: " + str(e))
+            response_generated("Error retrieving completed batch jobs: " + str(e))
 
-    def get_batch_results(self, model_context, batch_id):  # override
+    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
         try:
-            model_context["status_changed"]("Getting batch results ...")
-            client = self.getClient(model_context)
+            status_changed("Getting batch results ...")
+            client = self.getClient()
             jobs = self.jobs
             if jobs is None:
                 raise ValueError("No jobs available. Please call get_completed_batch_jobs first.")
@@ -191,7 +189,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
         except Exception as e:
             return (f"Error retrieving batch results: {str(e)}", "Error", False)
 
-    def delete_batch_job(self, model_context, batch_id):  # override
+    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
         print(f"Deleting batch job with ID: {batch_id}")
         try:
             jobs = self.jobs
@@ -202,7 +200,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
                 raise ValueError(f"Batch job with ID {batch_id} not found.")
             input_file_id = batch.input_file_id
             output_file_id = batch.output_file_id
-            client = self.getClient(model_context)
+            client = self.getClient()
             print("Deleting job file " + input_file_id)
             client.files.delete(input_file_id)
             print("Deleting job file " + output_file_id)
@@ -211,24 +209,24 @@ class OpenAIServiceProvider(ServiceProviderBase):
                 print("Deleting job " + batch_id)
                 client.batches.delete(output_file_id)
             except Exception:
-                model_context["response_generated"]("Files are deleted, but the batch can't be deleted since openAI API currently doesn't support it")
+                response_generated("Files are deleted, but the batch can't be deleted since openAI API currently doesn't support it")
             print("Done")
         except Exception as e:
-            model_context["response_generated"]("Error deleting batch results: " + str(e))
+            response_generated("Error deleting batch results: " + str(e))
 
-    def cancel_batch_job(self, model_context, batch_id):  # override
+    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
         try:
-            model_context["status_changed"]("Canceling batch job ...")
-            client = self.getClient(model_context)
+            status_changed("Canceling batch job ...")
+            client = self.getClient()
             client.batches.cancel(batch_id)
-            model_context["status_changed"]("Batch job canceled successfully")
+            status_changed("Batch job canceled successfully")
         except Exception as e:
-            model_context["response_generated"]("Error canceling batch job: " + str(e))
+            response_generated("Error canceling batch job: " + str(e))
 
-    def delete_all_server_files(self, model_context):  # override
+    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
         try:
-            model_context["status_changed"]("Listing server files ...")
-            client = self.getClient(model_context)
+            status_changed("Listing server files ...")
+            client = self.getClient()
             files_list = client.files.list()
             print("Files list:", files_list)
             files = files_list.data
@@ -238,7 +236,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
                 client.files.delete(file_id)
                 msg = f"Deleting file [{idx}/{total}] - OK"
                 print(msg)
-                model_context["response_generated"](msg)
-            model_context["status_changed"]("All files deleted.")
+                response_generated(msg)
+            status_changed("All files deleted.")
         except Exception as e:
-            model_context["response_generated"]("Error deleting server files: " + str(e))
+            response_generated("Error deleting server files: " + str(e))
