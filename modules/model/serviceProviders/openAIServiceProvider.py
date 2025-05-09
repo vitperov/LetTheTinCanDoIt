@@ -18,11 +18,12 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1", 
             "o3-mini",
             "o3-mini-high",
+            "o4-mini",
+            "o4-mini-high",
             "gpt-4.5-preview",
             "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",
-            "o4-mini",
         ]
         self.jobs = None
         self.api_key = api_key
@@ -61,6 +62,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
         if modelName == "o3-mini-high":
             api_model_name = "o3-mini"
             used_reasoning_effort = "high"
+        elif modelName == "o4-mini-high":
+            api_model_name = "o4-mini"
+            used_reasoning_effort = "high"
         elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
 
@@ -94,6 +98,9 @@ class OpenAIServiceProvider(ServiceProviderBase):
         used_reasoning_effort = None
         if modelName == "o3-mini-high":
             api_model_name = "o3-mini"
+            used_reasoning_effort = "high"
+        elif modelName == "o4-mini-high":
+            api_model_name = "o4-mini"
             used_reasoning_effort = "high"
         elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
