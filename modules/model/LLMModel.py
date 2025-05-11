@@ -183,3 +183,37 @@ class LLMModel(QObject):
             )
         except Exception as e:
             self.response_generated.emit("Error canceling batch job: " + str(e))
+            
+    def generate_simple_response_sync(self, modelName, request):
+        provider = self.get_provider_for_model(modelName)
+        return provider._generate_response_sync(
+            modelName,
+            request,
+            lambda status: None,
+            lambda response: None,
+            None,
+            None
+        )
+
+    def generate_simple_response_async(self, modelName, request):
+        try:
+            self.status_changed.emit("Sending simple request ...")
+            provider = self.get_provider_for_model(modelName)
+            def _run():
+                return provider._generate_response_sync(
+                    modelName,
+                    request,
+                    self.status_changed.emit,
+                    self.response_generated.emit,
+                    None,
+                    None
+                )
+            def _handle_result(result):
+                generated_response, usage = result
+                self.response_generated.emit(generated_response)
+                self.status_changed.emit(str(usage))
+            def _handle_error(e):
+                self.response_generated.emit("Error generating simple response: " + str(e))
+            self.thread_manager.execute_async(_run, _handle_result, _handle_error)
+        except Exception as e:
+            self.response_generated.emit("Error generating simple response: " + str(e))
