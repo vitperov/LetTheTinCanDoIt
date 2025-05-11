@@ -1,16 +1,37 @@
+import os
+import json
 from PyQt5.QtCore import QObject, pyqtSignal
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.ThreadManager import ThreadManager
 from modules.model.FileContentFormatter import FileContentFormatter
+from modules.model.serviceProviders.openAIServiceProvider import OpenAIServiceProvider
+from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
+from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
+
+def get_api_key(key_name):
+    settings_path = os.path.join('settings', 'key.json')
+    if os.path.exists(settings_path):
+        with open(settings_path, 'r') as f:
+            data = json.load(f)
+        return data.get(key_name, '')
+    return ''
 
 class LLMModel(QObject):
     response_generated = pyqtSignal(str)
     completed_job_list_updated = pyqtSignal(list, list)
     status_changed = pyqtSignal(str)
 
-    def __init__(self, service_providers):
+    def __init__(self):
         super().__init__()
-        self.service_providers = service_providers
+        self.service_providers = []
+        openai_api_key = get_api_key("api_key")
+        deepseek_api_key = get_api_key("deepseek_api_key")
+        self.service_providers.append(OpenAIServiceProvider(api_key=openai_api_key))
+        self.service_providers.append(DeepSeekServiceProvider(api_key=deepseek_api_key))
+        self.service_providers.append(OllamaServiceProvider())
+        self.available_models = []
+        for provider in self.service_providers:
+            self.available_models.extend(provider.getAvailableModels())
         self.thread_manager = ThreadManager()
         self.project_dir = None
         self.chosen_files = []
@@ -23,6 +44,10 @@ class LLMModel(QObject):
                 return provider
         raise ValueError(f"No service provider found for model: {modelName}")
 
+    def get_model_options(self, model_name):
+        provider = self.get_provider_for_model(model_name)
+        return provider.getModelOptions(model_name)
+
     def set_project_files(self, project_dir, chosen_files):
         self.project_dir = project_dir
         self.chosen_files = chosen_files
@@ -34,7 +59,6 @@ class LLMModel(QObject):
     def generate_response_async(self, modelName, role_string, full_request, editor_mode):
         try:
             self.status_changed.emit("Sending the request ...")
-            print("Sending the request in a new thread")
             user_message = role_string + "\n\n"
             if self.project_dir and self.chosen_files and editor_mode:
                 formatter = FileContentFormatter()
@@ -55,7 +79,6 @@ class LLMModel(QObject):
                 lambda result: self._handle_generated_response(result, editor_mode),
                 lambda e: self.response_generated.emit("Error generating response: " + str(e))
             )
-            print("Done. Waiting for the result")
         except Exception as e:
             self.response_generated.emit("Error generating response: " + str(e))
 
