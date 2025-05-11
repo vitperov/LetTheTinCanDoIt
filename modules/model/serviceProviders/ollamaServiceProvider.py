@@ -2,11 +2,11 @@ import subprocess
 import re
 from modules.model.serviceProviders.serviceProviderBase import ServiceProviderBase
 from modules.model.modelOptions import ModelOptions
-from modules.model.FileContentFormatter import FileContentFormatter  # Added to attach file content
+from modules.model.FileContentFormatter import FileContentFormatter
 
 def remove_ansi_escape(text):
-	ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-	return ansi_escape.sub('', text)
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', text)
 
 def remove_progress_symbols(text):
     return re.sub(r'[\u2800-\u28FF]', '', text)
@@ -32,13 +32,13 @@ class OllamaServiceProvider(ServiceProviderBase):
             print("Warning: Failed to retrieve ollama models: " + str(e))
             self.available_models = []
 
-    def getBaseUrl(self):  # override
+    def getBaseUrl(self):
         return ""
 
-    def getModelOptions(self, modelName):  # override
-        return ModelOptions(supportBatch=False, supportReasoningEffort=False)
+    def getModelOptions(self, modelName):
+        return ModelOptions(supportBatch=False)
 
-    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):
         print("OllamaServiceProvider: Generating response...")
         combined_prompt = full_request
         print("OllamaServiceProvider: Sending request:")
@@ -63,20 +63,20 @@ class OllamaServiceProvider(ServiceProviderBase):
             error_msg = f"Error generating response: {str(e)}"
             return (error_msg, "Error")
 
-    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
+    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")
 
-    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
+    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")
 
-    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")
 
-    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")
 
-    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")
 
-    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by OllamaServiceProvider")

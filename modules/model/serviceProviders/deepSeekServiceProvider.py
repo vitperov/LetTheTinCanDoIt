@@ -16,18 +16,16 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         self.jobs = None
         self.api_key = api_key
 
-    # REMOVED get_api_key - handled in model.py and passed to providers via constructor
-
     def getBaseUrl(self) -> str:
         return "https://api.deepseek.com/v1"
 
-    def getModelOptions(self, modelName) -> ModelOptions:  # override
-        return ModelOptions(supportBatch=False, supportReasoningEffort=False)
-    
+    def getModelOptions(self, modelName) -> ModelOptions:
+        return ModelOptions(supportBatch=False)
+
     def getClient(self):
         return OpenAI(api_key=self.api_key, base_url=self.getBaseUrl())
 
-    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):
         print("Response thread: Sending...")
         messages = [
             {"role": "user", "content": full_request}
@@ -48,20 +46,20 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         status_changed(str(response.usage))
         return (generated_response, response.usage)
 
-    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
+    def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
 
-    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):  # override
+    def get_completed_batch_jobs(self, modelName, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
 
-    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
 
-    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
 
-    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def cancel_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
 
-    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):  # override
+    def delete_all_server_files(self, modelName, status_changed, response_generated, project_dir=None, chosen_files=None):
         response_generated("Batch functionality is not supported by DeepSeekServiceProvider")
