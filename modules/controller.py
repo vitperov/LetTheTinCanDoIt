@@ -35,31 +35,31 @@ class ProjectGPTController(QObject):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request)
-        self.model.getCurrentModel().generate_response_async(model_name, role_string, full_request, editor_mode)
+        self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode)
 
     def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
         self.model.set_project_files(project_dir, chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request_template)
-        self.model.getCurrentModel().generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode)
+        self.model.llm_model.generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode)
 
     def handle_get_completed_batch_jobs(self):
         model_name = self.view.request_panel.model_dropdown.currentText()
-        self.model.getCurrentModel().get_completed_batch_jobs(model_name)
+        self.model.llm_model.get_completed_batch_jobs(model_name)
 
     def handle_get_batch_results(self, batch_id):
         model_name = self.view.request_panel.model_dropdown.currentText()
-        self.model.getCurrentModel().get_batch_results(model_name, batch_id)
+        self.model.llm_model.get_batch_results(model_name, batch_id)
 
     def handle_delete_batch_job(self, batch_id):
         model_name = self.view.request_panel.model_dropdown.currentText()
-        self.model.getCurrentModel().delete_batch_job(model_name, batch_id)
+        self.model.llm_model.delete_batch_job(model_name, batch_id)
         
     def handle_cancel_batch_job(self, batch_id):
         model_name = self.view.request_panel.model_dropdown.currentText()
-        self.model.getCurrentModel().cancel_batch_job(model_name, batch_id)
+        self.model.llm_model.cancel_batch_job(model_name, batch_id)
         
     def handle_model_change(self, model_name):
-        model_options = self.model.get_model_options(model_name)
+        model_options = self.model.llm_model.get_model_options(model_name)
         self.view.request_panel.set_batch_support(model_options.supportBatch)
         self.view.batches_panel.set_batch_support(model_options.supportBatch)

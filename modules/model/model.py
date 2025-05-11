@@ -48,9 +48,3 @@ class ProjectGPTModel(QObject):
 
     def get_additional_requests(self):
         return self.additionalRequests
-
-    def getCurrentModel(self):
-        return self.llm_model
-
-    def get_model_options(self, model_name):
-        return self.llm_model.get_model_options(model_name)
