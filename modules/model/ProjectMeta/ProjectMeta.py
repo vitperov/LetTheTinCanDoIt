@@ -8,7 +8,7 @@ from tinydb.middlewares import CachingMiddleware
 from .dbRecords.DescriptionRecord import DescriptionRecord
 
 class ProjectMeta:
-    def __init__(self, project_path: str, index_extensions: list = None):
+    def __init__(self, project_path: str, index_extensions: list = None, llm_model=None):
         self.project_path = project_path
         self.db_path = os.path.join(project_path, '.lttcdi', 'metadata.json')
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
@@ -19,6 +19,7 @@ class ProjectMeta:
         
         self.db = TinyDB(self.db_path, storage=CachingMiddleware(JSONStorage))
         self.index_extensions = index_extensions if index_extensions else ['py']
+        self.llm_model = llm_model
         
     def _get_relative_path(self, absolute_path: str) -> str:
         return os.path.relpath(absolute_path, self.project_path)
@@ -46,7 +47,18 @@ class ProjectMeta:
         return DescriptionRecord(**result[0]) if result else None
 
     def compose_file_description(self, relative_path: str) -> str:
-        return f"Description for {relative_path}"
+        absolute_path = os.path.join(self.project_path, relative_path)
+        with open(absolute_path, "r", encoding="utf-8") as f:
+            file_content = f.read()
+        request_text = file_content
+        if not self.llm_model:
+            return f"Description for {relative_path}"
+        response = self.llm_model.generate_simple_response_sync("gpt-4o-mini", request_text)
+        if isinstance(response, tuple):
+            description, _ = response
+        else:
+            description = response
+        return description
 
     def update_descriptions(self):
         files = self.getAll_project_files()

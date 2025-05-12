@@ -30,11 +30,11 @@ class ProjectGPTModel(QObject):
         self.requestHistoryModel = RequestHistoryModel()
 
         last_project_directory = self.historyModel.get_last_project_directory()
-        self.project_meta = ProjectMeta(last_project_directory)
+        self.project_meta = ProjectMeta(last_project_directory, llm_model=self.llm_model)
 
     def set_project_files(self, project_dir, chosen_files):
         self.llm_model.set_project_files(project_dir, chosen_files)
-        self.project_meta = ProjectMeta(project_dir)
+        self.project_meta = ProjectMeta(project_dir, llm_model=self.llm_model)
         self.project_dir = project_dir
         self.chosen_files = chosen_files
 
