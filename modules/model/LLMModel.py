@@ -60,11 +60,14 @@ class LLMModel(QObject):
         try:
             self.status_changed.emit("Sending the request ...")
             user_message = role_string + "\n\n"
-            if self.project_dir and self.chosen_files and editor_mode:
+            if self.project_dir and self.chosen_files:
                 formatter = FileContentFormatter()
-                user_message += formatter.make_file_content_text(
+                file_text = formatter.make_file_content_text(
                     self.project_dir, self.chosen_files, editor_mode
                 )
+                if file_text:
+                    user_message += file_text + "\n\n"
+
             user_message += full_request
             provider = self.get_provider_for_model(modelName)
             self.thread_manager.execute_async(
@@ -93,11 +96,14 @@ class LLMModel(QObject):
     def generate_batch_response_async(self, modelName, role_string, full_request, description, editor_mode):
         try:
             user_message = role_string + "\n\n"
-            if self.project_dir and self.chosen_files and editor_mode:
+            if self.project_dir and self.chosen_files:
                 formatter = FileContentFormatter()
-                user_message += formatter.make_file_content_text(
+                file_text = formatter.make_file_content_text(
                     self.project_dir, self.chosen_files, editor_mode
                 )
+                if file_text:
+                    user_message += file_text + "\n\n"
+
             user_message += full_request
             custom_id = f"{self.project_dir}|{editor_mode}"
             provider = self.get_provider_for_model(modelName)
