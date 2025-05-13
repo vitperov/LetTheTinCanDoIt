@@ -50,13 +50,8 @@ class RequestPanel(QWidget):
         request_groupbox = QGroupBox("Request")
         request_layout = QVBoxLayout()
 
-        self.role_checkbox = QCheckBox("Include role")
-        self.role_checkbox.setChecked(True)
-        request_layout.addWidget(self.role_checkbox)
-
         self.role_selector = RoleSelector()
         request_layout.addWidget(self.role_selector)
-        self.role_checkbox.toggled.connect(self.role_selector.setEnabled)
 
         self.request_label = QLabel('Request:')
         self.request_input = QTextEdit()
@@ -132,10 +127,7 @@ class RequestPanel(QWidget):
 
         request_text = self.request_input.toPlainText()
         if request_text:
-            if self.role_checkbox.isChecked():
-                role_description = self.role_selector.get_role_string()
-            else:
-                role_description = ""
+            role_description = self.role_selector.get_role_string()
             selected_model = self.model_dropdown.currentText()
             editor_mode = self.editor_mode_button.isChecked()
             checked_additional_requests = [cb.text() for cb in self.checkbox_list if cb.isChecked()]
