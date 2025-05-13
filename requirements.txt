@@ -1,3 +1,5 @@
 PyQt5
 openai
 tinydb
+google-generativeai
+
