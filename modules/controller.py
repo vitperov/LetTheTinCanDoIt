@@ -33,13 +33,15 @@ class ProjectGPTController(QObject):
 
     def handle_send_request(self, model_name, role_string, full_request, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
-        self.model.set_project_files(project_dir, chosen_files)
+        self.model.set_project_dir(project_dir)
+        self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request)
         self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode)
 
     def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode):
         project_dir, chosen_files = self.view.left_panel.get_checked_files()
-        self.model.set_project_files(project_dir, chosen_files)
+        self.model.set_project_dir(project_dir)
+        self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request_template)
         self.model.llm_model.generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode)
 

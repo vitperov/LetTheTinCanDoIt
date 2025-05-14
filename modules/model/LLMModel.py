@@ -53,8 +53,10 @@ class LLMModel(QObject):
         provider = self.get_provider_for_model(model_name)
         return provider.getModelOptions(model_name)
 
-    def set_project_files(self, project_dir, chosen_files):
+    def set_project_dir(self, project_dir):
         self.project_dir = project_dir
+
+    def set_project_files(self, chosen_files):
         self.chosen_files = chosen_files
 
     def make_file_content_text(self, project_dir, chosen_files, editorMode):
