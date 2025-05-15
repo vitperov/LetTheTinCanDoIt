@@ -8,19 +8,22 @@ from tinydb.middlewares import CachingMiddleware
 from .dbRecords.DescriptionRecord import DescriptionRecord
 
 class ProjectMeta:
-    def __init__(self, project_path: str, index_extensions: list = None, llm_model=None):
+    def __init__(self, project_path: str, llm_model=None):
         self.project_path = project_path
         self.db_path = os.path.join(project_path, '.lttcdi', 'metadata.json')
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        
+
         if not os.path.exists(self.db_path):
             with open(self.db_path, "w") as f:
                 f.write('{}')
-        
+
         self.db = TinyDB(self.db_path, storage=CachingMiddleware(JSONStorage))
-        self.index_extensions = index_extensions if index_extensions else ['py']
         self.llm_model = llm_model
-        
+
+        self.index_extensions = ['py']
+        self.index_directories = []
+        self.load_settings()
+
     def _get_relative_path(self, absolute_path: str) -> str:
         return os.path.relpath(absolute_path, self.project_path)
 
@@ -34,11 +37,21 @@ class ProjectMeta:
 
     def getAll_project_files(self) -> list:
         project_files = []
-        for root, dirs, files in os.walk(self.project_path):
-            for file in files:
-                if Path(file).suffix[1:] in self.index_extensions:
-                    full_path = os.path.join(root, file)
-                    project_files.append(self._get_relative_path(full_path))
+        if not self.index_directories:
+            for root, dirs, files in os.walk(self.project_path):
+                for file in files:
+                    if Path(file).suffix[1:] in self.index_extensions:
+                        full_path = os.path.join(root, file)
+                        project_files.append(self._get_relative_path(full_path))
+        else:
+            for rel_dir in self.index_directories:
+                abs_dir = os.path.join(self.project_path, rel_dir)
+                if os.path.isdir(abs_dir):
+                    for root, dirs, files in os.walk(abs_dir):
+                        for file in files:
+                            if Path(file).suffix[1:] in self.index_extensions:
+                                full_path = os.path.join(root, file)
+                                project_files.append(self._get_relative_path(full_path))
         return project_files
 
     def _get_existing_record(self, relative_path: str):
@@ -65,7 +78,7 @@ class ProjectMeta:
         for rel_path in files:
             current_checksum = self.calculate_checksum(rel_path)
             existing = self._get_existing_record(rel_path)
-            
+
             if not existing or existing.checksum != current_checksum:
                 new_description = self.compose_file_description(rel_path)
                 record = DescriptionRecord(rel_path, current_checksum, new_description)
@@ -88,31 +101,31 @@ class ProjectMeta:
     def stat_descriptions(self) -> dict:
         files_in_project = set(self.getAll_project_files())
         db_records = {rec['file_path']: rec for rec in self.db.all()}
-        
+
         stats = {
             'total_files': len(files_in_project),
             'new_files': [],
             'outdated_files': [],
             'up_to_date_files': []
         }
-        
+
         for rel_path in files_in_project:
             current_checksum = self.calculate_checksum(rel_path)
             db_record = db_records.get(rel_path)
-            
+
             if not db_record:
                 stats['new_files'].append(rel_path)
             elif db_record['checksum'] != current_checksum:
                 stats['outdated_files'].append(rel_path)
             else:
                 stats['up_to_date_files'].append(rel_path)
-                
+
         print(f"Project Description Statistics:")
         print(f"Total files: {stats['total_files']}")
         print(f"New files: {len(stats['new_files'])}")
         print(f"Outdated files: {len(stats['outdated_files'])}")
         print(f"Up-to-date files: {len(stats['up_to_date_files'])}")
-        
+
         return stats
 
     def load_settings(self):
@@ -120,13 +133,18 @@ class ProjectMeta:
         settings = settings_table.get(Query().id == "project_settings")
         if settings:
             self.index_extensions = settings.get("index_extensions", self.index_extensions)
-        return self.index_extensions
+            self.index_directories = settings.get("index_directories", self.index_directories)
+        else:
+            if self.index_directories is None:
+                self.index_directories = []
+        return self.index_extensions, self.index_directories
 
-    def save_settings(self, index_extensions):
+    def save_settings(self, index_extensions, index_directories):
         self.index_extensions = index_extensions
+        self.index_directories = index_directories
         settings_table = self.db.table('settings')
         settings_table.upsert(
-            {"id": "project_settings", "index_extensions": index_extensions},
+            {"id": "project_settings", "index_extensions": index_extensions, "index_directories": index_directories},
             Query().id == "project_settings"
         )
         self.db.storage.flush()

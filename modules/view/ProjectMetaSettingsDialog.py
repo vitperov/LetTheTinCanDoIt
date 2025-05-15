@@ -16,6 +16,12 @@ class ProjectMetaSettingsDialog(QDialog):
         self.line_edit = QLineEdit()
         layout.addWidget(self.line_edit)
 
+        self.dir_label = QLabel("Index directories (comma-separated):")
+        layout.addWidget(self.dir_label)
+
+        self.dir_line_edit = QLineEdit()
+        layout.addWidget(self.dir_line_edit)
+
         button_layout = QHBoxLayout()
         self.save_button = QPushButton("Save")
         self.load_button = QPushButton("Load")
@@ -41,17 +47,22 @@ class ProjectMetaSettingsDialog(QDialog):
         self.index_one_button.clicked.connect(self.run_index_one)
 
     def save_settings(self):
-        text = self.line_edit.text()
-        index_extensions = [ext.strip() for ext in text.split(",") if ext.strip()]
+        ext_text = self.line_edit.text()
+        index_extensions = [ext.strip() for ext in ext_text.split(",") if ext.strip()]
+        dir_text = self.dir_line_edit.text()
+        index_directories = [d.strip() for d in dir_text.split(",") if d.strip()]
         print(f"\n[GUI] Saving index extensions: {index_extensions}")
-        self.project_meta.save_settings(index_extensions)
+        print(f"[GUI] Saving index directories: {index_directories}")
+        self.project_meta.save_settings(index_extensions, index_directories)
         print("[GUI] Settings saved successfully")
 
     def load_settings(self):
         print("\n[GUI] Loading settings")
-        index_extensions = self.project_meta.load_settings()
-        print(f"[GUI] Retrieved settings: {index_extensions}")
+        index_extensions, index_directories = self.project_meta.load_settings()
+        print(f"[GUI] Retrieved extensions: {index_extensions}")
+        print(f"[GUI] Retrieved directories: {index_directories}")
         self.line_edit.setText(", ".join(index_extensions))
+        self.dir_line_edit.setText(", ".join(index_directories))
         print("[GUI] Settings loaded into UI")
 
     def run_stats(self):
