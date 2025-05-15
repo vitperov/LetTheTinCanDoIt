@@ -199,9 +199,10 @@ class LLMModel(QObject):
         except Exception as e:
             self.response_generated.emit("Error canceling batch job: " + str(e))
             
-    def generate_simple_response_sync(self, modelName, request):
-        print(f"Model: {modelName}")
-        print(f"Request: {request}")
+    def generate_simple_response_sync(self, modelName, request, printRequest=True):
+        if printRequest:
+            print(f"Model: {modelName}")
+            print(f"Request: {request}")
         provider = self.get_provider_for_model(modelName)
         return provider._generate_response_sync(
             modelName,

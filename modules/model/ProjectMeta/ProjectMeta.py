@@ -76,7 +76,7 @@ class ProjectMeta:
         if not self.llm_model:
             return f"Description for {relative_path}"
         model_name = self.indexing_model or (self.available_models[0] if self.available_models else "gpt-4o-mini")
-        response = self.llm_model.generate_simple_response_sync(model_name, request_text)
+        response = self.llm_model.generate_simple_response_sync(model_name, request_text, printRequest=False)
         if isinstance(response, tuple):
             description, _ = response
         else:
@@ -91,6 +91,7 @@ class ProjectMeta:
 
             if not existing or existing.checksum != current_checksum:
                 new_description = self.compose_file_description(rel_path)
+                print(f"{rel_path}: {new_description}\n")
                 record = DescriptionRecord(rel_path, current_checksum, new_description)
                 self.db.upsert(record.to_dict(), Query().file_path == rel_path)
 
@@ -99,12 +100,14 @@ class ProjectMeta:
         for rel_path in files:
             current_checksum = self.calculate_checksum(rel_path)
             new_description = self.compose_file_description(rel_path)
+            print(f"{rel_path}: {new_description}\n")
             record = DescriptionRecord(rel_path, current_checksum, new_description)
             self.db.upsert(record.to_dict(), Query().file_path == rel_path)
 
     def update_description(self, relative_path: str):
         current_checksum = self.calculate_checksum(relative_path)
         new_description = self.compose_file_description(relative_path)
+        print(f"{relative_path}: {new_description}\n")
         record = DescriptionRecord(relative_path, current_checksum, new_description)
         self.db.upsert(record.to_dict(), Query().file_path == relative_path)
 
