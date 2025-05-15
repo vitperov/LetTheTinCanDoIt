@@ -4,8 +4,14 @@ from pathlib import Path
 from tinydb import TinyDB, Query
 from tinydb.storages import JSONStorage
 from tinydb.middlewares import CachingMiddleware
+from enum import Enum
 
 from .dbRecords.DescriptionRecord import DescriptionRecord
+
+class FileStatus(Enum):
+    NotIndexed = "NotIndexed"
+    Indexed = "Indexed"
+    Outdated = "Outdated"
 
 class ProjectMeta:
     def __init__(self, project_path: str, llm_model=None):
@@ -173,3 +179,19 @@ class ProjectMeta:
             Query().id == "project_settings"
         )
         self.db.storage.flush()
+
+    def getFileDescription(self, relative_path: str):
+        existing = self._get_existing_record(relative_path)
+        return existing.description if existing else ""
+
+    def getFileStatus(self, relative_path: str) -> FileStatus:
+        existing = self._get_existing_record(relative_path)
+        if not existing:
+            return FileStatus.NotIndexed
+        current_checksum = self.calculate_checksum(relative_path)
+        if existing.checksum == current_checksum:
+            return FileStatus.Indexed
+        return FileStatus.Outdated
+
+    def getIndexationParameters(self):
+        return self.index_extensions, self.index_directories

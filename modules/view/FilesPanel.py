@@ -1,11 +1,12 @@
 import os
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
 from PyQt5.QtWidgets import QMessageBox
 from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
+from modules.model.ProjectMeta.ProjectMeta import FileStatus
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
@@ -41,7 +42,7 @@ class FilesPanel(QWidget):
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.clicked.connect(self.open_settings)
-        
+
         self.project_settings_button = QPushButton("Project settings")
         self.project_settings_button.clicked.connect(self.open_project_settings)
 
@@ -54,7 +55,6 @@ class FilesPanel(QWidget):
         self.tree_view = QTreeView()
         self.file_system_model = CustomFileSystemModel()
         self.tree_view.setModel(self.file_system_model)
-        # root path will be set in set_model or handle_project_selected
         self.tree_view.hideColumn(1)
         self.tree_view.hideColumn(2)
         self.tree_view.hideColumn(3)
@@ -83,7 +83,7 @@ class FilesPanel(QWidget):
             return
         settings_dialog = SettingsDialog(self, model=self.model)
         settings_dialog.exec_()
-        
+
     def open_project_settings(self):
         if self.model is None or getattr(self.model, "project_meta", None) is None:
             QMessageBox.critical(self, "Error", "Project Meta information is not available.")
@@ -99,6 +99,16 @@ class FilesPanel(QWidget):
             self.proj_dir_changed.emit(directory)
             self.clear_checked_files()
             self.update_settings(directory)
+
+            if self.model and getattr(self.model, "project_meta", None):
+                index_extensions, index_directories = self.model.project_meta.getIndexationParameters()
+                relative_files = self.model.project_meta.getAll_project_files()
+                statuses_map = {}
+                for rel_path in relative_files:
+                    status = self.model.project_meta.getFileStatus(rel_path)
+                    abs_path = os.path.join(directory, rel_path)
+                    statuses_map[abs_path] = status
+                self.file_system_model.set_status_map(statuses_map)
 
     def load_last_project_directory(self):
         if self.model and hasattr(self.model, "historyModel"):
@@ -120,6 +130,31 @@ class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.checked_files = {}
+        self.status_map = {}
+        self._generate_icons()
+
+    def _generate_icons(self):
+        size = 12
+        self.icons = {}
+        color_map = {
+            FileStatus.NotIndexed: Qt.red,
+            FileStatus.Indexed: Qt.green,
+            FileStatus.Outdated: Qt.yellow
+        }
+        for status, color in color_map.items():
+            pixmap = QPixmap(size, size)
+            pixmap.fill(Qt.transparent)
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(QBrush(color))
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(0, 0, size, size)
+            painter.end()
+            self.icons[status] = QIcon(pixmap)
+
+    def set_status_map(self, status_map):
+        self.status_map = status_map
+        self.layoutChanged.emit()
 
     def clear_checked_files(self):
         self.checked_files = {}
@@ -135,6 +170,12 @@ class CustomFileSystemModel(QFileSystemModel):
         if role == Qt.CheckStateRole and not self.isDir(index):
             file_path = self.filePath(index)
             return Qt.Checked if self.checked_files.get(file_path, False) else Qt.Unchecked
+        if role == Qt.DecorationRole and not self.isDir(index):
+            file_path = self.filePath(index)
+            if file_path in self.status_map:
+                icon = self.icons.get(self.status_map[file_path])
+                if icon:
+                    return icon
         return super().data(index, role)
 
     def setData(self, index, value, role):
