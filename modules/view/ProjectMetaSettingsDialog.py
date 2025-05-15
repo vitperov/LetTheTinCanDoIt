@@ -37,6 +37,8 @@ class ProjectMetaSettingsDialog(QDialog):
         actions_layout.addWidget(self.stats_button)
         self.index_all_button = QPushButton("Index all")
         actions_layout.addWidget(self.index_all_button)
+        self.force_index_all_button = QPushButton("Force reindex all")
+        actions_layout.addWidget(self.force_index_all_button)
         self.index_one_button = QPushButton("Index one")
         actions_layout.addWidget(self.index_one_button)
         actions_group.setLayout(actions_layout)
@@ -47,6 +49,7 @@ class ProjectMetaSettingsDialog(QDialog):
         self.save_button.clicked.connect(self.save_settings)
         self.stats_button.clicked.connect(self.run_stats)
         self.index_all_button.clicked.connect(self.run_index_all)
+        self.force_index_all_button.clicked.connect(self.run_force_index_all)
         self.index_one_button.clicked.connect(self.run_index_one)
 
     def save_settings(self):
@@ -84,6 +87,11 @@ class ProjectMetaSettingsDialog(QDialog):
         print("\n[GUI] Running index all")
         self.project_meta.update_descriptions()
         print("[GUI] Index all completed")
+
+    def run_force_index_all(self):
+        print("\n[GUI] Running force reindex all")
+        self.project_meta.force_update_descriptions()
+        print("[GUI] Force reindex all completed")
 
     def run_index_one(self):
         files = self.project_meta.getAll_project_files()

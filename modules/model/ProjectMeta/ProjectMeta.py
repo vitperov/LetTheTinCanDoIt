@@ -94,6 +94,7 @@ class ProjectMeta:
                 print(f"{rel_path}: {new_description}\n")
                 record = DescriptionRecord(rel_path, current_checksum, new_description)
                 self.db.upsert(record.to_dict(), Query().file_path == rel_path)
+        self.db.storage.flush()
 
     def force_update_descriptions(self):
         files = self.getAll_project_files()
@@ -103,6 +104,7 @@ class ProjectMeta:
             print(f"{rel_path}: {new_description}\n")
             record = DescriptionRecord(rel_path, current_checksum, new_description)
             self.db.upsert(record.to_dict(), Query().file_path == rel_path)
+        self.db.storage.flush()
 
     def update_description(self, relative_path: str):
         current_checksum = self.calculate_checksum(relative_path)
@@ -110,6 +112,7 @@ class ProjectMeta:
         print(f"{relative_path}: {new_description}\n")
         record = DescriptionRecord(relative_path, current_checksum, new_description)
         self.db.upsert(record.to_dict(), Query().file_path == relative_path)
+        self.db.storage.flush()
 
     def stat_descriptions(self) -> dict:
         files_in_project = set(self.getAll_project_files())
