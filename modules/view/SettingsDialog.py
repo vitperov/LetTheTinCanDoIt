@@ -94,19 +94,21 @@ class SettingsDialog(QDialog):
             model = self.model
             if model is None and hasattr(owner, "model"):
                 model = owner.model
+            
             if model is not None:
-                if hasattr(model.getCurrentModel().provider, "delete_all_server_files"):
-                    model_context = {
-                        "project_dir": model.project_dir,
-                        "chosen_files": model.chosen_files,
-                        "modelName": model.getCurrentModel().modelName,
-                        "status_changed": lambda msg: self.model.response_generated.emit("Status: " + msg),
-                        "response_generated": lambda msg: self.model.response_generated.emit(msg)
-                    }
-                    model.getCurrentModel().provider.delete_all_server_files(model_context)
-                else:
-                    self.model.response_generated.emit("Delete all server files not supported for current model.")
+                for provider in model.llm_model.service_providers:
+                    try:
+                        model_name = provider.available_models[0] if provider.available_models else 'default'
+                        provider.delete_all_server_files(
+                            modelName=model_name,
+                            status_changed=lambda msg, p=provider: model.response_generated.emit(f"Status ({p.__class__.__name__}): {msg}"),
+                            response_generated=lambda msg, p=provider: model.response_generated.emit(f"{p.__class__.__name__}: {msg}"),
+                            project_dir=model.project_dir,
+                            chosen_files=model.chosen_files
+                        )
+                    except Exception as e:
+                        model.response_generated.emit(f"Error deleting files from {provider.__class__.__name__}: {str(e)}")
             else:
-                self.model.response_generated.emit("No model found.")
+                model.response_generated.emit("No model found.")
         else:
             self.model.response_generated.emit("Deletion canceled.")
