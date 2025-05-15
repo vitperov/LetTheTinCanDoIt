@@ -76,6 +76,8 @@ class LLMModel(QObject):
                     user_message += file_text + "\n\n"
 
             user_message += full_request
+            print(f"Model: {modelName}")
+            print(f"Request: {user_message}")
             provider = self.get_provider_for_model(modelName)
             self.thread_manager.execute_async(
                 lambda: provider._generate_response_sync(
@@ -198,6 +200,8 @@ class LLMModel(QObject):
             self.response_generated.emit("Error canceling batch job: " + str(e))
             
     def generate_simple_response_sync(self, modelName, request):
+        print(f"Model: {modelName}")
+        print(f"Request: {request}")
         provider = self.get_provider_for_model(modelName)
         return provider._generate_response_sync(
             modelName,
@@ -211,6 +215,8 @@ class LLMModel(QObject):
     def generate_simple_response_async(self, modelName, request):
         try:
             self.status_changed.emit("Sending simple request ...")
+            print(f"Model: {modelName}")
+            print(f"Request: {request}")
             provider = self.get_provider_for_model(modelName)
             def _run():
                 return provider._generate_response_sync(

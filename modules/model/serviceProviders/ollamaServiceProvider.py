@@ -41,8 +41,6 @@ class OllamaServiceProvider(ServiceProviderBase):
     def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):
         print("OllamaServiceProvider: Generating response...")
         combined_prompt = full_request
-        print("OllamaServiceProvider: Sending request:")
-        print(combined_prompt)
         try:
             model_name = modelName.replace("ollama-", "", 1)
             command = ["ollama", "run", model_name, combined_prompt]

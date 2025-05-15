@@ -26,24 +26,16 @@ class DeepSeekServiceProvider(ServiceProviderBase):
         return OpenAI(api_key=self.api_key, base_url=self.getBaseUrl())
 
     def _generate_response_sync(self, modelName, full_request, status_changed, response_generated, project_dir=None, chosen_files=None):
-        print("Response thread: Sending...")
+        status_changed("Waiting for the response ...")
         messages = [
             {"role": "user", "content": full_request}
         ]
-        print("Model: " + modelName)
-        print("Request: " + full_request)
-        print("--------------")
-        status_changed("Waiting for the response ...")
         client = self.getClient()
         response = client.chat.completions.create(
             model=modelName,
             messages=messages
         )
         generated_response = response.choices[0].message.content
-        print("Response choices:" + str(len(response.choices)))
-        print("------------ USAGE ------")
-        print(response.usage)
-        status_changed(str(response.usage))
         return (generated_response, response.usage)
 
     def _generate_batch_response_sync(self, modelName, full_request, description, custom_id, status_changed, response_generated, completed_job_list_updated, project_dir=None, chosen_files=None):
