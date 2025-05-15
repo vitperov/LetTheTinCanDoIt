@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QInputDialog
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QInputDialog, QComboBox
 
 class ProjectMetaSettingsDialog(QDialog):
     def __init__(self, project_meta, parent=None):
@@ -21,6 +21,13 @@ class ProjectMetaSettingsDialog(QDialog):
 
         self.dir_line_edit = QLineEdit()
         layout.addWidget(self.dir_line_edit)
+
+        self.model_label = QLabel("Indexing model:")
+        layout.addWidget(self.model_label)
+
+        self.model_combo = QComboBox()
+        self.model_combo.addItems(self.project_meta.available_models)
+        layout.addWidget(self.model_combo)
 
         button_layout = QHBoxLayout()
         self.save_button = QPushButton("Save")
@@ -51,9 +58,11 @@ class ProjectMetaSettingsDialog(QDialog):
         index_extensions = [ext.strip() for ext in ext_text.split(",") if ext.strip()]
         dir_text = self.dir_line_edit.text()
         index_directories = [d.strip() for d in dir_text.split(",") if d.strip()]
+        model = self.model_combo.currentText()
         print(f"\n[GUI] Saving index extensions: {index_extensions}")
         print(f"[GUI] Saving index directories: {index_directories}")
-        self.project_meta.save_settings(index_extensions, index_directories)
+        print(f"[GUI] Saving indexing model: {model}")
+        self.project_meta.save_settings(index_extensions, index_directories, model)
         print("[GUI] Settings saved successfully")
 
     def load_settings(self):
@@ -63,6 +72,12 @@ class ProjectMetaSettingsDialog(QDialog):
         print(f"[GUI] Retrieved directories: {index_directories}")
         self.line_edit.setText(", ".join(index_extensions))
         self.dir_line_edit.setText(", ".join(index_directories))
+        model = getattr(self.project_meta, 'indexing_model', None)
+        print(f"[GUI] Retrieved indexing model: {model}")
+        if model:
+            idx = self.model_combo.findText(model)
+            if idx >= 0:
+                self.model_combo.setCurrentIndex(idx)
         print("[GUI] Settings loaded into UI")
 
     def run_stats(self):

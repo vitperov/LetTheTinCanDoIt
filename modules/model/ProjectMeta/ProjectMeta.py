@@ -19,9 +19,10 @@ class ProjectMeta:
 
         self.db = TinyDB(self.db_path, storage=CachingMiddleware(JSONStorage))
         self.llm_model = llm_model
-
+        self.available_models = llm_model.available_models if llm_model else []
         self.index_extensions = ['py']
         self.index_directories = []
+        self.indexing_model = None
         self.load_settings()
 
     def _get_relative_path(self, absolute_path: str) -> str:
@@ -66,7 +67,8 @@ class ProjectMeta:
         request_text = file_content
         if not self.llm_model:
             return f"Description for {relative_path}"
-        response = self.llm_model.generate_simple_response_sync("gpt-4o-mini", request_text)
+        model_name = self.indexing_model or (self.available_models[0] if self.available_models else "gpt-4o-mini")
+        response = self.llm_model.generate_simple_response_sync(model_name, request_text)
         if isinstance(response, tuple):
             description, _ = response
         else:
@@ -131,20 +133,29 @@ class ProjectMeta:
     def load_settings(self):
         settings_table = self.db.table('settings')
         settings = settings_table.get(Query().id == "project_settings")
+        default_model = self.available_models[0] if self.available_models else None
         if settings:
             self.index_extensions = settings.get("index_extensions", self.index_extensions)
             self.index_directories = settings.get("index_directories", self.index_directories)
+            self.indexing_model = settings.get("indexing_model", default_model)
         else:
             if self.index_directories is None:
                 self.index_directories = []
+            self.indexing_model = default_model
         return self.index_extensions, self.index_directories
 
-    def save_settings(self, index_extensions, index_directories):
+    def save_settings(self, index_extensions, index_directories, indexing_model):
         self.index_extensions = index_extensions
         self.index_directories = index_directories
+        self.indexing_model = indexing_model
         settings_table = self.db.table('settings')
         settings_table.upsert(
-            {"id": "project_settings", "index_extensions": index_extensions, "index_directories": index_directories},
+            {
+                "id": "project_settings",
+                "index_extensions": index_extensions,
+                "index_directories": index_directories,
+                "indexing_model": indexing_model
+            },
             Query().id == "project_settings"
         )
         self.db.storage.flush()
