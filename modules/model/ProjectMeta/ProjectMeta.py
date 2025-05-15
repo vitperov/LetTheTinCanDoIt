@@ -125,4 +125,8 @@ class ProjectMeta:
     def save_settings(self, index_extensions):
         self.index_extensions = index_extensions
         settings_table = self.db.table('settings')
-        settings_table.upsert({"id": "project_settings", "index_extensions": index_extensions}, Query().id == "project_settings")
+        settings_table.upsert(
+            {"id": "project_settings", "index_extensions": index_extensions},
+            Query().id == "project_settings"
+        )
+        self.db.storage.flush()
