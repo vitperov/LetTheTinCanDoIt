@@ -64,7 +64,15 @@ class ProjectMeta:
         absolute_path = os.path.join(self.project_path, relative_path)
         with open(absolute_path, "r", encoding="utf-8") as f:
             file_content = f.read()
-        request_text = file_content
+        prompt = (
+        "You are a code summarization assistant. A code file’s full text will be provided; analyze it and output **exactly one concise sentence** that captures the file’s primary responsibility or purpose.\n\n"
+        "  - Write in plain English—no JSON, no bullet lists, no quotes.\n"
+        "  - Do not explain your reasoning or add extra commentary—just the single sentence.\n"
+        "  - Do not mention framework.\n"
+        "  - Avoid common introduction phases, like \"This code\", \"This file\" and \"This script\". Straight to the point.\n\n"
+        " ----------------- \n"       
+        )
+        request_text = prompt + file_content
         if not self.llm_model:
             return f"Description for {relative_path}"
         model_name = self.indexing_model or (self.available_models[0] if self.available_models else "gpt-4o-mini")
