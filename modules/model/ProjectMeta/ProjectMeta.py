@@ -79,6 +79,12 @@ class ProjectMeta:
             record = DescriptionRecord(rel_path, current_checksum, new_description)
             self.db.upsert(record.to_dict(), Query().file_path == rel_path)
 
+    def update_description(self, relative_path: str):
+        current_checksum = self.calculate_checksum(relative_path)
+        new_description = self.compose_file_description(relative_path)
+        record = DescriptionRecord(relative_path, current_checksum, new_description)
+        self.db.upsert(record.to_dict(), Query().file_path == relative_path)
+
     def stat_descriptions(self) -> dict:
         files_in_project = set(self.getAll_project_files())
         db_records = {rec['file_path']: rec for rec in self.db.all()}
