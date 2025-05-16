@@ -66,7 +66,7 @@ class ProjectMetaSettingsDialog(QDialog):
 
     def load_settings(self):
         print("\n[GUI] Loading settings")
-        index_extensions, index_directories = self.project_meta.load_settings()
+        index_extensions, index_directories = self.project_meta.getIndexationParameters()
         print(f"[GUI] Retrieved extensions: {index_extensions}")
         print(f"[GUI] Retrieved directories: {index_directories}")
         self.line_edit.setText(", ".join(index_extensions))
