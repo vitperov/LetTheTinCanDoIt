@@ -1,12 +1,18 @@
 import os
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip
-from PyQt5.QtCore import QDir, Qt, pyqtSignal
+from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent
 from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
 from PyQt5.QtWidgets import QMessageBox
 from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
 from modules.model.ProjectMeta.ProjectMeta import FileStatus
+
+class FileTreeView(QTreeView):
+    def viewportEvent(self, ev):
+        if ev.type() == QEvent.ToolTip:
+            return True
+        return super().viewportEvent(ev)
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
@@ -53,7 +59,7 @@ class FilesPanel(QWidget):
         button_layout.addWidget(self.settings_button)
         button_layout.addWidget(self.project_settings_button)
 
-        self.tree_view = QTreeView()
+        self.tree_view = FileTreeView()
         self.tree_view.setMouseTracking(True)
         self.tree_view.entered.connect(self.on_item_entered)
         self.file_system_model = CustomFileSystemModel()
@@ -144,7 +150,8 @@ class FilesPanel(QWidget):
             if self.model and getattr(self.model, "project_meta", None):
                 description = self.model.project_meta.getFileDescription(rel_path)
             if description:
-                QToolTip.showText(QCursor.pos(), description, self.tree_view)
+                html_desc = '<html><body style="white-space:pre-wrap;">{}</body></html>'.format(description)
+                QToolTip.showText(QCursor.pos(), html_desc, self.tree_view, QRect(), 15000)
         else:
             QToolTip.hideText()
 
