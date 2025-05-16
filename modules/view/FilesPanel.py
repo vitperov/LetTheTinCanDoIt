@@ -1,7 +1,7 @@
 import os
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip
 from PyQt5.QtCore import QDir, Qt, pyqtSignal
-from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor
+from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
 from PyQt5.QtWidgets import QMessageBox
@@ -54,6 +54,8 @@ class FilesPanel(QWidget):
         button_layout.addWidget(self.project_settings_button)
 
         self.tree_view = QTreeView()
+        self.tree_view.setMouseTracking(True)
+        self.tree_view.entered.connect(self.on_item_entered)
         self.file_system_model = CustomFileSystemModel()
         self.tree_view.setModel(self.file_system_model)
         self.tree_view.hideColumn(1)
@@ -126,6 +128,25 @@ class FilesPanel(QWidget):
 
     def clear_checked_files(self):
         self.file_system_model.clear_checked_files()
+
+    def on_item_entered(self, index):
+        if not index.isValid():
+            QToolTip.hideText()
+            return
+        file_path = self.file_system_model.filePath(index)
+        if os.path.isdir(file_path):
+            QToolTip.hideText()
+            return
+        status = self.file_system_model.status_map.get(file_path)
+        if status in (FileStatus.Indexed, FileStatus.Outdated):
+            rel_path = os.path.relpath(file_path, self.project_dir)
+            description = ""
+            if self.model and getattr(self.model, "project_meta", None):
+                description = self.model.project_meta.getFileDescription(rel_path)
+            if description:
+                QToolTip.showText(QCursor.pos(), description, self.tree_view)
+        else:
+            QToolTip.hideText()
 
 class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
