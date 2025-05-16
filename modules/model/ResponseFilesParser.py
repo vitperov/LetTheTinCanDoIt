@@ -41,6 +41,7 @@ class ResponseFilesParser:
         """
         extracted_files = []
         start_index = 0
+        code_fence = "```"
 
         while True:
             # Find the next occurrence of ***
@@ -48,20 +49,30 @@ class ResponseFilesParser:
             if start_marker == -1:
                 break  # No more *** found, exit the loop
 
-            # Find the closing *** for the file name
-            end_marker = response.find("***", start_marker + 3)
-            if end_marker == -1:
-                break  # No closing ***, exit the loop
+            # Find the closing *** or code fence for the file name
+            next_asterisks = response.find("***", start_marker + 3)
+            next_fence = response.find(code_fence, start_marker + 3)
+
+            if next_asterisks == -1 and next_fence == -1:
+                break  # No closing marker, exit the loop
+
+            # Determine which marker comes first
+            if next_asterisks != -1 and (next_fence == -1 or next_asterisks < next_fence):
+                end_marker = next_asterisks
+                marker_length = 3
+            else:
+                end_marker = next_fence
+                marker_length = len(code_fence)
 
             # Extract the potential filename
             potential_filename = response[start_marker + 3:end_marker].strip()
 
             # Add it to the list of extracted files
-            if potential_filename:  # Ensure we don't add empty strings
+            if potential_filename:
                 extracted_files.append(potential_filename)
 
             # Move the start index forward to search for the next filename
-            start_index = end_marker + 2
+            start_index = end_marker + marker_length
 
         return extracted_files
 
@@ -71,28 +82,33 @@ class ResponseFilesParser:
         Assumes the content for each file is enclosed within triple backticks (```) after the filename,
         which can be wrapped in **.
         """
+        code_fence = "```"
+
         # Try to find the file name enclosed in ** in the response
         file_marker = f"***{relative_path}***"
-
         start_index = response.find(file_marker)
         if start_index == -1:
-            print(f"Could not find the file marker for: {relative_path}")
-            return None
+            # Fallback: look for the file name with only the leading ***
+            file_marker = f"***{relative_path}"
+            start_index = response.find(file_marker)
+            if start_index == -1:
+                print(f"Could not find the file marker for: {relative_path}")
+                return None
 
-        # After finding the file marker, look for the content inside the next triple backticks
-        start_content_index = response.find("```", start_index)
+        # After finding the file marker, look for the content inside the next code fence
+        start_content_index = response.find(code_fence, start_index)
         if start_content_index == -1:
             print(f"Could not find the start of the content block for file: {relative_path}")
             return None
 
-        # Find the closing triple backticks after the start_content_index
-        end_content_index = response.find("```", start_content_index + 3)
+        # Find the closing code fence after the start_content_index
+        end_content_index = response.find(code_fence, start_content_index + len(code_fence))
         if end_content_index == -1:
             print(f"Could not find the end of the content block for file: {relative_path}")
             return None
 
-        # Extract the content between the triple backticks
-        file_content = response[start_content_index + 3:end_content_index].strip()
+        # Extract the content between the code fences
+        file_content = response[start_content_index + len(code_fence):end_content_index].strip()
 
         return file_content
 
