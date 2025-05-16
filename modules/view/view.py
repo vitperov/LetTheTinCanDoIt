@@ -29,10 +29,10 @@ class ProjectGPTView(QWidget):
 
         # Left side layout with FilesPanel and BatchesPanel
         left_side_layout = QVBoxLayout()
-        self.left_panel = FilesPanel(self)
-        self.left_panel.setMinimumWidth(200)
+        self.files_panel = FilesPanel(self)
+        self.files_panel.setMinimumWidth(200)
         self.batches_panel = BatchesPanel()
-        left_side_layout.addWidget(self.left_panel)
+        left_side_layout.addWidget(self.files_panel)
         left_side_layout.addWidget(self.batches_panel)
 
         left_side_widget = QWidget()

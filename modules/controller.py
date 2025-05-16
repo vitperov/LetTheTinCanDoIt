@@ -8,7 +8,7 @@ class ProjectGPTController(QObject):
         self.model = ProjectGPTModel()
         self.view = ProjectGPTView(self.model.available_models)
         self.view.set_model(self.model)
-        self.view.left_panel.set_model(self.model)
+        self.view.files_panel.set_model(self.model)
 
         self.view.request_panel.send_request_signal.connect(self.handle_send_request)
         self.view.request_panel.send_batch_request_signal.connect(self.handle_send_batch_request)
@@ -20,7 +20,7 @@ class ProjectGPTController(QObject):
         self.model.response_generated.connect(self.view.update_response)
         self.model.completed_job_list_updated.connect(self.view.batches_panel.completed_job_list_updated)
         self.model.status_changed.connect(self.view.status_bar.update_status)
-        self.view.left_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
+        self.view.files_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
         last_project_directory = self.model.historyModel.get_last_project_directory()
         self.view.top_panel.update_directory(last_project_directory)
@@ -32,14 +32,14 @@ class ProjectGPTController(QObject):
         self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
     def handle_send_request(self, model_name, role_string, full_request, editor_mode):
-        project_dir, chosen_files = self.view.left_panel.get_checked_files()
+        project_dir, chosen_files = self.view.files_panel.get_checked_files()
         self.model.set_project_dir(project_dir)
         self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request)
         self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode)
 
     def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode):
-        project_dir, chosen_files = self.view.left_panel.get_checked_files()
+        project_dir, chosen_files = self.view.files_panel.get_checked_files()
         self.model.set_project_dir(project_dir)
         self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request_template)
