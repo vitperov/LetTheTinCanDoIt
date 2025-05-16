@@ -23,7 +23,8 @@ class FilesPanel(QWidget):
         self.model = model
         self.project_dir = self.load_last_project_directory()
         self.file_system_model.setRootPath(self.project_dir)
-        self.tree_view.setRootIndex(self.file_system_model.index(self.project_dir))
+        print(f"FilesPanel: set model. project_dir = {self.project_dir}")
+        self.handle_project_selected(self.project_dir)
 
     def init_ui(self):
         main_layout = QVBoxLayout()

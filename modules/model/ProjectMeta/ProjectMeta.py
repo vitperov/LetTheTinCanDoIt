@@ -15,6 +15,7 @@ class FileStatus(Enum):
 
 class ProjectMeta:
     def __init__(self, project_path: str, llm_model=None):
+        print(f"ProjectMeta: opening project {project_path}")
         self.project_path = project_path
         self.db_path = os.path.join(project_path, '.lttcdi', 'metadata.json')
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
