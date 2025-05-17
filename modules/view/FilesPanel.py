@@ -1,5 +1,4 @@
 import os
-import subprocess
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip, QMenu, QMessageBox
 from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel, QModelIndex, QUrl
 from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor, QDesktopServices
@@ -214,22 +213,10 @@ class FilesPanel(QWidget):
         menu = QMenu(self)
         open_action = menu.addAction("Open")
         open_action.triggered.connect(lambda: self.open_file(file_path))
-        open_with_action = menu.addAction("Open With...")
-        open_with_action.triggered.connect(lambda: self.open_with(file_path))
-        # Additional custom actions can be added here later
-
         menu.exec_(self.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
-
-    def open_with(self, file_path):
-        program, _ = QFileDialog.getOpenFileName(self, "Open with", "", "")
-        if program:
-            try:
-                subprocess.Popen([program, file_path])
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Failed to open {file_path} with {program}: {e}")
 
 class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
