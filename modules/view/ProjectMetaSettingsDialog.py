@@ -21,6 +21,10 @@ class ProjectMetaSettingsDialog(QDialog):
         settings_layout.addWidget(self.dir_label)
         self.dir_line_edit = QLineEdit()
         settings_layout.addWidget(self.dir_line_edit)
+        self.hide_label = QLabel("Hide extensions (comma-separated):")
+        settings_layout.addWidget(self.hide_label)
+        self.hide_line_edit = QLineEdit()
+        settings_layout.addWidget(self.hide_line_edit)
         self.model_label = QLabel("Indexing model:")
         settings_layout.addWidget(self.model_label)
         self.model_combo = QComboBox()
@@ -57,11 +61,14 @@ class ProjectMetaSettingsDialog(QDialog):
         index_extensions = [ext.strip() for ext in ext_text.split(",") if ext.strip()]
         dir_text = self.dir_line_edit.text()
         index_directories = [d.strip() for d in dir_text.split(",") if d.strip()]
+        hide_text = self.hide_line_edit.text()
+        hide_extensions = [h.strip() for h in hide_text.split(",") if h.strip()]
         model = self.model_combo.currentText()
         print(f"\n[GUI] Saving index extensions: {index_extensions}")
         print(f"[GUI] Saving index directories: {index_directories}")
+        print(f"[GUI] Saving hide extensions: {hide_extensions}")
         print(f"[GUI] Saving indexing model: {model}")
-        self.project_meta.save_settings(index_extensions, index_directories, model)
+        self.project_meta.save_settings(index_extensions, index_directories, model, hide_extensions)
         print("[GUI] Settings saved successfully")
 
     def load_settings(self):
@@ -77,6 +84,9 @@ class ProjectMetaSettingsDialog(QDialog):
             idx = self.model_combo.findText(model)
             if idx >= 0:
                 self.model_combo.setCurrentIndex(idx)
+        hide_extensions = self.project_meta.getHiddenExtensions()
+        print(f"[GUI] Retrieved hide extensions: {hide_extensions}")
+        self.hide_line_edit.setText(", ".join(hide_extensions))
         print("[GUI] Settings loaded into UI")
 
     def run_stats(self):

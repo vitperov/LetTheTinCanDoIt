@@ -30,6 +30,7 @@ class ProjectMeta:
         self.index_extensions = ['py']
         self.index_directories = []
         self.indexing_model = None
+        self.hide_extensions = []
         self.load_settings()
 
     def _get_relative_path(self, absolute_path: str) -> str:
@@ -159,23 +160,27 @@ class ProjectMeta:
             self.index_extensions = settings.get("index_extensions", self.index_extensions)
             self.index_directories = settings.get("index_directories", self.index_directories)
             self.indexing_model = settings.get("indexing_model", default_model)
+            self.hide_extensions = settings.get("hide_extensions", self.hide_extensions) or []
         else:
             if self.index_directories is None:
                 self.index_directories = []
             self.indexing_model = default_model
+            self.hide_extensions = []
         return self.index_extensions, self.index_directories
 
-    def save_settings(self, index_extensions, index_directories, indexing_model):
+    def save_settings(self, index_extensions, index_directories, indexing_model, hide_extensions):
         self.index_extensions = index_extensions
         self.index_directories = index_directories
         self.indexing_model = indexing_model
+        self.hide_extensions = hide_extensions
         settings_table = self.db.table('settings')
         settings_table.upsert(
             {
                 "id": "project_settings",
                 "index_extensions": index_extensions,
                 "index_directories": index_directories,
-                "indexing_model": indexing_model
+                "indexing_model": indexing_model,
+                "hide_extensions": hide_extensions
             },
             Query().id == "project_settings"
         )
@@ -196,3 +201,6 @@ class ProjectMeta:
 
     def getIndexationParameters(self):
         return self.index_extensions, self.index_directories
+
+    def getHiddenExtensions(self) -> list:
+        return self.hide_extensions

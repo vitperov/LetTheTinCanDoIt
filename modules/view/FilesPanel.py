@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip
-from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent
+from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel
 from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
@@ -13,6 +13,28 @@ class FileTreeView(QTreeView):
         if ev.type() == QEvent.ToolTip:
             return True
         return super().viewportEvent(ev)
+
+class ExtensionFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.hidden_extensions = set()
+
+    def set_hidden_extensions(self, hide_exts):
+        self.hidden_extensions = set(hide_exts)
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, source_row, source_parent):
+        model = self.sourceModel()
+        index = model.index(source_row, 0, source_parent)
+        if not index.isValid():
+            return False
+        file_path = model.filePath(index)
+        if model.isDir(index):
+            return True
+        ext = os.path.splitext(file_path)[1][1:]
+        if ext in self.hidden_extensions:
+            return False
+        return True
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
@@ -63,7 +85,9 @@ class FilesPanel(QWidget):
         self.tree_view.setMouseTracking(True)
         self.tree_view.entered.connect(self.on_item_entered)
         self.file_system_model = CustomFileSystemModel()
-        self.tree_view.setModel(self.file_system_model)
+        self.proxy_model = ExtensionFilterProxyModel(self)
+        self.proxy_model.setSourceModel(self.file_system_model)
+        self.tree_view.setModel(self.proxy_model)
         self.tree_view.hideColumn(1)
         self.tree_view.hideColumn(2)
         self.tree_view.hideColumn(3)
@@ -103,7 +127,12 @@ class FilesPanel(QWidget):
     def handle_project_selected(self, directory):
         if directory:
             self.file_system_model.setRootPath(directory)
-            self.tree_view.setRootIndex(self.file_system_model.index(directory))
+            hidden_extensions = []
+            if self.model and getattr(self.model, "project_meta", None):
+                hidden_extensions = self.model.project_meta.getHiddenExtensions()
+            self.proxy_model.set_hidden_extensions(hidden_extensions)
+            source_index = self.file_system_model.index(directory)
+            self.tree_view.setRootIndex(self.proxy_model.mapFromSource(source_index))
             self.project_dir = directory
             self.proj_dir_changed.emit(directory)
             self.clear_checked_files()
