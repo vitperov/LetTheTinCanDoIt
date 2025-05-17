@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QTextEdit, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox, QSizePolicy
 from PyQt5.QtCore import Qt
-from modules.view.FilesPanel import FilesPanel
+from modules.view.FilesPanel.FilesPanel import FilesPanel
 from modules.view.BatchesPanel import BatchesPanel
 from modules.view.RequestPanel import RequestPanel
 from modules.view.TopPanel import TopPanel  # Import the new TopPanel
