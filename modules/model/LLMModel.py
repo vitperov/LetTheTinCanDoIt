@@ -63,8 +63,9 @@ class LLMModel(QObject):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def generate_response_async(self, modelName, role_string, full_request, editor_mode):
+    def generate_response_async(self, modelName, role_string, full_request, editor_mode, request_options):
         try:
+            print(f"Include files list in request: {request_options.includeFilesList}")
             self.status_changed.emit("Sending the request ...")
             user_message = role_string + "\n\n"
             if self.project_dir and self.chosen_files:
@@ -102,8 +103,9 @@ class LLMModel(QObject):
         self.response_generated.emit(generated_response)
         self.status_changed.emit(str(usage))
 
-    def generate_batch_response_async(self, modelName, role_string, full_request, description, editor_mode):
+    def generate_batch_response_async(self, modelName, role_string, full_request, description, editor_mode, request_options):
         try:
+            print(f"Include files list in batch request: {request_options.includeFilesList}")
             user_message = role_string + "\n\n"
             if self.project_dir and self.chosen_files:
                 formatter = FileContentFormatter()

@@ -25,26 +25,26 @@ class ProjectGPTController(QObject):
 
         last_project_directory = self.model.historyModel.get_last_project_directory()
         self.view.top_panel.update_directory(last_project_directory)
-        
+
         additional_requests = self.model.get_additional_requests()
         self.view.set_additional_requests(additional_requests)
 
         self.view.request_panel.model_dropdown.currentTextChanged.connect(self.handle_model_change)
         self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
-    def handle_send_request(self, model_name, role_string, full_request, editor_mode):
+    def handle_send_request(self, model_name, role_string, full_request, editor_mode, request_options):
         project_dir, chosen_files = self.view.files_panel.get_checked_files()
         self.model.set_project_dir(project_dir)
         self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request)
-        self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode)
+        self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode, request_options)
 
-    def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode):
+    def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode, request_options):
         project_dir, chosen_files = self.view.files_panel.get_checked_files()
         self.model.set_project_dir(project_dir)
         self.model.set_project_files(chosen_files)
         self.model.requestHistoryModel.update_request_history(full_request_template)
-        self.model.llm_model.generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode)
+        self.model.llm_model.generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode, request_options)
 
     def handle_get_completed_batch_jobs(self):
         model_name = self.view.request_panel.model_dropdown.currentText()
@@ -57,11 +57,11 @@ class ProjectGPTController(QObject):
     def handle_delete_batch_job(self, batch_id):
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.delete_batch_job(model_name, batch_id)
-        
+
     def handle_cancel_batch_job(self, batch_id):
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.cancel_batch_job(model_name, batch_id)
-        
+
     def handle_model_change(self, model_name):
         model_options = self.model.llm_model.get_model_options(model_name)
         self.view.request_panel.set_batch_support(model_options.supportBatch)
