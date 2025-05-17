@@ -1,10 +1,10 @@
 import os
-from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip
-from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel, QModelIndex
-from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor
+import subprocess
+from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip, QMenu, QMessageBox
+from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel, QModelIndex, QUrl
+from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor, QDesktopServices
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
-from PyQt5.QtWidgets import QMessageBox
 from modules.view.ProjectMetaSettingsDialog import ProjectMetaSettingsDialog
 from modules.model.ProjectMeta.ProjectMeta import FileStatus
 
@@ -82,6 +82,9 @@ class FilesPanel(QWidget):
         self.tree_view = FileTreeView()
         self.tree_view.setMouseTracking(True)
         self.tree_view.entered.connect(self.on_item_entered)
+        self.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tree_view.customContextMenuRequested.connect(self.on_context_menu)
+
         self.file_system_model = CustomFileSystemModel()
         self.proxy_model = ExtensionFilterProxyModel(self)
         self.proxy_model.setSourceModel(self.file_system_model)
@@ -198,6 +201,35 @@ class FilesPanel(QWidget):
                 QToolTip.showText(QCursor.pos(), html_desc, self.tree_view, QRect(), 15000)
         else:
             QToolTip.hideText()
+
+    def on_context_menu(self, point):
+        proxy_index = self.tree_view.indexAt(point)
+        if not proxy_index.isValid():
+            return
+        src_index = self.proxy_model.mapToSource(proxy_index)
+        if not src_index.isValid() or self.file_system_model.isDir(src_index):
+            return
+        file_path = self.file_system_model.filePath(src_index)
+
+        menu = QMenu(self)
+        open_action = menu.addAction("Open")
+        open_action.triggered.connect(lambda: self.open_file(file_path))
+        open_with_action = menu.addAction("Open With...")
+        open_with_action.triggered.connect(lambda: self.open_with(file_path))
+        # Additional custom actions can be added here later
+
+        menu.exec_(self.tree_view.viewport().mapToGlobal(point))
+
+    def open_file(self, file_path):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+
+    def open_with(self, file_path):
+        program, _ = QFileDialog.getOpenFileName(self, "Open with", "", "")
+        if program:
+            try:
+                subprocess.Popen([program, file_path])
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to open {file_path} with {program}: {e}")
 
 class CustomFileSystemModel(QFileSystemModel):
     def __init__(self, parent=None):
