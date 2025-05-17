@@ -1,6 +1,6 @@
 import os
 from PyQt5.QtWidgets import QWidget, QTreeView, QVBoxLayout, QPushButton, QFileSystemModel, QFileDialog, QHBoxLayout, QLabel, QToolTip
-from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel
+from PyQt5.QtCore import QDir, Qt, pyqtSignal, QRect, QEvent, QSortFilterProxyModel, QModelIndex
 from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor
 from PyQt5.QtWidgets import QStyle
 from modules.view.ProjectsHistoryWindow import ProjectsHistoryWindow
@@ -24,17 +24,16 @@ class ExtensionFilterProxyModel(QSortFilterProxyModel):
         self.invalidateFilter()
 
     def filterAcceptsRow(self, source_row, source_parent):
+        if not self.hidden_extensions:
+            return True
         model = self.sourceModel()
         index = model.index(source_row, 0, source_parent)
         if not index.isValid():
             return False
-        file_path = model.filePath(index)
         if model.isDir(index):
             return True
-        ext = os.path.splitext(file_path)[1][1:]
-        if ext in self.hidden_extensions:
-            return False
-        return True
+        ext = os.path.splitext(model.filePath(index))[1][1:]
+        return ext not in self.hidden_extensions
 
 class FilesPanel(QWidget):
     proj_dir_changed = pyqtSignal(str)
@@ -51,7 +50,6 @@ class FilesPanel(QWidget):
         self.model = model
         self.project_dir = self.load_last_project_directory()
         self.file_system_model.setRootPath(self.project_dir)
-        print(f"FilesPanel: set model. project_dir = {self.project_dir}")
         self.handle_project_selected(self.project_dir)
 
     def init_ui(self):
@@ -97,23 +95,25 @@ class FilesPanel(QWidget):
         self.setLayout(main_layout)
 
     def choose_directory(self):
-        selected_dir = QFileDialog.getExistingDirectory(self, "Choose Project Directory", self.project_dir or os.path.expanduser('~'))
+        selected_dir = QFileDialog.getExistingDirectory(
+            self,
+            "Choose Project Directory",
+            self.project_dir or os.path.expanduser('~')
+        )
         if selected_dir:
             self.handle_project_selected(selected_dir)
 
     def show_projects_history(self):
-        history_model = None
-        if self.model and hasattr(self.model, "historyModel"):
-            history_model = self.model.historyModel
+        history_model = getattr(self.model, "historyModel", None)
         self.history_window = ProjectsHistoryWindow(history_model)
         self.history_window.project_selected.connect(self.handle_project_selected)
         self.history_window.exec_()
 
     def open_settings(self):
-        from modules.view.SettingsDialog import SettingsDialog
         if self.model is None:
             QMessageBox.critical(self, "Error", "Model is not set.")
             return
+        from modules.view.SettingsDialog import SettingsDialog
         settings_dialog = SettingsDialog(self, model=self.model)
         settings_dialog.exec_()
 
@@ -125,28 +125,34 @@ class FilesPanel(QWidget):
         dialog.exec_()
 
     def handle_project_selected(self, directory):
-        if directory:
-            self.file_system_model.setRootPath(directory)
-            hidden_extensions = []
-            if self.model and getattr(self.model, "project_meta", None):
-                hidden_extensions = self.model.project_meta.getHiddenExtensions()
-            self.proxy_model.set_hidden_extensions(hidden_extensions)
-            source_index = self.file_system_model.index(directory)
-            self.tree_view.setRootIndex(self.proxy_model.mapFromSource(source_index))
-            self.project_dir = directory
-            self.proj_dir_changed.emit(directory)
-            self.clear_checked_files()
-            self.update_settings(directory)
+        if not directory:
+            return
+        self.file_system_model.setRootPath(directory)
 
-            if self.model and getattr(self.model, "project_meta", None):
-                index_extensions, index_directories = self.model.project_meta.getIndexationParameters()
-                relative_files = self.model.project_meta.getAll_project_files()
-                statuses_map = {}
-                for rel_path in relative_files:
-                    status = self.model.project_meta.getFileStatus(rel_path)
-                    abs_path = os.path.join(directory, rel_path)
-                    statuses_map[abs_path] = status
-                self.file_system_model.set_status_map(statuses_map)
+        hidden_extensions = []
+        if self.model and getattr(self.model, "project_meta", None):
+            hidden_extensions = self.model.project_meta.getHiddenExtensions()
+        self.proxy_model.set_hidden_extensions(hidden_extensions)
+
+        if self.model and getattr(self.model, "project_meta", None):
+            _, _ = self.model.project_meta.getIndexationParameters()
+            relative_files = self.model.project_meta.getAll_project_files()
+            statuses_map = {}
+            for rel_path in relative_files:
+                status = self.model.project_meta.getFileStatus(rel_path)
+                abs_path = os.path.join(directory, rel_path)
+                statuses_map[abs_path] = status
+            self.file_system_model.set_status_map(statuses_map)
+
+        source_index = self.file_system_model.index(directory)
+        proxy_index = self.proxy_model.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.tree_view.setRootIndex(proxy_index)
+
+        self.project_dir = directory
+        self.proj_dir_changed.emit(directory)
+        self.clear_checked_files()
+        self.update_settings(directory)
 
     def load_last_project_directory(self):
         if self.model and hasattr(self.model, "historyModel"):
@@ -158,7 +164,11 @@ class FilesPanel(QWidget):
             self.model.historyModel.update_last_project(directory)
 
     def get_checked_files(self):
-        relative_files = [os.path.relpath(file_path, self.project_dir) for file_path, checked in self.file_system_model.checked_files.items() if checked]
+        relative_files = [
+            os.path.relpath(path, self.project_dir)
+            for path, checked in self.file_system_model.checked_files.items()
+            if checked
+        ]
         return self.project_dir, relative_files
 
     def clear_checked_files(self):
@@ -168,10 +178,15 @@ class FilesPanel(QWidget):
         if not index.isValid():
             QToolTip.hideText()
             return
-        file_path = self.file_system_model.filePath(index)
+        src_index = self.proxy_model.mapToSource(index)
+        if not src_index.isValid():
+            QToolTip.hideText()
+            return
+        file_path = self.file_system_model.filePath(src_index)
         if os.path.isdir(file_path):
             QToolTip.hideText()
             return
+
         status = self.file_system_model.status_map.get(file_path)
         if status in (FileStatus.Indexed, FileStatus.Outdated):
             rel_path = os.path.relpath(file_path, self.project_dir)
@@ -211,32 +226,37 @@ class CustomFileSystemModel(QFileSystemModel):
             self.icons[status] = QIcon(pixmap)
 
     def set_status_map(self, status_map):
+        self.beginResetModel()
         self.status_map = status_map
-        self.layoutChanged.emit()
+        self.endResetModel()
 
     def clear_checked_files(self):
         self.checked_files = {}
 
     def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlags
         default_flags = super().flags(index)
-        if not self.isDir(index):
-            return default_flags | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
-        else:
+        if self.isDir(index):
             return default_flags
+        return default_flags | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
 
     def data(self, index, role):
+        if not index.isValid():
+            return None
         if role == Qt.CheckStateRole and not self.isDir(index):
             file_path = self.filePath(index)
             return Qt.Checked if self.checked_files.get(file_path, False) else Qt.Unchecked
         if role == Qt.DecorationRole and not self.isDir(index):
             file_path = self.filePath(index)
-            if file_path in self.status_map:
-                icon = self.icons.get(self.status_map[file_path])
-                if icon:
-                    return icon
+            icon = self.icons.get(self.status_map.get(file_path))
+            if icon:
+                return icon
         return super().data(index, role)
 
     def setData(self, index, value, role):
+        if not index.isValid():
+            return super().setData(index, value, role)
         if role == Qt.CheckStateRole and not self.isDir(index):
             file_path = self.filePath(index)
             self.checked_files[file_path] = (value == Qt.Checked)
