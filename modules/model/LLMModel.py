@@ -9,6 +9,7 @@ from modules.model.serviceProviders.openAIServiceProvider import OpenAIServicePr
 from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
 from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
 from modules.model.serviceProviders.geminiServiceProvider import GeminiServiceProvider
+from modules.model.constants import FILES_LIST_INTRO
 
 def get_api_key(key_name):
     settings_path = os.path.join('settings', 'key.json')
@@ -64,29 +65,33 @@ class LLMModel(QObject):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
+    def _build_user_message(self, role_string, full_request, editor_mode, include_files_list):
+        parts = []
+        if include_files_list:
+            if self.project_dir:
+                meta = ProjectMeta(self.project_dir)
+                files = meta.getAll_project_files()
+            else:
+                files = []
+            files_text = "\n".join(files)
+            parts.append(FILES_LIST_INTRO + "\n" + files_text)
+        parts.append(role_string)
+        if self.project_dir and self.chosen_files:
+            formatter = FileContentFormatter()
+            file_text = formatter.make_file_content_text(
+                self.project_dir, self.chosen_files, editor_mode
+            )
+            if file_text:
+                parts.append(file_text)
+        parts.append(full_request)
+        return "\n\n".join(parts)
+
     def generate_response_async(self, modelName, role_string, full_request, editor_mode, request_options):
         try:
-            print(f"Include files list in request: {request_options.includeFilesList}")
+            include = getattr(request_options, 'includeFilesList', False)
+            print(f"Include files list in request: {include}")
             self.status_changed.emit("Sending the request ...")
-            user_message = ""
-            if getattr(request_options, 'includeFilesList', False):
-                start_message = "Here are list of files of the project:"
-                if self.project_dir:
-                    meta = ProjectMeta(self.project_dir)
-                    files = meta.getAll_project_files()
-                else:
-                    files = []
-                files_text = "\n".join(files)
-                user_message += start_message + "\n" + files_text + "\n\n"
-            user_message += role_string + "\n\n"
-            if self.project_dir and self.chosen_files:
-                formatter = FileContentFormatter()
-                file_text = formatter.make_file_content_text(
-                    self.project_dir, self.chosen_files, editor_mode
-                )
-                if file_text:
-                    user_message += file_text + "\n\n"
-            user_message += full_request
+            user_message = self._build_user_message(role_string, full_request, editor_mode, include)
             print(f"Model: {modelName}")
             print(f"Request: {user_message}")
             provider = self.get_provider_for_model(modelName)
@@ -115,26 +120,9 @@ class LLMModel(QObject):
 
     def generate_batch_response_async(self, modelName, role_string, full_request, description, editor_mode, request_options):
         try:
-            print(f"Include files list in batch request: {request_options.includeFilesList}")
-            user_message = ""
-            if getattr(request_options, 'includeFilesList', False):
-                start_message = "Here are list of files of the project:"
-                if self.project_dir:
-                    meta = ProjectMeta(self.project_dir)
-                    files = meta.getAll_project_files()
-                else:
-                    files = []
-                files_text = "\n".join(files)
-                user_message += start_message + "\n" + files_text + "\n\n"
-            user_message += role_string + "\n\n"
-            if self.project_dir and self.chosen_files:
-                formatter = FileContentFormatter()
-                file_text = formatter.make_file_content_text(
-                    self.project_dir, self.chosen_files, editor_mode
-                )
-                if file_text:
-                    user_message += file_text + "\n\n"
-            user_message += full_request
+            include = getattr(request_options, 'includeFilesList', False)
+            print(f"Include files list in batch request: {include}")
+            user_message = self._build_user_message(role_string, full_request, editor_mode, include)
             custom_id = f"{self.project_dir}|{editor_mode}"
             provider = self.get_provider_for_model(modelName)
             self.thread_manager.execute_async(
@@ -219,7 +207,7 @@ class LLMModel(QObject):
             )
         except Exception as e:
             self.response_generated.emit("Error canceling batch job: " + str(e))
-            
+
     def generate_simple_response_sync(self, modelName, request, printRequest=True):
         if printRequest:
             print(f"Model: {modelName}")
