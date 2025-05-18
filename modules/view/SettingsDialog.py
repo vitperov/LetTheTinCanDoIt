@@ -21,7 +21,7 @@ class SettingsDialog(QDialog):
                     return json.load(f)
             except Exception:
                 pass
-        return {"api_key": "", "deepseek_api_key": ""}
+        return {"api_key": "", "deepseek_api_key": "", "gemini_api_key": ""}
 
     def init_ui(self):
         layout = QVBoxLayout(self)
@@ -52,6 +52,15 @@ class SettingsDialog(QDialog):
         self.deepseek_group.setLayout(deepseek_layout)
         models_layout.addWidget(self.deepseek_group)
 
+        # Gemini GroupBox
+        self.gemini_group = QGroupBox("Gemini")
+        gemini_layout = QFormLayout()
+        self.gemini_key_edit = QLineEdit()
+        self.gemini_key_edit.setText(self.keys.get("gemini_api_key", ""))
+        gemini_layout.addRow("API Key:", self.gemini_key_edit)
+        self.gemini_group.setLayout(gemini_layout)
+        models_layout.addWidget(self.gemini_group)
+
         # Ollama GroupBox
         self.ollama_group = QGroupBox("Ollama")
         ollama_layout = QVBoxLayout()
@@ -59,8 +68,6 @@ class SettingsDialog(QDialog):
         ollama_layout.addWidget(ollama_label)
         self.ollama_group.setLayout(ollama_layout)
         models_layout.addWidget(self.ollama_group)
-
-        # Removed debug output field
 
         models_tab.setLayout(models_layout)
         self.tab_widget.addTab(models_tab, "Models")
@@ -74,6 +81,7 @@ class SettingsDialog(QDialog):
     def save_settings(self):
         self.keys["api_key"] = self.chatgpt_key_edit.text()
         self.keys["deepseek_api_key"] = self.deepseek_key_edit.text()
+        self.keys["gemini_api_key"] = self.gemini_key_edit.text()
         os.makedirs(os.path.dirname(self.settings_file), exist_ok=True)
         with open(self.settings_file, 'w') as f:
             json.dump(self.keys, f, indent=4)
@@ -86,19 +94,21 @@ class SettingsDialog(QDialog):
             model = self.model
             if model is None and hasattr(owner, "model"):
                 model = owner.model
+            
             if model is not None:
-                if hasattr(model.getCurrentModel().provider, "delete_all_server_files"):
-                    model_context = {
-                        "project_dir": model.project_dir,
-                        "chosen_files": model.chosen_files,
-                        "modelName": model.getCurrentModel().modelName,
-                        "status_changed": lambda msg: self.model.response_generated.emit("Status: " + msg),
-                        "response_generated": lambda msg: self.model.response_generated.emit(msg)
-                    }
-                    model.getCurrentModel().provider.delete_all_server_files(model_context)
-                else:
-                    self.model.response_generated.emit("Delete all server files not supported for current model.")
+                for provider in model.llm_model.service_providers:
+                    try:
+                        model_name = provider.available_models[0] if provider.available_models else 'default'
+                        provider.delete_all_server_files(
+                            modelName=model_name,
+                            status_changed=lambda msg, p=provider: model.response_generated.emit(f"Status ({p.__class__.__name__}): {msg}"),
+                            response_generated=lambda msg, p=provider: model.response_generated.emit(f"{p.__class__.__name__}: {msg}"),
+                            project_dir=model.project_dir,
+                            chosen_files=model.chosen_files
+                        )
+                    except Exception as e:
+                        model.response_generated.emit(f"Error deleting files from {provider.__class__.__name__}: {str(e)}")
             else:
-                self.model.response_generated.emit("No model found.")
+                model.response_generated.emit("No model found.")
         else:
             self.model.response_generated.emit("Deletion canceled.")

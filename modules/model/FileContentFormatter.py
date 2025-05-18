@@ -39,7 +39,7 @@ class FileContentFormatter:
             "  * Please return the content of each file with its corresponding file path.\n"
             "  * Do not omit the file paths.\n"
             "  * If you are editing a file provided by the user, do not modify the original file path.\n"
-            "  * Each file path should be enclosed in triple asterisks (***file_path***), followed immediately by the modified content inside a code block.\n"
+            "  * Each file path should be enclosed in triple asterisks (***file_path***) (triple asterisks before the filename and triple asterisks after the file name), followed immediately by the modified content inside a code block.\n"
             "  * Do not use ### before file path.\n"
             "  * Do not use row of '─' before or after file path.\n"
             "  * Do not insert any text, explanations, or comments before, after, or between the file path and the code block.\n"
@@ -53,6 +53,10 @@ class FileContentFormatter:
             "- Rules for including files in the response:\n"
             "  * If a file provided by user remains unchanged, do not include it in the response.\n"
             "  * If you modified a provided file, include its entire content.\n"
+            "- Rules for making changes:\n"
+            "  * Make minimum changes.\n"
+            "  * Do not delete existing code or comments unless it is part of a clearly necessary refactoring (e.g., code is moved to another file or replaced with an improved version). When removing code, ensure that its purpose is preserved elsewhere or justified by context.\n"
+            "  * Preserve all meaningful comments. Do not remove any comment unless the corresponding code is also being justifiably removed or relocated.\n"
             " \n\n"
          )
 
