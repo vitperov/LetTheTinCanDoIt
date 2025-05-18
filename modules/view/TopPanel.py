@@ -28,6 +28,9 @@ class TopPanel(QWidget):
         self.project_settings_button = QPushButton("Project settings")
         layout.addWidget(self.project_settings_button)
 
+        self.robot_button = QPushButton("R")
+        layout.addWidget(self.robot_button)
+
         self.label = QLabel("Project directory:")
         layout.addWidget(self.label)
 
