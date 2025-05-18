@@ -23,6 +23,11 @@ class ProjectGPTController(QObject):
         self.view.files_panel.proj_dir_changed.connect(self.model.set_project_dir)
         self.view.files_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
 
+        self.view.top_panel.choose_dir_button.clicked.connect(self.view.files_panel.choose_directory)
+        self.view.top_panel.last_projects_button.clicked.connect(self.view.files_panel.show_projects_history)
+        self.view.top_panel.settings_button.clicked.connect(self.view.files_panel.open_settings)
+        self.view.top_panel.project_settings_button.clicked.connect(self.view.files_panel.open_project_settings)
+
         last_project_directory = self.model.historyModel.get_last_project_directory()
         self.view.top_panel.update_directory(last_project_directory)
 
