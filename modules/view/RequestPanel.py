@@ -71,6 +71,10 @@ class RequestPanel(QWidget):
         self.include_files_checkbox = QCheckBox("Include files list in the request")
         request_layout.addWidget(self.include_files_checkbox)
 
+        # New checkbox for attaching last commit diff
+        self.attach_diff_checkbox = QCheckBox("Attach last commit diff")
+        request_layout.addWidget(self.attach_diff_checkbox)
+
         batch_layout = QHBoxLayout()
 
         self.description_label = QLabel('Description:')
@@ -117,7 +121,10 @@ class RequestPanel(QWidget):
             role_description = self.role_selector.get_role_string()
             selected_model = self.model_dropdown.currentText()
             editor_mode = self.editor_mode_button.isChecked()
-            request_options = RequestOptions(includeFilesList=self.include_files_checkbox.isChecked())
+            request_options = RequestOptions(
+                includeFilesList=self.include_files_checkbox.isChecked(),
+                attachLastCommitDiff=self.attach_diff_checkbox.isChecked()
+            )
             self.request_input.clear()
             if is_batch:
                 description_text = self.description_input.text()

@@ -1,6 +1,8 @@
 import os
 import json
 from PyQt5.QtCore import QObject, pyqtSignal
+from git import Repo
+from git.exc import InvalidGitRepositoryError
 from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.ThreadManager import ThreadManager
 from modules.model.FileContentFormatter import FileContentFormatter
@@ -65,7 +67,7 @@ class LLMModel(QObject):
         formatter = FileContentFormatter()
         return formatter.make_file_content_text(project_dir, chosen_files, editorMode)
 
-    def _build_user_message(self, role_string, full_request, editor_mode, include_files_list):
+    def _build_user_message(self, role_string, full_request, editor_mode, include_files_list, attach_diff):
         parts = []
         if include_files_list:
             if self.project_dir:
@@ -75,6 +77,16 @@ class LLMModel(QObject):
                 files = []
             files_text = "\n".join(files)
             parts.append(FILES_LIST_INTRO + "\n" + files_text)
+        if attach_diff:
+            if self.project_dir:
+                try:
+                    repo = Repo(self.project_dir)
+                    diff_text = repo.git.diff('HEAD~1', 'HEAD')
+                    parts.append("Here is last commit diff:\n" + diff_text)
+                except InvalidGitRepositoryError:
+                    print(f"No git repository found at {self.project_dir}, cannot attach diff.")
+                except Exception as e:
+                    print(f"Error getting git diff: {e}")
         parts.append(role_string)
         if self.project_dir and self.chosen_files:
             formatter = FileContentFormatter()
@@ -90,8 +102,10 @@ class LLMModel(QObject):
         try:
             include = getattr(request_options, 'includeFilesList', False)
             print(f"Include files list in request: {include}")
+            attach_diff = getattr(request_options, 'attachLastCommitDiff', False)
+            print(f"Attach last commit diff in request: {attach_diff}")
             self.status_changed.emit("Sending the request ...")
-            user_message = self._build_user_message(role_string, full_request, editor_mode, include)
+            user_message = self._build_user_message(role_string, full_request, editor_mode, include, attach_diff)
             print(f"Model: {modelName}")
             print(f"Request: {user_message}")
             provider = self.get_provider_for_model(modelName)
@@ -122,7 +136,9 @@ class LLMModel(QObject):
         try:
             include = getattr(request_options, 'includeFilesList', False)
             print(f"Include files list in batch request: {include}")
-            user_message = self._build_user_message(role_string, full_request, editor_mode, include)
+            attach_diff = getattr(request_options, 'attachLastCommitDiff', False)
+            print(f"Attach last commit diff in batch request: {attach_diff}")
+            user_message = self._build_user_message(role_string, full_request, editor_mode, include, attach_diff)
             custom_id = f"{self.project_dir}|{editor_mode}"
             provider = self.get_provider_for_model(modelName)
             self.thread_manager.execute_async(
