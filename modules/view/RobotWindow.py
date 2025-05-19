@@ -61,8 +61,10 @@ class RobotWindow(QDialog):
         self.initial_state_text.setPlainText(initial_state)
 
     def onRunClicked(self):
+        model_name = self.model_combo.currentText()
+        scenario_name = self.scenario_combo.currentText()
         initial_state = self.initial_state_text.toPlainText()
-        self.model.robotModel.runOneStep(initial_state)
+        self.model.robotModel.runOneStep(model_name, scenario_name, initial_state)
 
     def onModelResponse(self, response_str):
         self.last_response_text.setPlainText(response_str)
