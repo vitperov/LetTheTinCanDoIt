@@ -5,7 +5,7 @@ from modules.model.LLMModel import LLMModel
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector
 from modules.model.HistoryModel import HistoryModel
 from modules.model.RequestHistoryModel import RequestHistoryModel
-from modules.model.robot import RobotModel
+from modules.model.robot.robot import RobotModel
 from modules.model.ProjectMeta.ProjectMeta import ProjectMeta
 
 class ProjectGPTModel(QObject):
