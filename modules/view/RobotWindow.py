@@ -15,6 +15,7 @@ class RobotWindow(QDialog):
         row1 = QHBoxLayout()
         row1.addWidget(QLabel("Scenario"))
         self.scenario_combo = QComboBox()
+        self.scenario_combo.addItems(self.model.robotModel.getScenarioNames())
         row1.addWidget(self.scenario_combo)
         row1.addWidget(QLabel("Max steps"))
         self.max_steps_input = QLineEdit(str(self.max_steps))
@@ -38,3 +39,21 @@ class RobotWindow(QDialog):
         main_layout.addWidget(self.last_response_text)
 
         self.setLayout(main_layout)
+
+        self.scenario_combo.currentIndexChanged.connect(self.onScenarioChanged)
+        self.run_button.clicked.connect(self.onRunClicked)
+        self.model.robotModel.response.connect(self.onModelResponse)
+
+        self.onScenarioChanged(self.scenario_combo.currentIndex())
+
+    def onScenarioChanged(self, index):
+        scenario_name = self.scenario_combo.currentText()
+        initial_state = self.model.robotModel.getInitialState(scenario_name)
+        self.initial_state_text.setPlainText(initial_state)
+
+    def onRunClicked(self):
+        initial_state = self.initial_state_text.toPlainText()
+        self.model.robotModel.runOneStep(initial_state)
+
+    def onModelResponse(self, response_str):
+        self.last_response_text.setPlainText(response_str)

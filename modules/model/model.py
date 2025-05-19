@@ -5,6 +5,7 @@ from modules.model.LLMModel import LLMModel
 from modules.model.FileSyntaxCorrector import FileSyntaxCorrector
 from modules.model.HistoryModel import HistoryModel
 from modules.model.RequestHistoryModel import RequestHistoryModel
+from modules.model.robot import RobotModel
 from modules.model.ProjectMeta.ProjectMeta import ProjectMeta
 
 class ProjectGPTModel(QObject):
@@ -28,6 +29,7 @@ class ProjectGPTModel(QObject):
 
         self.historyModel = HistoryModel()
         self.requestHistoryModel = RequestHistoryModel()
+        self.robotModel = RobotModel()
 
         last_project_directory = self.historyModel.get_last_project_directory()
         self.project_meta = ProjectMeta(last_project_directory, llm_model=self.llm_model)
