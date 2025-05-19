@@ -5,10 +5,15 @@ from PyQt5.QtCore import QObject, pyqtSignal
 class RobotModel(QObject):
     response = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, llm_model=None):
         super().__init__()
+        self.llm_model = llm_model
+        self.available_models = self.llm_model.available_models if self.llm_model else []
         self.scenarios = []
         self.load_scenarios()
+
+    def getModelNames(self):
+        return self.available_models
 
     def load_scenarios(self):
         path = os.path.join('settings', 'robot.json')

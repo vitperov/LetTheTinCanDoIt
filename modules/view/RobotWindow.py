@@ -12,6 +12,15 @@ class RobotWindow(QDialog):
         self.setWindowTitle("Robot")
         main_layout = QVBoxLayout()
 
+        # Model selection row
+        model_row = QHBoxLayout()
+        model_row.addWidget(QLabel("Model"))
+        self.model_combo = QComboBox()
+        self.model_combo.addItems(self.model.robotModel.getModelNames())
+        model_row.addWidget(self.model_combo)
+        main_layout.addLayout(model_row)
+
+        # Scenario and Max steps row
         row1 = QHBoxLayout()
         row1.addWidget(QLabel("Scenario"))
         self.scenario_combo = QComboBox()
