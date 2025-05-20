@@ -163,7 +163,20 @@ class FilesPanel(QWidget):
         menu = QMenu(self)
         open_action = menu.addAction("Open")
         open_action.triggered.connect(lambda: self.open_file(file_path))
+        index_action = menu.addAction("Index description")
+        index_action.triggered.connect(lambda: self.index_description(file_path))
         menu.exec_(self.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+
+    def index_description(self, file_path):
+        rel_path = os.path.relpath(file_path, self.project_dir)
+        self.model.project_meta.update_description(rel_path)
+        new_status = self.model.project_meta.getFileStatus(rel_path)
+        self.file_system_model.status_map[file_path] = new_status
+        self.file_system_model.set_status_map(self.file_system_model.status_map)
+        source_index = self.file_system_model.index(self.project_dir)
+        proxy_index = self.proxy_model.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.tree_view.setRootIndex(proxy_index)
