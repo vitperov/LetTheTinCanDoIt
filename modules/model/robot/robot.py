@@ -1,13 +1,15 @@
 import os
 import json
 from PyQt5.QtCore import QObject, pyqtSignal
+from .ActionExecutor import ActionExecutor
 
 class RobotModel(QObject):
     response = pyqtSignal(str)
 
-    def __init__(self, llm_model=None):
+    def __init__(self, llm_model=None, project_meta=None):
         super().__init__()
         self.llm_model = llm_model
+        self.project_meta = project_meta
         self.available_models = self.llm_model.available_models if self.llm_model else []
         self.scenarios = []
         self.load_scenarios()
@@ -58,15 +60,16 @@ class RobotModel(QObject):
             self.response.emit(f"ERROR: Exception during LLM call: {e}")
 
     def parseResponse(self, response_str):
-        # parse ACTION and STATE lines if present
         action = ""
-        state = ""
         lines = response_str.splitlines()
         for line in lines:
             if line.startswith("ACTION:"):
                 action = line[len("ACTION:"):].strip()
-            if line.startswith("STATE:"):
-                state = line[len("STATE:"):].strip()
-        if action or state:
-            return f"ACTION: {action}\nSTATE: {state}"
+                break
+        if action:
+            try:
+                executor = ActionExecutor(self.project_meta)
+                return executor.execute(action)
+            except Exception as e:
+                return f"ERROR: Exception executing action: {e}"
         return response_str

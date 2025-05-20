@@ -29,14 +29,16 @@ class ProjectGPTModel(QObject):
 
         self.historyModel = HistoryModel()
         self.requestHistoryModel = RequestHistoryModel()
-        self.robotModel = RobotModel(self.llm_model)
 
         last_project_directory = self.historyModel.get_last_project_directory()
         self.project_meta = ProjectMeta(last_project_directory, llm_model=self.llm_model)
 
+        self.robotModel = RobotModel(self.llm_model, self.project_meta)
+
     def set_project_dir(self, project_dir):
         self.llm_model.set_project_dir(project_dir)
         self.project_meta = ProjectMeta(project_dir, llm_model=self.llm_model)
+        self.robotModel.project_meta = self.project_meta
         self.project_dir = project_dir
 
     def set_project_files(self, chosen_files):
