@@ -16,22 +16,32 @@ class FileStatus(Enum):
 class ProjectMeta:
     def __init__(self, project_path: str, llm_model=None):
         print(f"ProjectMeta: opening project {project_path}")
+        self.llm_model = llm_model
+        self._initialize_project(project_path)
+
+    def _initialize_project(self, project_path: str):
         self.project_path = project_path
         self.db_path = os.path.join(project_path, '.lttcdi', 'metadata.json')
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-
         if not os.path.exists(self.db_path):
             with open(self.db_path, "w") as f:
                 f.write('{}')
-
         self.db = TinyDB(self.db_path, storage=CachingMiddleware(JSONStorage))
-        self.llm_model = llm_model
-        self.available_models = llm_model.available_models if llm_model else []
+        self.available_models = self.llm_model.available_models if self.llm_model else []
+        default_model = self.available_models[0] if self.available_models else None
         self.index_extensions = ['py']
         self.index_directories = []
-        self.indexing_model = None
+        self.indexing_model = default_model
         self.hide_extensions = []
         self.load_settings()
+
+    def set_project_path(self, project_path: str):
+        print(f"ProjectMeta: switching project to {project_path}")
+        try:
+            self.db.close()
+        except Exception:
+            pass
+        self._initialize_project(project_path)
 
     def _get_relative_path(self, absolute_path: str) -> str:
         return os.path.relpath(absolute_path, self.project_path)
@@ -96,7 +106,6 @@ class ProjectMeta:
         for rel_path in files:
             current_checksum = self.calculate_checksum(rel_path)
             existing = self._get_existing_record(rel_path)
-
             if not existing or existing.checksum != current_checksum:
                 new_description = self.compose_file_description(rel_path)
                 print(f"{rel_path}: {new_description}\n")
@@ -125,31 +134,26 @@ class ProjectMeta:
     def stat_descriptions(self) -> dict:
         files_in_project = set(self.getAll_project_files())
         db_records = {rec['file_path']: rec for rec in self.db.all()}
-
         stats = {
             'total_files': len(files_in_project),
             'new_files': [],
             'outdated_files': [],
             'up_to_date_files': []
         }
-
         for rel_path in files_in_project:
             current_checksum = self.calculate_checksum(rel_path)
             db_record = db_records.get(rel_path)
-
             if not db_record:
                 stats['new_files'].append(rel_path)
             elif db_record['checksum'] != current_checksum:
                 stats['outdated_files'].append(rel_path)
             else:
                 stats['up_to_date_files'].append(rel_path)
-
         print(f"Project Description Statistics:")
         print(f"Total files: {stats['total_files']}")
         print(f"New files: {len(stats['new_files'])}")
         print(f"Outdated files: {len(stats['outdated_files'])}")
         print(f"Up-to-date files: {len(stats['up_to_date_files'])}")
-
         return stats
 
     def load_settings(self):

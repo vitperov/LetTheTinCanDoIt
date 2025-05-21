@@ -37,7 +37,7 @@ class ProjectGPTModel(QObject):
 
     def set_project_dir(self, project_dir):
         self.llm_model.set_project_dir(project_dir)
-        self.project_meta = ProjectMeta(project_dir, llm_model=self.llm_model)
+        self.project_meta.set_project_path(project_dir)
         self.robotModel.project_meta = self.project_meta
         self.project_dir = project_dir
 
