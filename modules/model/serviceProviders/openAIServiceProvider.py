@@ -17,6 +17,7 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o1-mini",
             "o1",
             "o3",
+            "o3-high",
             "o3-mini",
             "o3-mini-high",
             "o4-mini",
@@ -56,13 +57,18 @@ class OpenAIServiceProvider(ServiceProviderBase):
         api_model_name = modelName
         used_reasoning_effort = None
 
-        if modelName == "o3-mini-high":
+        if modelName == "o3-high":
+            api_model_name = "o3"
+            used_reasoning_effort = "high"
+        elif modelName == "o3-mini-high":
             api_model_name = "o3-mini"
             used_reasoning_effort = "high"
         elif modelName == "o4-mini-high":
             api_model_name = "o4-mini"
             used_reasoning_effort = "high"
         elif modelName == "o3-mini":
+            used_reasoning_effort = "medium"
+        elif modelName == "o4-mini":
             used_reasoning_effort = "medium"
 
         if used_reasoning_effort:
@@ -93,13 +99,19 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("======================")
         api_model_name = modelName
         used_reasoning_effort = None
-        if modelName == "o3-mini-high":
+
+        if modelName == "o3-high":
+            api_model_name = "o3"
+            used_reasoning_effort = "high"
+        elif modelName == "o3-mini-high":
             api_model_name = "o3-mini"
             used_reasoning_effort = "high"
         elif modelName == "o4-mini-high":
             api_model_name = "o4-mini"
             used_reasoning_effort = "high"
         elif modelName == "o3-mini":
+            used_reasoning_effort = "medium"
+        elif modelName == "o4-mini":
             used_reasoning_effort = "medium"
 
         batch_request = {

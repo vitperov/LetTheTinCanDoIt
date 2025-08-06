@@ -1,7 +1,7 @@
 import os
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFileDialog, QHBoxLayout, QLabel, QToolTip, QMenu, QMessageBox, QStyle
-from PyQt5.QtCore import Qt, pyqtSignal, QRect, QEvent, QModelIndex, QUrl
-from PyQt5.QtGui import QPixmap, QIcon, QPainter, QBrush, QColor, QCursor, QDesktopServices
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QLabel, QToolTip, QMenu, QMessageBox
+from PyQt5.QtCore import Qt, pyqtSignal, QRect, QModelIndex, QUrl
+from PyQt5.QtGui import QCursor, QDesktopServices
 from .FileTreeView import FileTreeView
 from .ExtensionFilterProxyModel import ExtensionFilterProxyModel
 from .CustomFileSystemModel import CustomFileSystemModel
@@ -28,30 +28,6 @@ class FilesPanel(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout()
-        button_layout = QHBoxLayout()
-
-        self.icon_label = QLabel()
-        pixmap = QPixmap('resources/tinCan.png')
-        self.icon_label.setPixmap(pixmap)
-
-        self.choose_dir_button = QPushButton("Open Project")
-        self.choose_dir_button.setIcon(self.style().standardIcon(QStyle.SP_DirIcon))
-        self.choose_dir_button.clicked.connect(self.choose_directory)
-
-        self.last_projects_button = QPushButton("Last projects")
-        self.last_projects_button.clicked.connect(self.show_projects_history)
-
-        self.settings_button = QPushButton("Settings")
-        self.settings_button.clicked.connect(self.open_settings)
-
-        self.project_settings_button = QPushButton("Project settings")
-        self.project_settings_button.clicked.connect(self.open_project_settings)
-
-        button_layout.addWidget(self.icon_label)
-        button_layout.addWidget(self.choose_dir_button)
-        button_layout.addWidget(self.last_projects_button)
-        button_layout.addWidget(self.settings_button)
-        button_layout.addWidget(self.project_settings_button)
 
         self.tree_view = FileTreeView()
         self.tree_view.setMouseTracking(True)
@@ -67,7 +43,6 @@ class FilesPanel(QWidget):
         self.tree_view.hideColumn(2)
         self.tree_view.hideColumn(3)
 
-        main_layout.addLayout(button_layout)
         main_layout.addWidget(self.tree_view)
         self.setLayout(main_layout)
 
@@ -188,7 +163,20 @@ class FilesPanel(QWidget):
         menu = QMenu(self)
         open_action = menu.addAction("Open")
         open_action.triggered.connect(lambda: self.open_file(file_path))
+        index_action = menu.addAction("Index description")
+        index_action.triggered.connect(lambda: self.index_description(file_path))
         menu.exec_(self.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+
+    def index_description(self, file_path):
+        rel_path = os.path.relpath(file_path, self.project_dir)
+        self.model.project_meta.update_description(rel_path)
+        new_status = self.model.project_meta.getFileStatus(rel_path)
+        self.file_system_model.status_map[file_path] = new_status
+        self.file_system_model.set_status_map(self.file_system_model.status_map)
+        source_index = self.file_system_model.index(self.project_dir)
+        proxy_index = self.proxy_model.mapFromSource(source_index)
+        if proxy_index.isValid():
+            self.tree_view.setRootIndex(proxy_index)

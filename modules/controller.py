@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject
 from modules.model.model import ProjectGPTModel
 from modules.view.view import ProjectGPTView
+from modules.view.RobotWindow import RobotWindow
 
 class ProjectGPTController(QObject):
     def __init__(self):
@@ -22,6 +23,12 @@ class ProjectGPTController(QObject):
         self.model.status_changed.connect(self.view.status_bar.update_status)
         self.view.files_panel.proj_dir_changed.connect(self.model.set_project_dir)
         self.view.files_panel.proj_dir_changed.connect(self.view.top_panel.update_directory)
+
+        self.view.top_panel.choose_dir_button.clicked.connect(self.view.files_panel.choose_directory)
+        self.view.top_panel.last_projects_button.clicked.connect(self.view.files_panel.show_projects_history)
+        self.view.top_panel.settings_button.clicked.connect(self.view.files_panel.open_settings)
+        self.view.top_panel.project_settings_button.clicked.connect(self.view.files_panel.open_project_settings)
+        self.view.top_panel.robot_button.clicked.connect(self.open_robot_window)
 
         last_project_directory = self.model.historyModel.get_last_project_directory()
         self.view.top_panel.update_directory(last_project_directory)
@@ -66,3 +73,7 @@ class ProjectGPTController(QObject):
         model_options = self.model.llm_model.get_model_options(model_name)
         self.view.request_panel.set_batch_support(model_options.supportBatch)
         self.view.batches_panel.set_batch_support(model_options.supportBatch)
+
+    def open_robot_window(self):
+        dialog = RobotWindow(self.model, parent=self.view)
+        dialog.exec_()
