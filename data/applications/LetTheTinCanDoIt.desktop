@@ -1,6 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=LetTheTinCanDoIt
-Exec=python3 %k/../../gpt.py
-Icon=letthetincandoit
-Terminal=false
