@@ -156,19 +156,26 @@ class FilesPanel(QWidget):
         if not proxy_index.isValid():
             return
         src_index = self.proxy_model.mapToSource(proxy_index)
-        if not src_index.isValid() or self.file_system_model.isDir(src_index):
+        if not src_index.isValid():
             return
-        file_path = self.file_system_model.filePath(src_index)
+        item_path = self.file_system_model.filePath(src_index)
 
         menu = QMenu(self)
-        open_action = menu.addAction("Open")
-        open_action.triggered.connect(lambda: self.open_file(file_path))
-        index_action = menu.addAction("Index description")
-        index_action.triggered.connect(lambda: self.index_description(file_path))
+        if self.file_system_model.isDir(src_index):
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda *_: self.open_directory(item_path))
+        else:
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda *_: self.open_file(item_path))
+            index_action = menu.addAction("Index description")
+            index_action.triggered.connect(lambda *_: self.index_description(item_path))
         menu.exec_(self.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+
+    def open_directory(self, dir_path):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(dir_path))
 
     def index_description(self, file_path):
         rel_path = os.path.relpath(file_path, self.project_dir)
