@@ -39,33 +39,40 @@ class ProjectGPTController(QObject):
         self.view.request_panel.model_dropdown.currentTextChanged.connect(self.handle_model_change)
         self.handle_model_change(self.view.request_panel.model_dropdown.currentText())
 
-    def handle_send_request(self, model_name, role_string, full_request, editor_mode, request_options):
+    # helper -------------------------------------------------------
+    def _apply_current_project_context(self):
+        """Make sure model has the actual project dir + selected files."""
         project_dir, chosen_files = self.view.files_panel.get_checked_files()
         self.model.set_project_dir(project_dir)
         self.model.set_project_files(chosen_files)
+
+    def handle_send_request(self, model_name, role_string, full_request, editor_mode, request_options):
+        self._apply_current_project_context()
         self.model.requestHistoryModel.update_request_history(full_request)
         self.model.llm_model.generate_response_async(model_name, role_string, full_request, editor_mode, request_options)
 
     def handle_send_batch_request(self, model_name, role_string, full_request_template, description, editor_mode, request_options):
-        project_dir, chosen_files = self.view.files_panel.get_checked_files()
-        self.model.set_project_dir(project_dir)
-        self.model.set_project_files(chosen_files)
+        self._apply_current_project_context()
         self.model.requestHistoryModel.update_request_history(full_request_template)
         self.model.llm_model.generate_batch_response_async(model_name, role_string, full_request_template, description, editor_mode, request_options)
 
     def handle_get_completed_batch_jobs(self):
+        self._apply_current_project_context()
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.get_completed_batch_jobs(model_name)
 
     def handle_get_batch_results(self, batch_id):
+        self._apply_current_project_context()
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.get_batch_results(model_name, batch_id)
 
     def handle_delete_batch_job(self, batch_id):
+        self._apply_current_project_context()
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.delete_batch_job(model_name, batch_id)
 
     def handle_cancel_batch_job(self, batch_id):
+        self._apply_current_project_context()
         model_name = self.view.request_panel.model_dropdown.currentText()
         self.model.llm_model.cancel_batch_job(model_name, batch_id)
 
