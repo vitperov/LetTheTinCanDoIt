@@ -82,15 +82,26 @@ class FilesPanel(QWidget):
     def handle_project_selected(self, directory):
         if not directory:
             return
+
+        # Ensure that ProjectMeta is switched to the newly selected project
+        if self.model and getattr(self.model, "project_meta", None):
+            try:
+                self.model.project_meta.set_project_path(directory)
+            except Exception as e:
+                # Do not interrupt the UI flow if something goes wrong
+                print(f"FilesPanel: failed to switch ProjectMeta path -> {e}")
+
+        # Update file system view
         self.file_system_model.setRootPath(directory)
 
+        # Apply per-project settings (e.g., hidden extensions)
         hidden_extensions = []
         if self.model and getattr(self.model, "project_meta", None):
             hidden_extensions = self.model.project_meta.getHiddenExtensions()
         self.proxy_model.set_hidden_extensions(hidden_extensions)
 
+        # Refresh status map based on the currently opened project
         if self.model and getattr(self.model, "project_meta", None):
-            _, _ = self.model.project_meta.getIndexationParameters()
             relative_files = self.model.project_meta.getAll_project_files()
             statuses_map = {}
             for rel_path in relative_files:
