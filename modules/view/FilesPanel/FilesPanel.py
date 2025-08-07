@@ -1,4 +1,7 @@
 import os
+import sys
+import shutil
+import subprocess
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QLabel, QToolTip, QMenu, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QModelIndex, QUrl
 from PyQt5.QtGui import QCursor, QDesktopServices
@@ -164,6 +167,9 @@ class FilesPanel(QWidget):
         if self.file_system_model.isDir(src_index):
             open_action = menu.addAction("Open")
             open_action.triggered.connect(lambda *_: self.open_directory(item_path))
+            if sys.platform.startswith("linux"):
+                term_action = menu.addAction("Open in Terminal")
+                term_action.triggered.connect(lambda *_: self.open_in_terminal(item_path))
         else:
             open_action = menu.addAction("Open")
             open_action.triggered.connect(lambda *_: self.open_file(item_path))
@@ -187,3 +193,23 @@ class FilesPanel(QWidget):
         proxy_index = self.proxy_model.mapFromSource(source_index)
         if proxy_index.isValid():
             self.tree_view.setRootIndex(proxy_index)
+
+    def open_in_terminal(self, dir_path):
+        if sys.platform.startswith("linux"):
+            terminal = shutil.which("gnome-terminal") or shutil.which("konsole") or shutil.which("xfce4-terminal") or shutil.which("xterm")
+            if not terminal:
+                QMessageBox.critical(self, "Error", "No terminal emulator found.")
+                return
+            try:
+                if "gnome-terminal" in terminal or "xfce4-terminal" in terminal:
+                    subprocess.Popen([terminal, "--working-directory", dir_path])
+                elif "konsole" in terminal:
+                    subprocess.Popen([terminal, "--workdir", dir_path])
+                elif "xterm" in terminal:
+                    subprocess.Popen([terminal, "-e", f"bash -c 'cd {dir_path}; exec bash'"])
+                else:
+                    subprocess.Popen([terminal])
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to open terminal: {e}")
+        else:
+            QMessageBox.information(self, "Not Supported", "Opening in terminal is not supported on this OS.")
