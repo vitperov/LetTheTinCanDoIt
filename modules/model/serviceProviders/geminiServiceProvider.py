@@ -4,10 +4,22 @@ import google.generativeai as genai
 import os
 import json
 
+
 class GeminiServiceProvider(ServiceProviderBase):
-    def __init__(self, api_key=None):
+    def __init__(self, settings=None, api_key=None):
+        """
+        `settings` should come from get_provider_settings("gemini").
+        """
         super().__init__()
-        self.api_key = api_key
+
+        if settings is None:
+            settings = {}
+        if api_key is not None:
+            settings["api_key"] = api_key
+
+        self.settings = settings
+        self.api_key = self.settings.get("api_key")
+
         self.available_models = [
             "gemini-2.0-flash",
             "gemini-2.5-pro-preview-05-06",

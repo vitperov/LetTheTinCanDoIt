@@ -13,13 +13,37 @@ from modules.model.serviceProviders.ollamaServiceProvider import OllamaServicePr
 from modules.model.serviceProviders.geminiServiceProvider import GeminiServiceProvider
 from modules.model.constants import FILES_LIST_INTRO
 
-def get_api_key(key_name):
+
+def get_provider_settings(provider_name: str) -> dict:
+    """
+    Return configuration dictionary for the given provider.
+
+    Expected JSON structure in settings/key.json:
+
+    {
+        "openai": {
+            "api_key": "...",
+            "hide_models": "..."
+        },
+        "deepseek": {
+            "api_key": "..."
+        },
+        "gemini": {
+            "api_key": "..."
+        }
+    }
+    """
     settings_path = os.path.join('settings', 'key.json')
     if os.path.exists(settings_path):
-        with open(settings_path, 'r') as f:
-            data = json.load(f)
-        return data.get(key_name, '')
-    return ''
+        try:
+            with open(settings_path, 'r') as f:
+                data = json.load(f)
+            return data.get(provider_name.lower(), {})
+        except Exception:
+            # If file is corrupted or unreadable – return empty dict
+            return {}
+    return {}
+
 
 class LLMModel(QObject):
     response_generated = pyqtSignal(str)
@@ -29,14 +53,17 @@ class LLMModel(QObject):
     def __init__(self):
         super().__init__()
         self.service_providers = []
-        openai_api_key = get_api_key("api_key")
-        deepseek_api_key = get_api_key("deepseek_api_key")
-        gemini_api_key = get_api_key("gemini_api_key")
 
-        self.service_providers.append(OpenAIServiceProvider(api_key=openai_api_key))
-        self.service_providers.append(DeepSeekServiceProvider(api_key=deepseek_api_key))
+        # Load settings for every provider
+        openai_settings = get_provider_settings("openai")
+        deepseek_settings = get_provider_settings("deepseek")
+        gemini_settings = get_provider_settings("gemini")
+
+        # Initialise providers with their settings dictionaries
+        self.service_providers.append(OpenAIServiceProvider(settings=openai_settings))
+        self.service_providers.append(DeepSeekServiceProvider(settings=deepseek_settings))
         self.service_providers.append(OllamaServiceProvider())
-        self.service_providers.append(GeminiServiceProvider(api_key=gemini_api_key))
+        self.service_providers.append(GeminiServiceProvider(settings=gemini_settings))
 
         self.available_models = []
         for provider in self.service_providers:

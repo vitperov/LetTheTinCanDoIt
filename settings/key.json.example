@@ -1,5 +1,17 @@
 {
-    "api_key": "your_openai_api_key_here",
-    "deepseek_api_key": "your deepseek api key here",
-    "gemini_api_key": "your gemini api key here"
+    "openai": {
+        "api_key": "YOUR_OPENAI_API_KEY",
+        "hide_models": "model1,model2"
+    },
+    "deepseek": {
+        "api_key": "YOUR_DEEPSEEK_API_KEY",
+        "hide_models": ""
+    },
+    "gemini": {
+        "api_key": "YOUR_GEMINI_API_KEY",
+        "hide_models": ""
+    },
+    "ollama": {
+        "hide_models": ""
+    }
 }

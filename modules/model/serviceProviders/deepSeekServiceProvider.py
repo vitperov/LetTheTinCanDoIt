@@ -6,15 +6,27 @@ import json
 import tempfile
 from modules.model.ResponseFilesParser import ResponseFilesParser
 
+
 class DeepSeekServiceProvider(ServiceProviderBase):
-    def __init__(self, api_key=None):
+    def __init__(self, settings=None, api_key=None):
+        """
+        `settings` should come from get_provider_settings("deepseek").
+        """
         super().__init__()
+
+        if settings is None:
+            settings = {}
+        if api_key is not None:
+            settings["api_key"] = api_key
+
+        self.settings = settings
+        self.api_key = self.settings.get("api_key")
+
         self.available_models = [
             "deepseek-chat",
             "deepseek-reasoner",
         ]
         self.jobs = None
-        self.api_key = api_key
 
     def getBaseUrl(self) -> str:
         return "https://api.deepseek.com/v1"
