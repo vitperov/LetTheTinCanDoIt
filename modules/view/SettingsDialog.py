@@ -188,6 +188,16 @@ class SettingsDialog(QDialog):
 
         models_tab.setLayout(models_layout)
         self.tab_widget.addTab(models_tab, "Models")
+
+        # Common settings Tab
+        common_tab = QWidget()
+        common_layout = QVBoxLayout()
+        self.install_desktop_button = QPushButton("Install Desktop file")
+        self.install_desktop_button.clicked.connect(self.on_install_desktop_file)
+        common_layout.addWidget(self.install_desktop_button)
+        common_tab.setLayout(common_layout)
+        self.tab_widget.addTab(common_tab, "Common settings")
+
         layout.addWidget(self.tab_widget)
 
         self.button_box = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
@@ -283,3 +293,16 @@ class SettingsDialog(QDialog):
                 model.response_generated.emit(
                     f"Error deleting files from {provider.__class__.__name__}: {str(e)}"
                 )
+
+    def on_install_desktop_file(self):
+        model = self.model
+        if model is None and hasattr(self.parent().window(), "model"):
+            model = self.parent().window().model
+        if model is None or not hasattr(model, "install_desktop_file"):
+            QMessageBox.warning(self, "Error", "No installer available.")
+            return
+        try:
+            model.install_desktop_file()
+            QMessageBox.information(self, "Success", "Desktop file installed successfully.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to install desktop file: {e}")

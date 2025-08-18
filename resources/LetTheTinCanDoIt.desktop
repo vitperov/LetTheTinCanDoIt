@@ -1,0 +1,16 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LetTheTinCanDoIt
+GenericName=Project GPT
+Comment=My cool GPT-powered tin can
+Exec={python_exec} {script_path}
+Icon={icon_path}
+Categories=Utility;
+StartupWMClass=LetTheTinCanDoIt
+Actions=new-instance;
+
+[Desktop Action new-instance]
+Name=New Instance
+Exec={python_exec} {script_path}
+OnlyShowIn=GNOME;Unity;

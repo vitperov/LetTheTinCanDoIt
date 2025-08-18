@@ -7,6 +7,7 @@ from modules.model.HistoryModel import HistoryModel
 from modules.model.RequestHistoryModel import RequestHistoryModel
 from modules.model.robot.robot import RobotModel
 from modules.model.ProjectMeta.ProjectMeta import ProjectMeta
+from modules.model.DesktopFileInstaller import DesktopFileInstaller
 
 class ProjectGPTModel(QObject):
     response_generated = pyqtSignal(str)
@@ -34,6 +35,7 @@ class ProjectGPTModel(QObject):
         self.project_meta = ProjectMeta(last_project_directory, llm_model=self.llm_model)
 
         self.robotModel = RobotModel(self.llm_model, self.project_meta)
+        self.desktop_installer = DesktopFileInstaller()
 
     def set_project_dir(self, project_dir):
         self.llm_model.set_project_dir(project_dir)
@@ -55,3 +57,9 @@ class ProjectGPTModel(QObject):
 
     def get_additional_requests(self):
         return self.additionalRequests
+
+    def install_desktop_file(self):
+        """
+        Trigger installation of the .desktop file via the DesktopFileInstaller.
+        """
+        self.desktop_installer.install()
