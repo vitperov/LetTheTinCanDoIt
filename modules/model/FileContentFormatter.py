@@ -50,6 +50,7 @@ class FileContentFormatter:
             "  * If any files are modified, provide the entire content of each modified file, including any unmodified sections to allow direct replacement.\n"
             "  * Do not write '# (No changes below this point)' - return the entire content of the modified file instead.\n"
             "  * Do not write '# (No changes above this point)' - return the entire content of the modified file instead.\n"
+            "  * Do not write # ... rest of the file unchanged ... ' - return the entire content of the modified file instead.\n"
             "- Rules for including files in the response:\n"
             "  * If a file provided by user remains unchanged, do not include it in the response.\n"
             "  * If you modified a provided file, include its entire content.\n"
