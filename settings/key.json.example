@@ -1,17 +1,21 @@
 {
     "openai": {
         "api_key": "YOUR_OPENAI_API_KEY",
-        "hide_models": "model1,model2"
+        "hide_models": "model1,model2",
+        "enabled": true
     },
     "deepseek": {
         "api_key": "YOUR_DEEPSEEK_API_KEY",
-        "hide_models": ""
+        "hide_models": "",
+        "enabled": true
     },
     "gemini": {
         "api_key": "YOUR_GEMINI_API_KEY",
-        "hide_models": ""
+        "hide_models": "",
+        "enabled": true
     },
     "ollama": {
-        "hide_models": ""
+        "hide_models": "",
+        "enabled": true
     }
 }

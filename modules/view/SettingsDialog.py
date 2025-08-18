@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
     QPushButton,
     QHBoxLayout,
+    QCheckBox,
 )
 from PyQt5.QtCore import Qt
 import os
@@ -45,6 +46,10 @@ class SettingsDialog(QDialog):
             "deepseek_hide_models": "",
             "gemini_hide_models": "",
             "ollama_hide_models": "",
+            "openai_enabled": True,
+            "deepseek_enabled": True,
+            "gemini_enabled": True,
+            "ollama_enabled": True,
         }
 
     def _flatten_nested_keys(self, data):
@@ -60,6 +65,10 @@ class SettingsDialog(QDialog):
             "deepseek_hide_models": data.get("deepseek", {}).get("hide_models", ""),
             "gemini_hide_models": data.get("gemini", {}).get("hide_models", ""),
             "ollama_hide_models": data.get("ollama", {}).get("hide_models", ""),
+            "openai_enabled": data.get("openai", {}).get("enabled", True),
+            "deepseek_enabled": data.get("deepseek", {}).get("enabled", True),
+            "gemini_enabled": data.get("gemini", {}).get("enabled", True),
+            "ollama_enabled": data.get("ollama", {}).get("enabled", True),
         }
 
     def load_keys(self):
@@ -102,6 +111,11 @@ class SettingsDialog(QDialog):
         # -------------------- OpenAI -------------------- #
         self.chatgpt_group = QGroupBox("OpenAI")
         chatgpt_layout = QFormLayout()
+
+        self.chatgpt_enabled_checkbox = QCheckBox()
+        self.chatgpt_enabled_checkbox.setChecked(self.keys.get("openai_enabled", True))
+        chatgpt_layout.addRow("Enabled:", self.chatgpt_enabled_checkbox)
+
         self.chatgpt_key_edit = QLineEdit()
         self.chatgpt_key_edit.setText(self.keys.get("api_key", ""))
         chatgpt_layout.addRow("API Key:", self.chatgpt_key_edit)
@@ -119,6 +133,11 @@ class SettingsDialog(QDialog):
         # -------------------- DeepSeek -------------------- #
         self.deepseek_group = QGroupBox("DeepSeek")
         deepseek_layout = QFormLayout()
+
+        self.deepseek_enabled_checkbox = QCheckBox()
+        self.deepseek_enabled_checkbox.setChecked(self.keys.get("deepseek_enabled", True))
+        deepseek_layout.addRow("Enabled:", self.deepseek_enabled_checkbox)
+
         self.deepseek_key_edit = QLineEdit()
         self.deepseek_key_edit.setText(self.keys.get("deepseek_api_key", ""))
         deepseek_layout.addRow("API Key:", self.deepseek_key_edit)
@@ -133,6 +152,11 @@ class SettingsDialog(QDialog):
         # -------------------- Gemini -------------------- #
         self.gemini_group = QGroupBox("Gemini")
         gemini_layout = QFormLayout()
+
+        self.gemini_enabled_checkbox = QCheckBox()
+        self.gemini_enabled_checkbox.setChecked(self.keys.get("gemini_enabled", True))
+        gemini_layout.addRow("Enabled:", self.gemini_enabled_checkbox)
+
         self.gemini_key_edit = QLineEdit()
         self.gemini_key_edit.setText(self.keys.get("gemini_api_key", ""))
         gemini_layout.addRow("API Key:", self.gemini_key_edit)
@@ -147,6 +171,11 @@ class SettingsDialog(QDialog):
         # -------------------- Ollama -------------------- #
         self.ollama_group = QGroupBox("Ollama")
         ollama_layout = QFormLayout()
+
+        self.ollama_enabled_checkbox = QCheckBox()
+        self.ollama_enabled_checkbox.setChecked(self.keys.get("ollama_enabled", True))
+        ollama_layout.addRow("Enabled:", self.ollama_enabled_checkbox)
+
         ollama_label = QLabel("No API key required.")
         ollama_layout.addRow(ollama_label)
 
@@ -180,22 +209,31 @@ class SettingsDialog(QDialog):
         self.keys["gemini_hide_models"] = self.gemini_hide_edit.text()
         self.keys["ollama_hide_models"] = self.ollama_hide_edit.text()
 
+        self.keys["openai_enabled"] = self.chatgpt_enabled_checkbox.isChecked()
+        self.keys["deepseek_enabled"] = self.deepseek_enabled_checkbox.isChecked()
+        self.keys["gemini_enabled"] = self.gemini_enabled_checkbox.isChecked()
+        self.keys["ollama_enabled"] = self.ollama_enabled_checkbox.isChecked()
+
         # Convert to *nested* structure expected by LLMModel/get_provider_settings
         nested = {
             "openai": {
                 "api_key": self.keys["api_key"],
                 "hide_models": self.keys["openai_hide_models"],
+                "enabled": self.keys["openai_enabled"],
             },
             "deepseek": {
                 "api_key": self.keys["deepseek_api_key"],
                 "hide_models": self.keys["deepseek_hide_models"],
+                "enabled": self.keys["deepseek_enabled"],
             },
             "gemini": {
                 "api_key": self.keys["gemini_api_key"],
                 "hide_models": self.keys["gemini_hide_models"],
+                "enabled": self.keys["gemini_enabled"],
             },
             "ollama": {
                 "hide_models": self.keys["ollama_hide_models"],
+                "enabled": self.keys["ollama_enabled"],
             },
         }
 

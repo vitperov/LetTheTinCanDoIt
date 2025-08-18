@@ -23,14 +23,14 @@ def get_provider_settings(provider_name: str) -> dict:
     {
         "openai": {
             "api_key": "...",
-            "hide_models": "..."
+            "hide_models": "...",
+            "enabled": true
         },
         "deepseek": {
-            "api_key": "..."
+            "api_key": "...",
+            "enabled": false
         },
-        "gemini": {
-            "api_key": "..."
-        }
+        ...
     }
     """
     settings_path = os.path.join('settings', 'key.json')
@@ -58,12 +58,21 @@ class LLMModel(QObject):
         openai_settings = get_provider_settings("openai")
         deepseek_settings = get_provider_settings("deepseek")
         gemini_settings = get_provider_settings("gemini")
+        ollama_settings = get_provider_settings("ollama")
 
-        # Initialise providers with their settings dictionaries
-        self.service_providers.append(OpenAIServiceProvider(settings=openai_settings))
-        self.service_providers.append(DeepSeekServiceProvider(settings=deepseek_settings))
-        self.service_providers.append(OllamaServiceProvider())
-        self.service_providers.append(GeminiServiceProvider(settings=gemini_settings))
+        # Initialise providers with their settings dictionaries if enabled
+        if openai_settings.get("enabled", True):
+            self.service_providers.append(OpenAIServiceProvider(settings=openai_settings))
+
+        if deepseek_settings.get("enabled", True):
+            self.service_providers.append(DeepSeekServiceProvider(settings=deepseek_settings))
+
+        if ollama_settings.get("enabled", True):
+            # Ollama currently doesn't require settings argument
+            self.service_providers.append(OllamaServiceProvider())
+
+        if gemini_settings.get("enabled", True):
+            self.service_providers.append(GeminiServiceProvider(settings=gemini_settings))
 
         self.available_models = []
         for provider in self.service_providers:
