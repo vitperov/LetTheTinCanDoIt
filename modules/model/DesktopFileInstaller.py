@@ -25,11 +25,13 @@ class DesktopFileInstaller:
         python_exec = sys.executable
         script_path = Path(sys.argv[0]).resolve()
         icon_path = base_dir / "resources" / "tinCan.png"
+        script_dir = script_path.parent
 
         content = content.format(
             python_exec=python_exec,
             script_path=script_path,
             icon_path=icon_path,
+            script_dir=script_dir,
         )
 
         xdg_data_home = os.environ.get("XDG_DATA_HOME", os.path.expanduser("~/.local/share"))

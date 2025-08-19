@@ -5,6 +5,7 @@ Name=LetTheTinCanDoIt
 GenericName=Project GPT
 Comment=My cool GPT-powered tin can
 Exec={python_exec} {script_path}
+Path={script_dir}
 Icon={icon_path}
 Categories=Utility;
 StartupWMClass=LetTheTinCanDoIt
