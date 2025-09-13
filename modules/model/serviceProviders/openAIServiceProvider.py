@@ -37,10 +37,13 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o3-mini-high",
             "o4-mini",
             "o4-mini-high",
-            "gpt-4.5-preview",
             "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",
+            "gpt-5",
+            "gpt-5-high",
+            "gpt-5-mini",
+            "gpt-5-nano",
         ]
 
         # Hide models if requested in settings
@@ -90,6 +93,11 @@ class OpenAIServiceProvider(ServiceProviderBase):
         elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
         elif modelName == "o4-mini":
+            used_reasoning_effort = "medium"
+        elif modelName == "gpt-5-high":
+            api_model_name = "gpt-5"
+            used_reasoning_effort = "high"
+        elif modelName == "gpt-5":
             used_reasoning_effort = "medium"
 
         if used_reasoning_effort:
