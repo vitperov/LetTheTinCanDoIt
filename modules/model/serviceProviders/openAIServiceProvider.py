@@ -7,13 +7,28 @@ from modules.model.ResponseFilesParser import ResponseFilesParser
 from modules.model.serviceProviders.serviceProviderBase import ServiceProviderBase
 from ..modelOptions import ModelOptions
 
+
 class OpenAIServiceProvider(ServiceProviderBase):
-    def __init__(self, api_key=None):
+    def __init__(self, settings=None, api_key=None):
+        """
+        `settings` is expected to be a dictionary returned by
+        get_provider_settings("openai"). If legacy code passes a plain
+        `api_key` string, it will still be accepted.
+        """
         super().__init__()
+
+        if settings is None:
+            settings = {}
+        if api_key is not None:
+            settings["api_key"] = api_key
+
+        self.settings = settings
+        self.api_key = self.settings.get("api_key")
+
         self.available_models = [
-            "gpt-4o-mini", 
-            "gpt-4o", 
-            "o1-preview", 
+            "gpt-4o-mini",
+            "gpt-4o",
+            "o1-preview",
             "o1-mini",
             "o1",
             "o3",
@@ -22,20 +37,29 @@ class OpenAIServiceProvider(ServiceProviderBase):
             "o3-mini-high",
             "o4-mini",
             "o4-mini-high",
-            "gpt-4.5-preview",
             "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",
+            "gpt-5",
+            "gpt-5-high",
+            "gpt-5-mini",
+            "gpt-5-nano",
         ]
+
+        # Hide models if requested in settings
+        hide_models_str = self.settings.get("hide_models") or self.settings.get("openai_hide_models", "")
+        if hide_models_str:
+            hide_set = {m.strip() for m in hide_models_str.split(",") if m.strip()}
+            self.available_models = [m for m in self.available_models if m not in hide_set]
+
         self.jobs = None
-        self.api_key = api_key
 
     def getBaseUrl(self):
         return "https://api.openai.com/v1"
 
     def getModelOptions(self, modelName):
         return ModelOptions(supportBatch=True)
-    
+
     def getRoleForModel(self, modelName):
         if "o1" in modelName.lower():
             return "assistant"
@@ -69,6 +93,11 @@ class OpenAIServiceProvider(ServiceProviderBase):
         elif modelName == "o3-mini":
             used_reasoning_effort = "medium"
         elif modelName == "o4-mini":
+            used_reasoning_effort = "medium"
+        elif modelName == "gpt-5-high":
+            api_model_name = "gpt-5"
+            used_reasoning_effort = "high"
+        elif modelName == "gpt-5":
             used_reasoning_effort = "medium"
 
         if used_reasoning_effort:

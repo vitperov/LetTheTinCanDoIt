@@ -41,15 +41,12 @@ class CustomFileSystemModel(QFileSystemModel):
     def flags(self, index):
         if not index.isValid():
             return Qt.NoItemFlags
-        default_flags = super().flags(index)
-        if self.isDir(index):
-            return default_flags
-        return default_flags | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
+        return super().flags(index) | Qt.ItemIsUserCheckable
 
     def data(self, index, role):
         if not index.isValid():
             return None
-        if role == Qt.CheckStateRole and not self.isDir(index):
+        if role == Qt.CheckStateRole:
             file_path = self.filePath(index)
             return Qt.Checked if self.checked_files.get(file_path, False) else Qt.Unchecked
         if role == Qt.DecorationRole and not self.isDir(index):
@@ -62,9 +59,14 @@ class CustomFileSystemModel(QFileSystemModel):
     def setData(self, index, value, role):
         if not index.isValid():
             return super().setData(index, value, role)
-        if role == Qt.CheckStateRole and not self.isDir(index):
+        if role == Qt.CheckStateRole:
             file_path = self.filePath(index)
-            self.checked_files[file_path] = (value == Qt.Checked)
+            checked = (value == Qt.Checked)
+            self.checked_files[file_path] = checked
+            if self.isDir(index):
+                for row in range(self.rowCount(index)):
+                    child_index = self.index(row, 0, index)
+                    self.setData(child_index, value, role)
             self.dataChanged.emit(index, index)
             return True
         return super().setData(index, value, role)

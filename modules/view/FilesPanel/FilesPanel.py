@@ -1,4 +1,7 @@
 import os
+import sys
+import shutil
+import subprocess
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QFileDialog, QLabel, QToolTip, QMenu, QMessageBox
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QModelIndex, QUrl
 from PyQt5.QtGui import QCursor, QDesktopServices
@@ -79,15 +82,26 @@ class FilesPanel(QWidget):
     def handle_project_selected(self, directory):
         if not directory:
             return
+
+        # Ensure that ProjectMeta is switched to the newly selected project
+        if self.model and getattr(self.model, "project_meta", None):
+            try:
+                self.model.project_meta.set_project_path(directory)
+            except Exception as e:
+                # Do not interrupt the UI flow if something goes wrong
+                print(f"FilesPanel: failed to switch ProjectMeta path -> {e}")
+
+        # Update file system view
         self.file_system_model.setRootPath(directory)
 
+        # Apply per-project settings (e.g., hidden extensions)
         hidden_extensions = []
         if self.model and getattr(self.model, "project_meta", None):
             hidden_extensions = self.model.project_meta.getHiddenExtensions()
         self.proxy_model.set_hidden_extensions(hidden_extensions)
 
+        # Refresh status map based on the currently opened project
         if self.model and getattr(self.model, "project_meta", None):
-            _, _ = self.model.project_meta.getIndexationParameters()
             relative_files = self.model.project_meta.getAll_project_files()
             statuses_map = {}
             for rel_path in relative_files:
@@ -156,19 +170,29 @@ class FilesPanel(QWidget):
         if not proxy_index.isValid():
             return
         src_index = self.proxy_model.mapToSource(proxy_index)
-        if not src_index.isValid() or self.file_system_model.isDir(src_index):
+        if not src_index.isValid():
             return
-        file_path = self.file_system_model.filePath(src_index)
+        item_path = self.file_system_model.filePath(src_index)
 
         menu = QMenu(self)
-        open_action = menu.addAction("Open")
-        open_action.triggered.connect(lambda: self.open_file(file_path))
-        index_action = menu.addAction("Index description")
-        index_action.triggered.connect(lambda: self.index_description(file_path))
+        if self.file_system_model.isDir(src_index):
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda *_: self.open_directory(item_path))
+            if sys.platform.startswith("linux"):
+                term_action = menu.addAction("Open in Terminal")
+                term_action.triggered.connect(lambda *_: self.open_in_terminal(item_path))
+        else:
+            open_action = menu.addAction("Open")
+            open_action.triggered.connect(lambda *_: self.open_file(item_path))
+            index_action = menu.addAction("Index description")
+            index_action.triggered.connect(lambda *_: self.index_description(item_path))
         menu.exec_(self.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
         QDesktopServices.openUrl(QUrl.fromLocalFile(file_path))
+
+    def open_directory(self, dir_path):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(dir_path))
 
     def index_description(self, file_path):
         rel_path = os.path.relpath(file_path, self.project_dir)
@@ -180,3 +204,23 @@ class FilesPanel(QWidget):
         proxy_index = self.proxy_model.mapFromSource(source_index)
         if proxy_index.isValid():
             self.tree_view.setRootIndex(proxy_index)
+
+    def open_in_terminal(self, dir_path):
+        if sys.platform.startswith("linux"):
+            terminal = shutil.which("gnome-terminal") or shutil.which("konsole") or shutil.which("xfce4-terminal") or shutil.which("xterm")
+            if not terminal:
+                QMessageBox.critical(self, "Error", "No terminal emulator found.")
+                return
+            try:
+                if "gnome-terminal" in terminal or "xfce4-terminal" in terminal:
+                    subprocess.Popen([terminal, "--working-directory", dir_path])
+                elif "konsole" in terminal:
+                    subprocess.Popen([terminal, "--workdir", dir_path])
+                elif "xterm" in terminal:
+                    subprocess.Popen([terminal, "-e", f"bash -c 'cd {dir_path}; exec bash'"])
+                else:
+                    subprocess.Popen([terminal])
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to open terminal: {e}")
+        else:
+            QMessageBox.information(self, "Not Supported", "Opening in terminal is not supported on this OS.")
