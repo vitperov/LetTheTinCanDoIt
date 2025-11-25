@@ -3,3 +3,4 @@ openai
 tinydb
 google-generativeai
 gitpython
+anthropic

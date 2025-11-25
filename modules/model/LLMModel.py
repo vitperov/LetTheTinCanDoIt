@@ -11,6 +11,7 @@ from modules.model.serviceProviders.openAIServiceProvider import OpenAIServicePr
 from modules.model.serviceProviders.deepSeekServiceProvider import DeepSeekServiceProvider
 from modules.model.serviceProviders.ollamaServiceProvider import OllamaServiceProvider
 from modules.model.serviceProviders.geminiServiceProvider import GeminiServiceProvider
+from modules.model.serviceProviders.anthropicServiceProvider import AnthropicServiceProvider
 from modules.model.constants import FILES_LIST_INTRO
 
 
@@ -59,6 +60,7 @@ class LLMModel(QObject):
         deepseek_settings = get_provider_settings("deepseek")
         gemini_settings = get_provider_settings("gemini")
         ollama_settings = get_provider_settings("ollama")
+        anthropic_settings = get_provider_settings("anthropic")
 
         # Initialise providers with their settings dictionaries if enabled
         if openai_settings.get("enabled", True):
@@ -73,6 +75,9 @@ class LLMModel(QObject):
 
         if gemini_settings.get("enabled", True):
             self.service_providers.append(GeminiServiceProvider(settings=gemini_settings))
+
+        if anthropic_settings.get("enabled", True):
+            self.service_providers.append(AnthropicServiceProvider(settings=anthropic_settings))
 
         self.available_models = []
         for provider in self.service_providers:
