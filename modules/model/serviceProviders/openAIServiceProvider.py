@@ -25,26 +25,30 @@ class OpenAIServiceProvider(ServiceProviderBase):
         self.settings = settings
         self.api_key = self.settings.get("api_key")
 
-        self.available_models = [
+        # Non-reasoning models
+        self.non_reasoning_models = [
             "gpt-4o-mini",
             "gpt-4o",
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+        ]
+
+        # Reasoning models with their default reasoning effort
+        self.reasoning_models = [
             "o1-preview",
             "o1-mini",
             "o1",
             "o3",
-            "o3-high",
             "o3-mini",
-            "o3-mini-high",
             "o4-mini",
-            "o4-mini-high",
-            "gpt-4.1",
-            "gpt-4.1-mini",
-            "gpt-4.1-nano",
             "gpt-5",
-            "gpt-5-high",
             "gpt-5-mini",
             "gpt-5-nano",
         ]
+
+        # Build available models list
+        self.available_models = self._build_available_models()
 
         # Hide models if requested in settings
         hide_models_str = self.settings.get("hide_models") or self.settings.get("openai_hide_models", "")
@@ -54,6 +58,40 @@ class OpenAIServiceProvider(ServiceProviderBase):
 
         self.jobs = None
 
+    def _build_available_models(self):
+        """Build the full list of available models including reasoning variants."""
+        models = []
+        
+        # Add non-reasoning models as-is
+        models.extend(self.non_reasoning_models)
+        
+        # Add reasoning models with their variants
+        for model in self.reasoning_models:
+            models.append(model)  # medium reasoning (default)
+            models.append(f"{model}-high")  # high reasoning
+        
+        return models
+
+    def _parse_model_name(self, modelName):
+        """
+        Parse the model name and return the API model name and reasoning effort.
+        
+        Returns:
+            tuple: (api_model_name, reasoning_effort) where reasoning_effort is None for non-reasoning models
+        """
+        # Check if this is a high reasoning variant
+        if modelName.endswith("-high"):
+            base_model = modelName[:-5]  # Remove "-high" suffix
+            if base_model in self.reasoning_models:
+                return (base_model, "high")
+        
+        # Check if this is a standard reasoning model
+        if modelName in self.reasoning_models:
+            return (modelName, "medium")
+        
+        # Non-reasoning model
+        return (modelName, None)
+
     def getBaseUrl(self):
         return "https://api.openai.com/v1"
 
@@ -61,7 +99,8 @@ class OpenAIServiceProvider(ServiceProviderBase):
         return ModelOptions(supportBatch=True)
 
     def getRoleForModel(self, modelName):
-        if "o1" in modelName.lower():
+        api_model_name, _ = self._parse_model_name(modelName)
+        if "o1" in api_model_name.lower():
             return "assistant"
         else:
             return "system"
@@ -78,33 +117,13 @@ class OpenAIServiceProvider(ServiceProviderBase):
         status_changed("Waiting for the response ...")
         client = self.getClient()
 
-        api_model_name = modelName
-        used_reasoning_effort = None
+        api_model_name, reasoning_effort = self._parse_model_name(modelName)
 
-        if modelName == "o3-high":
-            api_model_name = "o3"
-            used_reasoning_effort = "high"
-        elif modelName == "o3-mini-high":
-            api_model_name = "o3-mini"
-            used_reasoning_effort = "high"
-        elif modelName == "o4-mini-high":
-            api_model_name = "o4-mini"
-            used_reasoning_effort = "high"
-        elif modelName == "o3-mini":
-            used_reasoning_effort = "medium"
-        elif modelName == "o4-mini":
-            used_reasoning_effort = "medium"
-        elif modelName == "gpt-5-high":
-            api_model_name = "gpt-5"
-            used_reasoning_effort = "high"
-        elif modelName == "gpt-5":
-            used_reasoning_effort = "medium"
-
-        if used_reasoning_effort:
+        if reasoning_effort:
             response = client.chat.completions.create(
                 model=api_model_name,
                 messages=messages,
-                reasoning_effort=used_reasoning_effort
+                reasoning_effort=reasoning_effort
             )
         else:
             response = client.chat.completions.create(
@@ -126,22 +145,8 @@ class OpenAIServiceProvider(ServiceProviderBase):
         print("==== Request text ====")
         print(full_request)
         print("======================")
-        api_model_name = modelName
-        used_reasoning_effort = None
-
-        if modelName == "o3-high":
-            api_model_name = "o3"
-            used_reasoning_effort = "high"
-        elif modelName == "o3-mini-high":
-            api_model_name = "o3-mini"
-            used_reasoning_effort = "high"
-        elif modelName == "o4-mini-high":
-            api_model_name = "o4-mini"
-            used_reasoning_effort = "high"
-        elif modelName == "o3-mini":
-            used_reasoning_effort = "medium"
-        elif modelName == "o4-mini":
-            used_reasoning_effort = "medium"
+        
+        api_model_name, reasoning_effort = self._parse_model_name(modelName)
 
         batch_request = {
             "custom_id": custom_id,
@@ -152,8 +157,8 @@ class OpenAIServiceProvider(ServiceProviderBase):
                 "messages": messages,
             }
         }
-        if used_reasoning_effort:
-            batch_request["body"]["reasoning_effort"] = used_reasoning_effort
+        if reasoning_effort:
+            batch_request["body"]["reasoning_effort"] = reasoning_effort
         tmp_dir = os.path.join(os.getcwd(), 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         with tempfile.NamedTemporaryFile(mode="w+", suffix=".jsonl", dir=tmp_dir, delete=False) as temp_file:
