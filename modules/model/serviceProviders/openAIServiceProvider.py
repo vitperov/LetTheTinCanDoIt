@@ -27,22 +27,18 @@ class OpenAIServiceProvider(ServiceProviderBase):
 
         # Non-reasoning models
         self.non_reasoning_models = [
-            "gpt-4o-mini",
-            "gpt-4o",
-            "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",
         ]
 
         # Reasoning models with their default reasoning effort
         self.reasoning_models = [
-            "o1-preview",
             "o1-mini",
             "o1",
             "o3",
             "o3-mini",
             "o4-mini",
-            "gpt-5",
+            "gpt-5.1",
             "gpt-5-mini",
             "gpt-5-nano",
         ]
