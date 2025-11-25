@@ -42,14 +42,17 @@ class SettingsDialog(QDialog):
             "api_key": "",
             "deepseek_api_key": "",
             "gemini_api_key": "",
+            "anthropic_api_key": "",
             "openai_hide_models": "",
             "deepseek_hide_models": "",
             "gemini_hide_models": "",
             "ollama_hide_models": "",
+            "anthropic_hide_models": "",
             "openai_enabled": True,
             "deepseek_enabled": True,
             "gemini_enabled": True,
             "ollama_enabled": True,
+            "anthropic_enabled": True,
         }
 
     def _flatten_nested_keys(self, data):
@@ -61,14 +64,17 @@ class SettingsDialog(QDialog):
             "api_key": data.get("openai", {}).get("api_key", ""),
             "deepseek_api_key": data.get("deepseek", {}).get("api_key", ""),
             "gemini_api_key": data.get("gemini", {}).get("api_key", ""),
+            "anthropic_api_key": data.get("anthropic", {}).get("api_key", ""),
             "openai_hide_models": data.get("openai", {}).get("hide_models", ""),
             "deepseek_hide_models": data.get("deepseek", {}).get("hide_models", ""),
             "gemini_hide_models": data.get("gemini", {}).get("hide_models", ""),
             "ollama_hide_models": data.get("ollama", {}).get("hide_models", ""),
+            "anthropic_hide_models": data.get("anthropic", {}).get("hide_models", ""),
             "openai_enabled": data.get("openai", {}).get("enabled", True),
             "deepseek_enabled": data.get("deepseek", {}).get("enabled", True),
             "gemini_enabled": data.get("gemini", {}).get("enabled", True),
             "ollama_enabled": data.get("ollama", {}).get("enabled", True),
+            "anthropic_enabled": data.get("anthropic", {}).get("enabled", True),
         }
 
     def load_keys(self):
@@ -186,6 +192,25 @@ class SettingsDialog(QDialog):
         self.ollama_group.setLayout(ollama_layout)
         models_layout.addWidget(self.ollama_group)
 
+        # -------------------- Anthropic -------------------- #
+        self.anthropic_group = QGroupBox("Anthropic")
+        anthropic_layout = QFormLayout()
+
+        self.anthropic_enabled_checkbox = QCheckBox()
+        self.anthropic_enabled_checkbox.setChecked(self.keys.get("anthropic_enabled", True))
+        anthropic_layout.addRow("Enabled:", self.anthropic_enabled_checkbox)
+
+        self.anthropic_key_edit = QLineEdit()
+        self.anthropic_key_edit.setText(self.keys.get("anthropic_api_key", ""))
+        anthropic_layout.addRow("API Key:", self.anthropic_key_edit)
+
+        self.anthropic_hide_edit = QLineEdit()
+        self.anthropic_hide_edit.setText(self.keys.get("anthropic_hide_models", ""))
+        anthropic_layout.addRow("Hide models:", self.anthropic_hide_edit)
+
+        self.anthropic_group.setLayout(anthropic_layout)
+        models_layout.addWidget(self.anthropic_group)
+
         models_tab.setLayout(models_layout)
         self.tab_widget.addTab(models_tab, "Models")
 
@@ -213,16 +238,19 @@ class SettingsDialog(QDialog):
         self.keys["api_key"] = self.chatgpt_key_edit.text()
         self.keys["deepseek_api_key"] = self.deepseek_key_edit.text()
         self.keys["gemini_api_key"] = self.gemini_key_edit.text()
+        self.keys["anthropic_api_key"] = self.anthropic_key_edit.text()
 
         self.keys["openai_hide_models"] = self.chatgpt_hide_edit.text()
         self.keys["deepseek_hide_models"] = self.deepseek_hide_edit.text()
         self.keys["gemini_hide_models"] = self.gemini_hide_edit.text()
         self.keys["ollama_hide_models"] = self.ollama_hide_edit.text()
+        self.keys["anthropic_hide_models"] = self.anthropic_hide_edit.text()
 
         self.keys["openai_enabled"] = self.chatgpt_enabled_checkbox.isChecked()
         self.keys["deepseek_enabled"] = self.deepseek_enabled_checkbox.isChecked()
         self.keys["gemini_enabled"] = self.gemini_enabled_checkbox.isChecked()
         self.keys["ollama_enabled"] = self.ollama_enabled_checkbox.isChecked()
+        self.keys["anthropic_enabled"] = self.anthropic_enabled_checkbox.isChecked()
 
         # Convert to *nested* structure expected by LLMModel/get_provider_settings
         nested = {
@@ -244,6 +272,11 @@ class SettingsDialog(QDialog):
             "ollama": {
                 "hide_models": self.keys["ollama_hide_models"],
                 "enabled": self.keys["ollama_enabled"],
+            },
+            "anthropic": {
+                "api_key": self.keys["anthropic_api_key"],
+                "hide_models": self.keys["anthropic_hide_models"],
+                "enabled": self.keys["anthropic_enabled"],
             },
         }
 
