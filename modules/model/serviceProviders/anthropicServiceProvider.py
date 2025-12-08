@@ -136,14 +136,26 @@ class AnthropicServiceProvider(ServiceProviderBase):
             self.client = anthropic.Anthropic(api_key=self.api_key)
         try:
             status_changed("Retrieving batch results ...")
-            batch = self.client.messages.batches.retrieve(batch_id)
-            responses = getattr(batch, 'responses', None) or getattr(batch, 'results', None)
+            # Stream results using the batches.results endpoint
+            results_iter = self.client.messages.batches.results(batch_id)
+            responses = []
+            for resp in results_iter:
+                custom_id = getattr(resp, 'custom_id', None)
+                result = getattr(resp, 'result', None)
+                if not result:
+                    continue
+                text = getattr(result, 'completion', None)
+                usage = getattr(result, 'usage', None)
+                if usage:
+                    usage_str = f"Input tokens: {getattr(usage, 'input_tokens', '')}, Output tokens: {getattr(usage, 'output_tokens', '')}"
+                else:
+                    usage_str = ""
+                responses.append((custom_id, text, usage_str))
             if not responses:
                 raise Exception("No responses found in batch.")
-            response = responses[0]
-            generated_response = response.content[0].text
-            usage_info = f"Input tokens: {response.usage.input_tokens}, Output tokens: {response.usage.output_tokens}"
-            return (generated_response, usage_info)
+            combined_texts = "\n\n".join([f"{cid}: {txt}" for cid, txt, _ in responses])
+            combined_usage = "\n".join([f"{cid}: {u}" for cid, _, u in responses])
+            return (combined_texts, combined_usage)
         except Exception as e:
             return (f"Error retrieving batch results: {str(e)}", "Error")
 
