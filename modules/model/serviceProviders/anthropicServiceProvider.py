@@ -72,6 +72,7 @@ class AnthropicServiceProvider(ServiceProviderBase):
         if not self.client:
             self.client = anthropic.Anthropic(api_key=self.api_key)
         status_changed("Creating batch request ...")
+        print(f"customId = {custom_id}")
         max_tokens = self.settings.get("max_tokens", 4096)
         request_item = {
             "custom_id": custom_id,

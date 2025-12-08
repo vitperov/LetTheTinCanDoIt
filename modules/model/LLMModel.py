@@ -180,7 +180,7 @@ class LLMModel(QObject):
             attach_diff = getattr(request_options, 'attachLastCommitDiff', False)
             print(f"Attach last commit diff in batch request: {attach_diff}")
             user_message = self._build_user_message(role_string, full_request, editor_mode, include, attach_diff)
-            custom_id = f"{self.project_dir}|{editor_mode}"
+            custom_id = "true" if editor_mode else "false"
             provider = self.get_provider_for_model(modelName)
             self.thread_manager.execute_async(
                 lambda: provider._generate_batch_response_sync(
