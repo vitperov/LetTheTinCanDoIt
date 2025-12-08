@@ -94,11 +94,33 @@ class AnthropicServiceProvider(ServiceProviderBase):
         try:
             status_changed("Getting batch jobs list ...")
             page = self.client.messages.batches.list()
-            batches = page.data
-            batch_ids = [batch.id for batch in batches]
-            descriptions = ['' for _ in batches]
+            batches = getattr(page, 'data', []) or []
+            batch_ids = []
+            descriptions = []
+            for b in batches:
+                batch_ids.append(getattr(b, 'id', ''))
+                status = getattr(b, 'processing_status', 'unknown')
+                rc = getattr(b, 'request_counts', {}) or {}
+                if hasattr(rc, 'get'):
+                    succeeded = rc.get('succeeded', 0)
+                    processing = rc.get('processing', 0)
+                    errored = rc.get('errored', 0)
+                    canceled = rc.get('canceled', 0)
+                    expired = rc.get('expired', 0)
+                else:
+                    succeeded = getattr(rc, 'succeeded', 0)
+                    processing = getattr(rc, 'processing', 0)
+                    errored = getattr(rc, 'errored', 0)
+                    canceled = getattr(rc, 'canceled', 0)
+                    expired = getattr(rc, 'expired', 0)
+                desc = (
+                    f"Status: {status}, "
+                    f"succeeded: {succeeded}, processing: {processing}, "
+                    f"errored: {errored}, canceled: {canceled}, expired: {expired}"
+                )
+                descriptions.append(desc)
             if batch_ids:
-                result_str = "\n".join([f"* {bid}" for bid in batch_ids])
+                result_str = "\n".join([f"* {bid}: {desc}" for bid, desc in zip(batch_ids, descriptions)])
                 response_generated(result_str)
             else:
                 response_generated("No batch jobs found.")
