@@ -120,26 +120,35 @@ class AnthropicServiceProvider(ServiceProviderBase):
             self.client = anthropic.Anthropic(api_key=self.api_key)
         try:
             status_changed("Retrieving batch results ...")
-            # Stream results using the batches.results endpoint
-            results_iter = self.client.messages.batches.results(batch_id)
-            responses = []
-            for resp in results_iter:
-                custom_id = getattr(resp, 'custom_id', None)
-                result = getattr(resp, 'result', None)
-                if not result:
-                    continue
-                text = getattr(result, 'completion', None)
-                usage = getattr(result, 'usage', None)
-                if usage:
-                    usage_str = f"Input tokens: {getattr(usage, 'input_tokens', '')}, Output tokens: {getattr(usage, 'output_tokens', '')}"
-                else:
-                    usage_str = ""
-                responses.append((custom_id, text, usage_str))
-            if not responses:
+            results = list(self.client.messages.batches.results(batch_id))
+            if len(results) > 1:
+                raise Exception("Only one batch result is supported")
+            if not results:
                 raise Exception("No responses found in batch.")
-            combined_texts = "\n\n".join([f"{cid}: {txt}" for cid, txt, _ in responses])
-            combined_usage = "\n".join([f"{cid}: {u}" for cid, _, u in responses])
-            return (combined_texts, combined_usage)
+            resp = results[0]
+            result = getattr(resp, 'result', None)
+            if not result:
+                raise Exception("No result found in batch.")
+            message = getattr(result, 'message', None)
+            if not message:
+                raise Exception("No message found in batch result.")
+            content = getattr(message, 'content', [])
+            if not content:
+                raise Exception("No content found in batch message.")
+            text = getattr(content[0], 'text', '')
+            usage = getattr(message, 'usage', None)
+            if usage:
+                input_tokens = getattr(usage, 'input_tokens', 0)
+                output_tokens = getattr(usage, 'output_tokens', 0)
+            else:
+                input_tokens = 0
+                output_tokens = 0
+
+            custom_id = getattr(resp, 'custom_id', '')
+            editor_mode = custom_id.lower() == 'true'
+            
+            usage_str = f"Input tokens: {input_tokens}, Output tokens: {output_tokens}"
+            return (text, usage_str, editor_mode)
         except Exception as e:
             return (f"Error retrieving batch results: {str(e)}", "Error")
 
