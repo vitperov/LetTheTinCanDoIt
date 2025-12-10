@@ -6,6 +6,9 @@ import json
 
 
 class AnthropicServiceProvider(ServiceProviderBase):
+    # Constants
+    DEFAULT_MAX_TOKENS = 65536
+
     def __init__(self, settings=None, api_key=None):
         """
         `settings` should come from get_provider_settings("anthropic").
@@ -49,7 +52,7 @@ class AnthropicServiceProvider(ServiceProviderBase):
             
             response = self.client.messages.create(
                 model=modelName,
-                max_tokens=4096,
+                max_tokens=self.DEFAULT_MAX_TOKENS,
                 messages=[
                     {"role": "user", "content": full_request}
                 ]
@@ -73,7 +76,7 @@ class AnthropicServiceProvider(ServiceProviderBase):
             self.client = anthropic.Anthropic(api_key=self.api_key)
         status_changed("Creating batch request ...")
         print(f"customId = {custom_id}")
-        max_tokens = self.settings.get("max_tokens", 4096)
+        max_tokens = self.settings.get("max_tokens", self.DEFAULT_MAX_TOKENS)
         request_item = {
             "custom_id": custom_id,
             "params": {
