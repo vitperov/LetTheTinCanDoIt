@@ -222,10 +222,8 @@ class OpenAIServiceProvider(ServiceProviderBase):
             output_file_id = batch.output_file_id
             file_response = client.files.content(output_file_id).text
             data = json.loads(file_response)
-            custom_id = data['custom_id']
-            proj_dir, editor_mode_str = custom_id.split('|')
-            editor_mode = editor_mode_str.lower() == 'true'
-            print("Proj dir: " + proj_dir)
+            custom_id = data.get('custom_id', '')
+            editor_mode = custom_id.lower() == 'true'
             print("Editor Mode: " + str(editor_mode))
             response_text = str(data['response']['body']['choices'][0]['message']['content'])
             usage = str(data['response']['body']['usage'])
