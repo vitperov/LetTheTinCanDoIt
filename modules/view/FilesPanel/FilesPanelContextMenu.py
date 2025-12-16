@@ -32,6 +32,8 @@ class FilesPanelContextMenu:
             open_action.triggered.connect(lambda *_: self.open_file(item_path))
             index_action = menu.addAction("Index description")
             index_action.triggered.connect(lambda *_: self.index_description(item_path))
+            delete_action = menu.addAction("Delete file")
+            delete_action.triggered.connect(lambda *_: self.delete_file(item_path))
         menu.exec_(self.files_panel.tree_view.viewport().mapToGlobal(point))
 
     def open_file(self, file_path):
@@ -50,6 +52,20 @@ class FilesPanelContextMenu:
         proxy_index = self.files_panel.proxy_model.mapFromSource(source_index)
         if proxy_index.isValid():
             self.files_panel.tree_view.setRootIndex(proxy_index)
+
+    def delete_file(self, file_path):
+        reply = QMessageBox.question(
+            self.files_panel,
+            "Delete File",
+            f"Are you sure you want to delete this file?\n\n{file_path}",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                QMessageBox.critical(self.files_panel, "Error", f"Failed to delete file: {e}")
 
     def open_in_terminal(self, dir_path):
         if sys.platform.startswith("linux"):
