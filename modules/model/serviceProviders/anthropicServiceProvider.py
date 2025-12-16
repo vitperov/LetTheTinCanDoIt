@@ -7,7 +7,7 @@ import json
 
 class AnthropicServiceProvider(ServiceProviderBase):
     # Constants
-    DEFAULT_MAX_TOKENS = 65536
+    DEFAULT_MAX_TOKENS = 64000
 
     def __init__(self, settings=None, api_key=None):
         """
