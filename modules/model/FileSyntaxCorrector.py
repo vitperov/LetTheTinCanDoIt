@@ -6,7 +6,7 @@ class FileSyntaxCorrector:
 
     def __init__(self):
         # Define a list of possible programming language identifiers
-        self.language_identifiers = ['python']  # We can expand this list in the future as needed
+        self.language_identifiers = ['python', 'java', 'csharp']  # We can expand this list in the future as needed
 
     def prepare_for_encoding(self, content):
         """

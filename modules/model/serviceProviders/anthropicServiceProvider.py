@@ -7,7 +7,7 @@ import json
 
 class AnthropicServiceProvider(ServiceProviderBase):
     # Constants
-    DEFAULT_MAX_TOKENS = 65536
+    DEFAULT_MAX_TOKENS = 64000
 
     def __init__(self, settings=None, api_key=None):
         """
@@ -118,7 +118,7 @@ class AnthropicServiceProvider(ServiceProviderBase):
 
     def get_batch_results(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         if not self.api_key:
-            return ("Error: Anthropic API key not configured in settings/key.json", "Error")
+            return ("Error: Anthropic API key not configured in settings/key.json", "", False)
         if not self.client:
             self.client = anthropic.Anthropic(api_key=self.api_key)
         try:
@@ -132,6 +132,15 @@ class AnthropicServiceProvider(ServiceProviderBase):
             result = getattr(resp, 'result', None)
             if not result:
                 raise Exception("No result found in batch.")
+            # Handle errored batch result
+            resp_error = getattr(result, 'error', None)
+            if resp_error:
+                underlying_error = getattr(resp_error, 'error', None)
+                if underlying_error:
+                    error_message = getattr(underlying_error, 'message', str(underlying_error))
+                else:
+                    error_message = str(resp_error)
+                return (error_message, "", False)
             message = getattr(result, 'message', None)
             if not message:
                 raise Exception("No message found in batch result.")
@@ -153,7 +162,7 @@ class AnthropicServiceProvider(ServiceProviderBase):
             usage_str = f"Input tokens: {input_tokens}, Output tokens: {output_tokens}"
             return (text, usage_str, editor_mode)
         except Exception as e:
-            return (f"Error retrieving batch results: {str(e)}", "Error")
+            return (f"Error retrieving batch results: {str(e)}", "", False)
 
     def delete_batch_job(self, modelName, batch_id, status_changed, response_generated, project_dir=None, chosen_files=None):
         if not self.api_key:
